@@ -45,7 +45,9 @@
       { "command": "specs.baseline.check", "title": "Baseline: Check", "category": "Specs" },
       { "command": "specs.baseline.update", "title": "Baseline: Update", "category": "Specs" },
       { "command": "specs.cr.refresh", "title": "Refresh CR list", "category": "Specs", "icon": "$(refresh)" },
-      { "command": "specs.cr.openDir", "title": "Reveal CR folder", "category": "Specs" }
+      { "command": "specs.cr.openDir", "title": "Reveal CR folder", "category": "Specs" },
+      { "command": "specs.visualize.preview", "title": "Visualize: Open preview", "category": "Specs" },
+      { "command": "specs.visualize.refresh", "title": "Visualize: Refresh preview", "category": "Specs" }
     ],
     "views": {
       "specs": [
@@ -106,6 +108,7 @@
     "compile": "tsc -p .",
     "watch": "tsc -p . --watch",
     "lint": "tsc -p . --noEmit",
+    "fetch-mermaid": "node -e \"require('https').get('https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js',r=>r.pipe(require('fs').createWriteStream('media/mermaid.min.js')))\"",
     "package": "vsce package --no-dependencies"
   },
   "devDependencies": {

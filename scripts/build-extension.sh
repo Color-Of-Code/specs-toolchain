@@ -43,6 +43,13 @@ else
 fi
 chmod +x "$bin_dir/$exe" 2>/dev/null || true
 
+# Vendor mermaid.min.js for the webview (kept out of git; downloaded each build).
+mermaid_dst="$ext_dir/media/mermaid.min.js"
+if [[ ! -f "$mermaid_dst" ]]; then
+  echo "Fetching mermaid.min.js" >&2
+  curl -sSLf https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js -o "$mermaid_dst"
+fi
+
 # Ensure node deps + compile.
 ( cd "$ext_dir" && npm ci --silent && npm run compile )
 

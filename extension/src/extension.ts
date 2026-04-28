@@ -3,6 +3,7 @@ import { getOutput } from "./cli";
 import { registerCommands } from "./commands";
 import { registerCRTree } from "./crTree";
 import { registerStatusBar } from "./statusBar";
+import { registerVisualizePanel } from "./visualizePanel";
 
 export function activate(context: vscode.ExtensionContext): void {
     const out = getOutput();
@@ -10,6 +11,7 @@ export function activate(context: vscode.ExtensionContext): void {
     registerCommands(context);
     registerCRTree(context);
     registerStatusBar(context);
+    registerVisualizePanel(context);
 }
 
 export function deactivate(): void {

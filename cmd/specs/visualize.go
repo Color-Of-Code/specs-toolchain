@@ -34,9 +34,10 @@ func cmdVisualize(args []string) error {
 func cmdVisualizeTraceability(args []string) error {
 	fs := flag.NewFlagSet("visualize traceability", flag.ContinueOnError)
 	format := fs.String("format", "dot", "output format: dot | mermaid")
-	outPath := fs.String("out", "", "write to file (default: stdout)")
+	outPath := fs.String("out", "", "write to file (use - or empty for stdout)")
+	fs.StringVar(outPath, "o", "", "shorthand for --out")
 	fs.Usage = func() {
-		fmt.Fprintln(os.Stderr, "Usage: specs visualize traceability [--format dot|mermaid] [--out <path>]")
+		fmt.Fprintln(os.Stderr, "Usage: specs visualize traceability [--format dot|mermaid] [--out <path>|-]")
 		fs.PrintDefaults()
 	}
 	if err := fs.Parse(args); err != nil {
@@ -52,7 +53,7 @@ func cmdVisualizeTraceability(args []string) error {
 	}
 
 	var out *os.File = os.Stdout
-	if *outPath != "" {
+	if *outPath != "" && *outPath != "-" {
 		f, err := os.Create(*outPath)
 		if err != nil {
 			return exitWith(1, "create %s: %v", *outPath, err)
@@ -73,7 +74,7 @@ func cmdVisualizeTraceability(args []string) error {
 	default:
 		return exitWith(2, "unknown --format %q (want dot or mermaid)", *format)
 	}
-	if *outPath != "" {
+	if *outPath != "" && *outPath != "-" {
 		fmt.Fprintf(os.Stderr, "wrote %s (%d node(s), %d edge(s))\n", *outPath, len(g.Nodes), len(g.Edges))
 	}
 	return nil

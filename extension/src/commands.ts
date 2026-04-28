@@ -164,7 +164,7 @@ async function visualize(
 
     const res = await runAndCapture(
         context,
-        ["visualize", "--format", format, "-o", outPath],
+        ["visualize", "traceability", "--format", format, "--out", outPath],
         cwd
     );
     if (res.exitCode !== 0) {
