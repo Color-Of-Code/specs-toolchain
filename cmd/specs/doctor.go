@@ -9,6 +9,7 @@ import (
 	"runtime"
 
 	"github.com/jdehaan/specs-cli/internal/config"
+	"github.com/jdehaan/specs-cli/internal/toolsmanifest"
 )
 
 func cmdDoctor(args []string) error {
@@ -59,6 +60,21 @@ func cmdDoctor(args []string) error {
 	fmt.Printf("markdownlint:     %s%s\n", cfg.MarkdownlintConfig, existsSuffix(cfg.MarkdownlintConfig))
 	if cfg.MinSpecsVersion != "" {
 		fmt.Printf("min_specs_version: %s\n", cfg.MinSpecsVersion)
+	}
+	if cfg.TemplatesSchema != 0 {
+		fmt.Printf("templates_schema: %d (host requires)\n", cfg.TemplatesSchema)
+	}
+	if cfg.ToolsDir != "" {
+		if m, err := toolsmanifest.Load(cfg.ToolsDir); err != nil {
+			fmt.Printf("tools manifest:   error: %v\n", err)
+		} else if m == nil {
+			fmt.Println("tools manifest:   <not present>")
+		} else {
+			fmt.Printf("tools manifest:   templates_schema=%d version=%s\n", m.TemplatesSchema, m.Version)
+			if ok, msg := toolsmanifest.Compatible(cfg.TemplatesSchema, m); !ok {
+				return exitWith(1, "%s", msg)
+			}
+		}
 	}
 	fmt.Printf("repos configured: %d\n", len(cfg.Repos))
 
