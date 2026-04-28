@@ -16,7 +16,8 @@ import (
 //
 //	--at .                 makes the cwd itself the specs root
 //	--layout folder        creates specs/ as a plain folder (default)
-//	--layout submodule     register specs/ as a submodule (advanced; manual)
+//	--layout submodule     register specs/ as a git submodule of the host repo;
+//	                       requires --specs-url
 //
 //	--tools-mode managed   (default) fetch into the user cache, hide it
 //	--tools-mode submodule add .specs-tools as a submodule of the host
@@ -26,6 +27,8 @@ func cmdBootstrap(args []string) error {
 	fs := flag.NewFlagSet("bootstrap", flag.ContinueOnError)
 	at := fs.String("at", "", "path to the specs root (created if missing); use '.' for repo root")
 	layout := fs.String("layout", "folder", "how specs/ is materialised: submodule|folder")
+	specsURL := fs.String("specs-url", "", "git URL of the host's specs repo (required for --layout submodule)")
+	specsRef := fs.String("specs-ref", "", "branch/tag for --layout submodule (optional)")
 	toolsMode := fs.String("tools-mode", "managed", "how .specs-tools is materialised: managed|submodule|folder|vendor")
 	toolsURL := fs.String("tools-url", "https://github.com/jdehaan/specs-tools.git", "git URL of specs-tools content repo")
 	toolsRef := fs.String("tools-ref", "main", "tag/branch/commit for content")
@@ -33,7 +36,7 @@ func cmdBootstrap(args []string) error {
 	withVSCode := fs.Bool("with-vscode", false, "write .vscode/tasks.json")
 	dryRun := fs.Bool("dry-run", false, "print actions without performing them")
 	fs.Usage = func() {
-		fmt.Fprintln(os.Stderr, "Usage: specs bootstrap [--at <path>] [--layout submodule|folder] [--tools-mode managed|submodule|folder|vendor] [--tools-url URL] [--tools-ref REF] [--with-model] [--with-vscode] [--dry-run]")
+		fmt.Fprintln(os.Stderr, "Usage: specs bootstrap [--at <path>] [--layout submodule|folder] [--specs-url URL] [--specs-ref REF] [--tools-mode managed|submodule|folder|vendor] [--tools-url URL] [--tools-ref REF] [--with-model] [--with-vscode] [--dry-run]")
 		fs.PrintDefaults()
 	}
 	if err := fs.Parse(args); err != nil {
@@ -66,9 +69,32 @@ func cmdBootstrap(args []string) error {
 			return err
 		}
 	case "submodule":
-		// Add specs root as a submodule of cwd. URL not collected here (operator
-		// adds the upstream specs repo separately or via --tools-url-style fork).
-		return exitWith(2, "--layout submodule requires the host to register the submodule explicitly first; see docs")
+		if *specsURL == "" {
+			return exitWith(2, "--layout submodule requires --specs-url <git-url-of-specs-repo>")
+		}
+		hostGitRoot := findGitRoot(cwd)
+		if hostGitRoot == "" {
+			if err := runOrLog(*dryRun, "git init "+cwd, func() error {
+				return runGit(cwd, "init")
+			}); err != nil {
+				return err
+			}
+			hostGitRoot = cwd
+		}
+		rel, err := filepath.Rel(hostGitRoot, specsRoot)
+		if err != nil {
+			return fmt.Errorf("compute submodule path: %w", err)
+		}
+		gitArgs := []string{"submodule", "add"}
+		if *specsRef != "" {
+			gitArgs = append(gitArgs, "-b", *specsRef)
+		}
+		gitArgs = append(gitArgs, *specsURL, rel)
+		if err := runOrLog(*dryRun, fmt.Sprintf("git -C %s %v", hostGitRoot, gitArgs), func() error {
+			return runGit(hostGitRoot, gitArgs...)
+		}); err != nil {
+			return err
+		}
 	default:
 		return exitWith(2, "unknown --layout %q", *layout)
 	}
