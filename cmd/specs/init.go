@@ -133,18 +133,115 @@ const vscodeTasksJSON = `{
       "command": "specs",
       "args": ["tools", "update"],
       "problemMatcher": []
+    },
+    {
+      "label": "Specs: Scaffold",
+      "type": "shell",
+      "command": "specs",
+      "args": [
+        "scaffold",
+        "${input:specsKind}",
+        "--title", "${input:specsTitle}",
+        "${input:specsPath}"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "Specs: CR New",
+      "type": "shell",
+      "command": "specs",
+      "args": [
+        "cr", "new",
+        "--id", "${input:specsCRId}",
+        "--slug", "${input:specsCRSlug}",
+        "--title", "${input:specsTitle}"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "Specs: CR Status",
+      "type": "shell",
+      "command": "specs",
+      "args": ["cr", "status"],
+      "problemMatcher": []
+    },
+    {
+      "label": "Specs: CR Drain",
+      "type": "shell",
+      "command": "specs",
+      "args": [
+        "cr", "drain",
+        "--id", "${input:specsCRId}"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "Specs: Baseline Check",
+      "type": "shell",
+      "command": "specs",
+      "args": ["baseline", "check"],
+      "problemMatcher": []
+    },
+    {
+      "label": "Specs: Baseline Update (dry-run)",
+      "type": "shell",
+      "command": "specs",
+      "args": ["baseline", "update", "--dry-run"],
+      "problemMatcher": []
+    },
+    {
+      "label": "Specs: Baseline Update",
+      "type": "shell",
+      "command": "specs",
+      "args": ["baseline", "update"],
+      "problemMatcher": []
+    }
+  ],
+  "inputs": [
+    {
+      "id": "specsKind",
+      "description": "Template kind",
+      "type": "pickString",
+      "options": ["requirement", "feature", "component", "api", "service"],
+      "default": "requirement"
+    },
+    {
+      "id": "specsPath",
+      "description": "Path under model/<area>/ (e.g. security/099-mfa)",
+      "type": "promptString"
+    },
+    {
+      "id": "specsTitle",
+      "description": "Human-readable title",
+      "type": "promptString"
+    },
+    {
+      "id": "specsCRId",
+      "description": "CR id (e.g. 004)",
+      "type": "promptString"
+    },
+    {
+      "id": "specsCRSlug",
+      "description": "CR slug (kebab-case)",
+      "type": "promptString"
     }
   ]
 }
 `
 
 func writeVSCodeTasks(hostRoot string) error {
+	return writeVSCodeTasksAt(hostRoot, false)
+}
+
+// writeVSCodeTasksAt writes the tasks file. When force is true, an existing
+// tasks.json is overwritten; otherwise the tasks land in tasks.specs.json.
+func writeVSCodeTasksAt(hostRoot string, force bool) error {
 	dir := filepath.Join(hostRoot, ".vscode")
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return err
 	}
 	target := filepath.Join(dir, "tasks.json")
-	if _, err := os.Stat(target); err == nil {
+	if _, err := os.Stat(target); err == nil && !force {
 		// Don't clobber existing tasks; write next to it.
 		target = filepath.Join(dir, "tasks.specs.json")
 	}

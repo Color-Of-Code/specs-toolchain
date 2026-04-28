@@ -29,6 +29,7 @@ func init() {
 		{"scaffold", "instantiate a template (requirement|feature|component|api|service)", cmdScaffold},
 		{"cr", "change-request operations (new, status, drain)", cmdCR},
 		{"baseline", "verify or update component baselines (check, update)", cmdBaseline},
+		{"vscode", "manage .vscode integration (init)", cmdVSCode},
 	}
 }
 
