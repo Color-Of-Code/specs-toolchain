@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 
 	"github.com/jdehaan/specs-cli/internal/config"
+	"github.com/jdehaan/specs-cli/internal/tools"
 )
 
 // cmdTools dispatches subcommands managing the .specs-tools content layer.
@@ -48,8 +49,14 @@ func cmdToolsUpdate(args []string) error {
 	if err != nil {
 		return err
 	}
+
+	switch cfg.ToolsMode {
+	case config.ToolsModeManaged:
+		return updateManaged(cfg, *to)
+	}
+
 	if cfg.ToolsDir == "" {
-		return exitWith(1, "tools_dir not found; run `specs bootstrap --tools-mode submodule`")
+		return exitWith(1, "tools_dir not found; run `specs bootstrap` (managed) or set tools_dir (dev)")
 	}
 
 	switch cfg.ToolsMode {
@@ -79,4 +86,32 @@ func cmdToolsUpdate(args []string) error {
 	default:
 		return exitWith(1, "unknown tools_mode %q", cfg.ToolsMode)
 	}
+}
+
+// updateManaged fetches the requested ref into the user cache and rewrites
+// tools_ref in .specs.yaml so subsequent invocations resolve to it.
+func updateManaged(cfg *config.Resolved, to string) error {
+	ref := to
+	if ref == "" {
+		ref = cfg.ToolsRef
+	}
+	if ref == "" {
+		ref = "main"
+	}
+	path, err := tools.Ensure(cfg.ToolsURL, ref)
+	if err != nil {
+		return exitWith(1, "fetch %s@%s: %v", cfg.ToolsURL, ref, err)
+	}
+	fmt.Printf("managed tools cached at %s\n", path)
+
+	// Rewrite tools_ref in .specs.yaml only when the caller pinned a new ref.
+	if to != "" && to != cfg.ToolsRef && cfg.ConfigPath != "" && cfg.Source != nil {
+		newFile := *cfg.Source
+		newFile.ToolsRef = to
+		if err := config.Save(cfg.ConfigPath, &newFile); err != nil {
+			return exitWith(1, "write %s: %v", cfg.ConfigPath, err)
+		}
+		fmt.Printf("updated %s: tools_ref=%s\n", cfg.ConfigPath, to)
+	}
+	return nil
 }

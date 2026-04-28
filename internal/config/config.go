@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/jdehaan/specs-cli/internal/tools"
 	"gopkg.in/yaml.v3"
 )
 
@@ -28,6 +29,7 @@ const (
 type ToolsMode string
 
 const (
+	ToolsModeManaged   ToolsMode = "managed"   // CLI-managed read-only checkout in the user cache dir
 	ToolsModeSubmodule ToolsMode = "submodule"
 	ToolsModeFolder    ToolsMode = "folder" // plain folder; may or may not be a git working tree
 	ToolsModeVendor    ToolsMode = "vendor" // vendored snapshot (no .git)
@@ -39,6 +41,8 @@ const (
 type File struct {
 	SpecsRoot          string            `yaml:"specs_root,omitempty"`
 	ToolsDir           string            `yaml:"tools_dir,omitempty"`
+	ToolsURL           string            `yaml:"tools_url,omitempty"`
+	ToolsRef           string            `yaml:"tools_ref,omitempty"`
 	ChangeRequestsDir  string            `yaml:"change_requests_dir,omitempty"`
 	ModelDir           string            `yaml:"model_dir,omitempty"`
 	BaselinesFile      string            `yaml:"baselines_file,omitempty"`
@@ -57,6 +61,8 @@ type Resolved struct {
 	SpecsMode          SpecsMode
 	ToolsDir           string // absolute path; may be empty if missing
 	ToolsMode          ToolsMode
+	ToolsURL           string // managed mode: upstream git URL
+	ToolsRef           string // managed mode: pinned tag/branch/commit
 	ChangeRequestsDir  string // absolute path
 	ModelDir           string // absolute path
 	BaselinesFile      string // absolute path; may not exist
@@ -119,14 +125,26 @@ func Load(start string) (*Resolved, error) {
 	}
 	r.SpecsMode = detectSpecsMode(r.HostRoot, r.SpecsRoot)
 
-	// Resolve tools_dir.
-	tools := f.ToolsDir
-	if tools == "" {
-		tools = "auto"
+	// Resolve tools location. Managed mode wins when tools_url is set: the
+	// content lives in the user cache dir, and tools_dir (if any) is ignored.
+	r.ToolsURL = f.ToolsURL
+	r.ToolsRef = f.ToolsRef
+	if f.ToolsURL != "" {
+		cachePath, err := tools.ManagedPath(f.ToolsRef)
+		if err != nil {
+			return nil, fmt.Errorf("resolve managed cache path: %w", err)
+		}
+		r.ToolsDir = cachePath
+		r.ToolsMode = ToolsModeManaged
+	} else {
+		tools := f.ToolsDir
+		if tools == "" {
+			tools = "auto"
+		}
+		resolvedTools, mode := resolveToolsDir(tools, r.SpecsRoot, r.HostRoot)
+		r.ToolsDir = resolvedTools
+		r.ToolsMode = mode
 	}
-	resolvedTools, mode := resolveToolsDir(tools, r.SpecsRoot, r.HostRoot)
-	r.ToolsDir = resolvedTools
-	r.ToolsMode = mode
 
 	// Resolve other dirs/files (relative paths anchored to SpecsRoot).
 	r.ChangeRequestsDir = absOr(r.SpecsRoot, f.ChangeRequestsDir, "change-requests")

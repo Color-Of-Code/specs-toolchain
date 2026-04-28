@@ -6,34 +6,34 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+
+	"github.com/jdehaan/specs-cli/internal/tools"
 )
 
-// cmdBootstrap scaffolds a new host with .specs-tools and .specs.yaml.
+// cmdBootstrap scaffolds a new host with .specs.yaml pointing at the
+// framework content. The default mode is `managed`: content is fetched
+// once into the user's cache dir and shared across host projects.
 //
-// Layouts and modes:
+//	--at .                 makes the cwd itself the specs root
+//	--layout folder        creates specs/ as a plain folder (default)
+//	--layout submodule     register specs/ as a submodule (advanced; manual)
 //
-//	--layout submodule   adds specs/ as a submodule of the cwd
-//	--layout folder      creates specs/ as a plain folder (default)
-//	--at .               makes the cwd itself the specs root
-//
-//	--tools-mode submodule  adds .specs-tools as a submodule (default)
-//	--tools-mode folder     clones .specs-tools and keeps the .git working tree
-//	--tools-mode vendor     downloads a tarball at --tools-ref into .specs-tools
-//
-// This command intentionally does the minimum needed to land a working host;
-// further scaffolding (model/, change-requests/) is gated behind --with-model.
+//	--tools-mode managed   (default) fetch into the user cache, hide it
+//	--tools-mode submodule add .specs-tools as a submodule of the host
+//	--tools-mode folder    clone .specs-tools next to specs root
+//	--tools-mode vendor    snapshot .specs-tools (no .git)
 func cmdBootstrap(args []string) error {
 	fs := flag.NewFlagSet("bootstrap", flag.ContinueOnError)
 	at := fs.String("at", "", "path to the specs root (created if missing); use '.' for repo root")
 	layout := fs.String("layout", "folder", "how specs/ is materialised: submodule|folder")
-	toolsMode := fs.String("tools-mode", "submodule", "how .specs-tools is materialised: submodule|folder|vendor")
+	toolsMode := fs.String("tools-mode", "managed", "how .specs-tools is materialised: managed|submodule|folder|vendor")
 	toolsURL := fs.String("tools-url", "https://github.com/jdehaan/specs-tools.git", "git URL of specs-tools content repo")
-	toolsRef := fs.String("tools-ref", "", "tag/branch/commit for content (empty = default branch)")
+	toolsRef := fs.String("tools-ref", "main", "tag/branch/commit for content")
 	withModel := fs.Bool("with-model", false, "create empty model/ and change-requests/ skeletons")
 	withVSCode := fs.Bool("with-vscode", false, "write .vscode/tasks.json")
 	dryRun := fs.Bool("dry-run", false, "print actions without performing them")
 	fs.Usage = func() {
-		fmt.Fprintln(os.Stderr, "Usage: specs bootstrap [--at <path>] [--layout submodule|folder] [--tools-mode submodule|folder|vendor] [--tools-url URL] [--tools-ref REF] [--with-model] [--with-vscode] [--dry-run]")
+		fmt.Fprintln(os.Stderr, "Usage: specs bootstrap [--at <path>] [--layout submodule|folder] [--tools-mode managed|submodule|folder|vendor] [--tools-url URL] [--tools-ref REF] [--with-model] [--with-vscode] [--dry-run]")
 		fs.PrintDefaults()
 	}
 	if err := fs.Parse(args); err != nil {
@@ -76,6 +76,16 @@ func cmdBootstrap(args []string) error {
 	// Materialise .specs-tools content.
 	toolsDir := filepath.Join(specsRoot, ".specs-tools")
 	switch *toolsMode {
+	case "managed":
+		if *dryRun {
+			fmt.Printf("would: fetch %s@%s into managed cache\n", *toolsURL, *toolsRef)
+		} else {
+			path, err := tools.Ensure(*toolsURL, *toolsRef)
+			if err != nil {
+				return exitWith(1, "fetch managed tools: %v", err)
+			}
+			fmt.Printf("managed tools cached at %s\n", path)
+		}
 	case "submodule":
 		// Submodule must be added in the host repo's git root, not below specsRoot
 		// when specsRoot is itself just a folder. Auto-detect the git root from cwd.
@@ -141,6 +151,9 @@ func cmdBootstrap(args []string) error {
 
 	// Run init logic to write .specs.yaml in the new specs root.
 	initArgs := []string{"--at", specsRoot, "--force"}
+	if *toolsMode == "managed" {
+		initArgs = append(initArgs, "--tools-url", *toolsURL, "--tools-ref", *toolsRef)
+	}
 	if *withVSCode {
 		initArgs = append(initArgs, "--with-vscode")
 	}

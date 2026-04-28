@@ -100,11 +100,9 @@ repos:
 
 Other optional knobs: `change_requests_dir`, `model_dir`, `baselines_file`, `markdownlint_config`, `templates_schema`. Defaults are sensible; only set them when overriding.
 
-> Status: `tools_url` / `tools_ref` (managed mode) is on the roadmap; today the binary supports the dev-mode `tools_dir` (auto-detecting submodule, plain folder, or vendor snapshot). The two-mode story above is what the docs and `specs bootstrap` will converge on.
-
 ## Status
 
-Phase 1 — lint, layout auto-detection, `init`/`bootstrap`/`tools update` against a checkout. **Phase 1.5** — implement managed mode (cache + auto-fetch). **Phase 2** — authoring commands (`scaffold`, `cr`, `link`, `baseline`, `vscode`).
+Phase 1 — lint, layout auto-detection, `init`/`bootstrap`/`tools update`, **managed mode** (cache + auto-fetch). **Phase 2** — authoring commands (`scaffold`, `cr`, `link`, `baseline`, `vscode`).
 
 ## Development
 

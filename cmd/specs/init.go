@@ -17,8 +17,10 @@ func cmdInit(args []string) error {
 	force := fs.Bool("force", false, "overwrite an existing .specs.yaml")
 	withVSCode := fs.Bool("with-vscode", false, "also write .vscode/tasks.json")
 	at := fs.String("at", "", "path to specs root (default: auto-detect from CWD)")
+	toolsURL := fs.String("tools-url", "", "set tools_url (managed mode); leave empty to auto-detect a checkout via tools_dir")
+	toolsRef := fs.String("tools-ref", "", "set tools_ref alongside --tools-url")
 	fs.Usage = func() {
-		fmt.Fprintln(os.Stderr, "Usage: specs init [--force] [--with-vscode] [--at <path>]")
+		fmt.Fprintln(os.Stderr, "Usage: specs init [--force] [--with-vscode] [--at <path>] [--tools-url URL --tools-ref REF]")
 		fs.PrintDefaults()
 	}
 	if err := fs.Parse(args); err != nil {
@@ -37,8 +39,13 @@ func cmdInit(args []string) error {
 	}
 
 	f := &config.File{
-		ToolsDir:        "auto",
 		MinSpecsVersion: Version,
+	}
+	if *toolsURL != "" {
+		f.ToolsURL = *toolsURL
+		f.ToolsRef = *toolsRef
+	} else {
+		f.ToolsDir = "auto"
 	}
 	// Preserve any existing repos map / overrides if .specs.yaml already exists.
 	if cfg.Source != nil {
@@ -53,6 +60,13 @@ func cmdInit(args []string) error {
 		}
 		if cfg.Source.BaselinesFile != "" {
 			f.BaselinesFile = cfg.Source.BaselinesFile
+		}
+		// If we weren't told to set tools_url, preserve any pre-existing
+		// managed-mode pin from the existing file.
+		if *toolsURL == "" && cfg.Source.ToolsURL != "" {
+			f.ToolsURL = cfg.Source.ToolsURL
+			f.ToolsRef = cfg.Source.ToolsRef
+			f.ToolsDir = ""
 		}
 	}
 	if f.Repos == nil {

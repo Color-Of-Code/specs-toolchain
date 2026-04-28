@@ -37,13 +37,21 @@ func cmdDoctor(args []string) error {
 	fmt.Printf("host root:        %s\n", cfg.HostRoot)
 	fmt.Printf("specs mode:       %s\n", cfg.SpecsMode)
 	if cfg.ToolsDir != "" {
-		fmt.Printf("tools dir:        %s\n", cfg.ToolsDir)
+		fmt.Printf("tools dir:        %s%s\n", cfg.ToolsDir, existsSuffix(cfg.ToolsDir))
 		fmt.Printf("tools mode:       %s\n", cfg.ToolsMode)
+		if cfg.ToolsMode == config.ToolsModeManaged {
+			fmt.Printf("tools url:        %s\n", cfg.ToolsURL)
+			ref := cfg.ToolsRef
+			if ref == "" {
+				ref = "(unset; defaults to main on next fetch)"
+			}
+			fmt.Printf("tools ref:        %s\n", ref)
+		}
 		if rev := gitShortRev(cfg.ToolsDir); rev != "" {
 			fmt.Printf("tools rev:        %s\n", rev)
 		}
 	} else {
-		fmt.Println("tools dir:        <missing> (run `specs bootstrap --tools-mode submodule` or set tools_dir)")
+		fmt.Println("tools dir:        <missing> (run `specs bootstrap` or set tools_url/tools_dir)")
 	}
 	fmt.Printf("model dir:        %s\n", cfg.ModelDir)
 	fmt.Printf("change-requests:  %s\n", cfg.ChangeRequestsDir)

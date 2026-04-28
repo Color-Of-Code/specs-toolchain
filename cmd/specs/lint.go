@@ -7,6 +7,7 @@ import (
 
 	"github.com/jdehaan/specs-cli/internal/config"
 	"github.com/jdehaan/specs-cli/internal/lint"
+	"github.com/jdehaan/specs-cli/internal/tools"
 )
 
 func cmdLint(args []string) error {
@@ -32,6 +33,13 @@ func cmdLint(args []string) error {
 	}
 	if cfg.SpecsRoot == "" {
 		return exitWith(2, "could not determine specs root; run from within a specs repo or pass via .specs.yaml")
+	}
+
+	// Managed mode: fetch into the user cache on first use.
+	if cfg.ToolsMode == config.ToolsModeManaged {
+		if _, err := tools.Ensure(cfg.ToolsURL, cfg.ToolsRef); err != nil {
+			return exitWith(1, "fetch managed tools: %v", err)
+		}
 	}
 
 	r := &lint.Result{}
