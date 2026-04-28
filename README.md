@@ -65,14 +65,17 @@ Three paths matter and are referenced throughout this README and in `specs docto
 
 ## Commands
 
-| Command                                                                                               | Purpose                                           |
-| ----------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
-| `specs version` / `--version`                                                                         | print the installed binary version                |
-| `specs doctor`                                                                                        | diagnose environment, layout, version drift       |
-| `specs init [--with-vscode] [--force]`                                                                | configure an existing host (writes `.specs.yaml`) |
-| `specs bootstrap [--at <path>] [--layout folder\|submodule] [--tools-mode submodule\|folder\|vendor]` | scaffold a new host                               |
-| `specs lint [--all\|--links\|--style\|--baselines]`                                                   | run lint checks                                   |
-| `specs tools update [--to <ref>]`                                                                     | update the `.specs-tools` content layer           |
+| Command                                                                                                       | Purpose                                                       |
+| ------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| `specs version` / `--version`                                                                                 | print the installed binary version                            |
+| `specs doctor`                                                                                                | diagnose environment, layout, version drift                   |
+| `specs init [--with-vscode] [--force] [--tools-url URL --tools-ref REF]`                                      | configure an existing host (writes `.specs.yaml`)             |
+| `specs bootstrap [--at <path>] [--layout folder\|submodule] [--tools-mode managed\|submodule\|folder\|vendor]` | scaffold a new host (managed by default)                      |
+| `specs lint [--all\|--links\|--style\|--baselines]`                                                           | run lint checks                                               |
+| `specs tools update [--to <ref>]`                                                                             | update the `.specs-tools` content layer                       |
+| `specs scaffold <kind> [--cr <NNN>] [--title <t>] [--force] [--dry-run] <path>`                               | instantiate a template (`requirement\|feature\|component\|api\|service`) |
+| `specs cr new --id <NNN> --slug <slug> [--title <t>] [--force] [--dry-run]`                                   | create a new change request from the template tree            |
+| `specs cr status`                                                                                             | list change requests with file counts per area                |
 
 All write commands accept `--dry-run` where applicable.
 
@@ -102,7 +105,7 @@ Other optional knobs: `change_requests_dir`, `model_dir`, `baselines_file`, `mar
 
 ## Status
 
-Phase 1 — lint, layout auto-detection, `init`/`bootstrap`/`tools update`, **managed mode** (cache + auto-fetch). **Phase 2** — authoring commands (`scaffold`, `cr`, `link`, `baseline`, `vscode`).
+Phase 1 — lint, layout auto-detection, `init`/`bootstrap`/`tools update`, **managed mode** (cache + auto-fetch). **Phase 2 (in progress)** — `scaffold`, `cr new`, `cr status` shipped; `cr drain`, `link`, `baseline {update,check}`, `vscode init` extensions still pending.
 
 ## Development
 

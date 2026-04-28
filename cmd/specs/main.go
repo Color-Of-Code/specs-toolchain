@@ -26,6 +26,8 @@ func init() {
 		{"bootstrap", "scaffold a new host with .specs.yaml and .specs-tools content", cmdBootstrap},
 		{"lint", "run lint checks (--all|--links|--style|--baselines)", cmdLint},
 		{"tools", "manage the .specs-tools content layer (update)", cmdTools},
+		{"scaffold", "instantiate a template (requirement|feature|component|api|service)", cmdScaffold},
+		{"cr", "change-request operations (new, status)", cmdCR},
 	}
 }
 
