@@ -17,11 +17,13 @@
   "keywords": ["specs", "requirements", "traceability", "markdown"],
   "main": "./out/extension.js",
   "activationEvents": [
+    "onCommand:specs.bootstrap",
     "workspaceContains:.specs.yaml",
     "workspaceContains:specs/.specs.yaml"
   ],
   "contributes": {
     "commands": [
+      { "command": "specs.bootstrap", "title": "Bootstrap host…", "category": "Specs" },
       { "command": "specs.doctor", "title": "Doctor", "category": "Specs" },
       { "command": "specs.lint", "title": "Lint (all checks)", "category": "Specs" },
       { "command": "specs.lint.links", "title": "Lint: Links only", "category": "Specs" },

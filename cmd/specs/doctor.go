@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"os"
@@ -12,10 +13,44 @@ import (
 	"github.com/jdehaan/specs-cli/internal/toolsmanifest"
 )
 
+// doctorJSON is the stable schema consumed by the VS Code extension and
+// other tooling. New fields may be added; existing fields are not
+// removed or repurposed.
+type doctorJSON struct {
+	Version           string            `json:"version"`
+	GOOS              string            `json:"goos"`
+	GOARCH            string            `json:"goarch"`
+	ConfigPath        string            `json:"config_path"`
+	SpecsRoot         string            `json:"specs_root"`
+	HostRoot          string            `json:"host_root"`
+	SpecsMode         string            `json:"specs_mode"`
+	ToolsDir          string            `json:"tools_dir"`
+	ToolsMode         string            `json:"tools_mode"`
+	ToolsURL          string            `json:"tools_url,omitempty"`
+	ToolsRef          string            `json:"tools_ref,omitempty"`
+	ToolsRev          string            `json:"tools_rev,omitempty"`
+	ModelDir          string            `json:"model_dir"`
+	ChangeRequestsDir string            `json:"change_requests_dir"`
+	BaselinesFile     string            `json:"baselines_file"`
+	MarkdownlintCfg   string            `json:"markdownlint_config"`
+	MinSpecsVersion   string            `json:"min_specs_version,omitempty"`
+	TemplatesSchema   int               `json:"templates_schema,omitempty"`
+	Manifest          *manifestJSON     `json:"tools_manifest,omitempty"`
+	Repos             map[string]string `json:"repos"`
+	Compatible        bool              `json:"compatible"`
+	CompatibleMessage string            `json:"compatible_message,omitempty"`
+}
+
+type manifestJSON struct {
+	TemplatesSchema int    `json:"templates_schema"`
+	Version         string `json:"version,omitempty"`
+}
+
 func cmdDoctor(args []string) error {
 	fs := flag.NewFlagSet("doctor", flag.ExitOnError)
+	jsonOut := fs.Bool("json", false, "emit machine-readable JSON to stdout (no human prose, no external-tool checks)")
 	fs.Usage = func() {
-		fmt.Fprintln(os.Stderr, "Usage: specs doctor")
+		fmt.Fprintln(os.Stderr, "Usage: specs doctor [--json]")
 		fmt.Fprintln(os.Stderr, "Diagnose specs CLI environment, layout, and version drift.")
 		fs.PrintDefaults()
 	}
@@ -26,6 +61,10 @@ func cmdDoctor(args []string) error {
 	cfg, err := config.Load("")
 	if err != nil {
 		return err
+	}
+
+	if *jsonOut {
+		return emitDoctorJSON(cfg)
 	}
 
 	fmt.Printf("specs CLI:        %s (%s/%s)\n", Version, runtime.GOOS, runtime.GOARCH)
@@ -146,3 +185,53 @@ func containsByte(s string, c byte) bool {
 
 // joinPath is a small helper used by other commands.
 func joinPath(parts ...string) string { return filepath.Join(parts...) }
+
+func emitDoctorJSON(cfg *config.Resolved) error {
+	repos := map[string]string{}
+	for name, p := range cfg.Repos {
+		repos[name] = p
+	}
+	d := doctorJSON{
+		Version:           Version,
+		GOOS:              runtime.GOOS,
+		GOARCH:            runtime.GOARCH,
+		ConfigPath:        cfg.ConfigPath,
+		SpecsRoot:         cfg.SpecsRoot,
+		HostRoot:          cfg.HostRoot,
+		SpecsMode:         string(cfg.SpecsMode),
+		ToolsDir:          cfg.ToolsDir,
+		ToolsMode:         string(cfg.ToolsMode),
+		ToolsURL:          cfg.ToolsURL,
+		ToolsRef:          cfg.ToolsRef,
+		ModelDir:          cfg.ModelDir,
+		ChangeRequestsDir: cfg.ChangeRequestsDir,
+		BaselinesFile:     cfg.BaselinesFile,
+		MarkdownlintCfg:   cfg.MarkdownlintConfig,
+		MinSpecsVersion:   cfg.MinSpecsVersion,
+		TemplatesSchema:   cfg.TemplatesSchema,
+		Repos:             repos,
+		Compatible:        true,
+	}
+	if cfg.ToolsDir != "" {
+		if rev := gitShortRev(cfg.ToolsDir); rev != "" {
+			d.ToolsRev = rev
+		}
+		if m, err := toolsmanifest.Load(cfg.ToolsDir); err == nil && m != nil {
+			d.Manifest = &manifestJSON{TemplatesSchema: m.TemplatesSchema, Version: m.Version}
+		}
+		if ok, msg := toolsmanifest.Compatible(cfg.TemplatesSchema, d.Manifest.toToolsManifest()); !ok {
+			d.Compatible = false
+			d.CompatibleMessage = msg
+		}
+	}
+	enc := json.NewEncoder(os.Stdout)
+	enc.SetIndent("", "  ")
+	return enc.Encode(d)
+}
+
+func (m *manifestJSON) toToolsManifest() *toolsmanifest.Manifest {
+	if m == nil {
+		return nil
+	}
+	return &toolsmanifest.Manifest{TemplatesSchema: m.TemplatesSchema, Version: m.Version}
+}

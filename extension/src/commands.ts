@@ -1,12 +1,16 @@
 // Phase E1 — palette wrappers around CLI subcommands.
 import * as vscode from "vscode";
 import { runInTerminal, runAndCapture, findSpecsFolder, findSpecsRoot, getOutput } from "./cli";
+import { runBootstrapWizard } from "./bootstrap";
 
 type ScaffoldKind = "requirement" | "feature" | "component" | "api" | "service";
 
 export function registerCommands(context: vscode.ExtensionContext): void {
     const reg = (id: string, fn: () => void | Promise<void>) =>
         context.subscriptions.push(vscode.commands.registerCommand(id, fn));
+
+    // Bootstrap wizard.
+    reg("specs.bootstrap", () => runBootstrapWizard(context));
 
     // Lint family.
     reg("specs.lint", () => runTerminal(context, ["lint"]));
