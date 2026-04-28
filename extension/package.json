@@ -18,6 +18,7 @@
   "main": "./out/extension.js",
   "activationEvents": [
     "onCommand:specs.bootstrap",
+    "onView:specs.changeRequests",
     "workspaceContains:.specs.yaml",
     "workspaceContains:specs/.specs.yaml"
   ],
@@ -42,8 +43,43 @@
       { "command": "specs.cr.status", "title": "Change Request: Status", "category": "Specs" },
       { "command": "specs.cr.drain", "title": "Change Request: Drain", "category": "Specs" },
       { "command": "specs.baseline.check", "title": "Baseline: Check", "category": "Specs" },
-      { "command": "specs.baseline.update", "title": "Baseline: Update", "category": "Specs" }
+      { "command": "specs.baseline.update", "title": "Baseline: Update", "category": "Specs" },
+      { "command": "specs.cr.refresh", "title": "Refresh CR list", "category": "Specs", "icon": "$(refresh)" },
+      { "command": "specs.cr.openDir", "title": "Reveal CR folder", "category": "Specs" }
     ],
+    "views": {
+      "specs": [
+        {
+          "id": "specs.changeRequests",
+          "name": "Change Requests",
+          "contextualTitle": "Specs"
+        }
+      ]
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "specs",
+          "title": "Specs",
+          "icon": "$(book)"
+        }
+      ]
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "specs.cr.refresh",
+          "when": "view == specs.changeRequests",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "specs.cr.openDir",
+          "when": "view == specs.changeRequests && viewItem == specs.cr"
+        }
+      ]
+    },
     "configuration": {
       "title": "Specs",
       "properties": {

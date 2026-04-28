@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"os"
@@ -238,6 +239,7 @@ func cmdCRNew(args []string) error {
 	title := fs.String("title", "", "human-readable title for the H1 (default: from slug)")
 	force := fs.Bool("force", false, "overwrite an existing CR directory")
 	dryRun := fs.Bool("dry-run", false, "print actions without writing")
+	jsonOut := fs.Bool("json", false, "emit JSON describing the created CR (path, id, slug, title)")
 	fs.Usage = func() {
 		fmt.Fprintln(os.Stderr, "Usage: specs cr new --id <NNN> --slug <slug> [--title <title>] [--force] [--dry-run]")
 		fs.PrintDefaults()
@@ -296,6 +298,17 @@ func cmdCRNew(args []string) error {
 	if err := copyCRTree(srcTree, destDir, normID, displayTitle); err != nil {
 		return err
 	}
+	if *jsonOut {
+		rec := struct {
+			Path  string `json:"path"`
+			ID    string `json:"id"`
+			Slug  string `json:"slug"`
+			Title string `json:"title"`
+		}{Path: destDir, ID: normID, Slug: *slug, Title: displayTitle}
+		enc := json.NewEncoder(os.Stdout)
+		enc.SetIndent("", "  ")
+		return enc.Encode(rec)
+	}
 	fmt.Println("wrote", destDir)
 	return nil
 }
@@ -336,7 +349,8 @@ func copyCRTree(src, dest, id, title string) error {
 // id, slug, presence of _index.md, count of files in each subtree.
 func cmdCRStatus(args []string) error {
 	fs := flag.NewFlagSet("cr status", flag.ContinueOnError)
-	fs.Usage = func() { fmt.Fprintln(os.Stderr, "Usage: specs cr status") }
+	jsonOut := fs.Bool("json", false, "emit a JSON array of CR records")
+	fs.Usage = func() { fmt.Fprintln(os.Stderr, "Usage: specs cr status [--json]") }
 	if err := fs.Parse(args); err != nil {
 		return err
 	}
@@ -348,25 +362,55 @@ func cmdCRStatus(args []string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("%-8s %-40s %5s %5s %5s %5s %s\n", "ID", "Slug", "Reqs", "Feats", "Comps", "Arch", "Index")
+	type crRecord struct {
+		ID           string `json:"id"`
+		Slug         string `json:"slug"`
+		Dir          string `json:"dir"`
+		HasIndex     bool   `json:"has_index"`
+		Requirements int    `json:"requirements"`
+		Features     int    `json:"features"`
+		Components   int    `json:"components"`
+		Architecture int    `json:"architecture"`
+	}
+	var records []crRecord
 	for _, e := range entries {
 		if !e.IsDir() || !strings.HasPrefix(e.Name(), "CR-") {
 			continue
 		}
 		dir := filepath.Join(cfg.ChangeRequestsDir, e.Name())
 		id, slug := splitCRName(e.Name())
-		idx := "-"
+		hasIdx := false
 		if _, err := os.Stat(filepath.Join(dir, "_index.md")); err == nil {
+			hasIdx = true
+		}
+		records = append(records, crRecord{
+			ID:           id,
+			Slug:         slug,
+			Dir:          dir,
+			HasIndex:     hasIdx,
+			Requirements: countFiles(filepath.Join(dir, "requirements")),
+			Features:     countFiles(filepath.Join(dir, "features")),
+			Components:   countFiles(filepath.Join(dir, "components")),
+			Architecture: countFiles(filepath.Join(dir, "architecture")),
+		})
+	}
+	if *jsonOut {
+		enc := json.NewEncoder(os.Stdout)
+		enc.SetIndent("", "  ")
+		if records == nil {
+			records = []crRecord{}
+		}
+		return enc.Encode(records)
+	}
+	fmt.Printf("%-8s %-40s %5s %5s %5s %5s %s\n", "ID", "Slug", "Reqs", "Feats", "Comps", "Arch", "Index")
+	for _, r := range records {
+		idx := "-"
+		if r.HasIndex {
 			idx = "ok"
 		}
 		fmt.Printf("%-8s %-40s %5d %5d %5d %5d %s\n",
-			id, truncate(slug, 40),
-			countFiles(filepath.Join(dir, "requirements")),
-			countFiles(filepath.Join(dir, "features")),
-			countFiles(filepath.Join(dir, "components")),
-			countFiles(filepath.Join(dir, "architecture")),
-			idx,
-		)
+			r.ID, truncate(r.Slug, 40),
+			r.Requirements, r.Features, r.Components, r.Architecture, idx)
 	}
 	return nil
 }
