@@ -37,3 +37,19 @@ jobs:
       - name: Type-check & compile
         run: npm run compile
         working-directory: extension
+
+  markdown:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - name: Install
+        run: npm ci
+      - name: Prettier (check)
+        run: npm run format:check
+      - name: markdownlint
+        run: npm run md:lint

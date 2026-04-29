@@ -12,15 +12,19 @@ monorepo. Releases ship a per-platform `.vsix` attached to each
 ## Install
 
 1. Download `specs-<your-platform>.vsix` from the latest release.
-2. `code --install-extension specs-<your-platform>.vsix`.
+2. Install it:
+
+   ```bash
+   code --install-extension specs-<your-platform>.vsix
+   ```
 
 ## Settings
 
-| Setting | Default | Purpose |
-| --- | --- | --- |
-| `specs.useGlobalBinary` | `false` | Prefer `specs` on `PATH` over the bundled binary. |
-| `specs.cliPath` | `""` | Explicit path to a CLI binary. Overrides bundled and PATH. |
-| `specs.toolsAutoUpdate` | `false` | Run `specs tools update` on activation. |
+| Setting                 | Default | Purpose                                                    |
+| ----------------------- | ------- | ---------------------------------------------------------- |
+| `specs.useGlobalBinary` | `false` | Prefer `specs` on `PATH` over the bundled binary.          |
+| `specs.cliPath`         | `""`    | Explicit path to a CLI binary. Overrides bundled and PATH. |
+| `specs.toolsAutoUpdate` | `false` | Run `specs tools update` on activation.                    |
 
 ## Status
 

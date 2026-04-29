@@ -1,0 +1,20 @@
+{
+  "name": "specs-cli-devtools",
+  "private": true,
+  "description": "Repo-level dev tooling for markdown lint/format. Not published.",
+  "scripts": {
+    "md:lint": "markdownlint-cli2 docs/*.md",
+    "md:fix": "markdownlint-cli2 --fix docs/*.md",
+    "md:format": "prettier --write 'docs/*.md'",
+    "md:check": "prettier --check 'docs/*.md' && markdownlint-cli2 docs/*.md",
+    "format": "prettier --write 'docs/*.md'",
+    "format:check": "prettier --check 'docs/*.md'",
+    "build": "pnpm run build:cli && pnpm run build:extension",
+    "build:cli": "cd cli/cmd/specs && go build -o ../../../specs",
+    "build:extension": "pnpm --filter ./extension run compile"
+  },
+  "devDependencies": {
+    "markdownlint-cli2": "^0.14.0",
+    "prettier": "^3.3.3"
+  }
+}
