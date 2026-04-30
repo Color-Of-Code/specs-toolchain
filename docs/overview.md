@@ -7,31 +7,36 @@ and is not covered here.
 ## What the engine is for
 
 A small CLI that lets a team author a structured specification model in
-markdown — requirements, features, components, services, APIs — with
-guaranteed formatting, traceability, and baseline integrity.
+markdown — product requirements, model requirements, features, components,
+services, APIs — with guaranteed formatting, traceability, and baseline
+integrity.
 
 ## The model
 
-Four artifact kinds, scaffolded from templates:
+Five artifact kinds, scaffolded from templates:
 
-| Kind          | Owned by    | Purpose                                                   |
-| ------------- | ----------- | --------------------------------------------------------- |
-| Requirement   | Author      | A single, testable statement of what the system shall do. |
-| Feature       | Analyst     | A grouping that implements one or more requirements.      |
-| Component     | Architect   | A unit of implementation pinned to an upstream repo.      |
-| Service / API | Architect   | An interface between components or with the outside.      |
+| Kind                | Owned by    | Purpose                                                                       |
+| ------------------- | ----------- | ----------------------------------------------------------------------------- |
+| Product requirement | Stakeholder | What was asked for, in the stakeholder's vocabulary. Lives under `product/`.  |
+| Requirement         | Author      | A single, testable re-formulation of one or more product requirements.        |
+| Feature             | Analyst     | A grouping that implements one or more requirements.                          |
+| Component           | Architect   | A unit of implementation pinned to an upstream repo.                          |
+| Service / API       | Architect   | An interface between components or with the outside.                          |
 
-All artifacts live under `model/` and are written in markdown.
+Product requirements live under `product/`; the rest live under `model/`.
+All artifacts are written in markdown.
 
 ## The authoring chain
 
 ```text
 Stakeholder ──► Author ──► Analyst ──► Architect
-   input        requirements   features    components / services / APIs
+ product       requirements   features    components / services / APIs
+ requirement
 ```
 
-Stakeholders describe needs as **change requests**; authors, analysts, and
-architects refine that input into model artifacts. See
+Stakeholders capture demands as **product requirements** inside change
+requests; authors re-formulate them as model **requirements**; analysts and
+architects refine those into features, components, services, and APIs. See
 [actors.md](actors.md) for details. Setup, review, and framework distribution
 work is described as *operational roles* in [roles.md](roles.md).
 
@@ -55,8 +60,10 @@ specs cr drain    ──►  git mv into canonical model paths
 - **Style compliance** — `specs lint --style` enforces the configured
   rules (defaults compiled in, overridable via `style.yaml`).
 - **Bidirectional traceability** — `specs link check` verifies that every
-  requirement listed as `Implemented By` is reciprocally listed in its
-  feature/component, and vice versa.
+  product requirement listed as `Realised By` is reciprocally listed as
+  `Realises` on the model requirement, and that every requirement listed as
+  `Implemented By` is reciprocally listed in its feature/component, and vice
+  versa.
 - **Component baselines** — `specs lint --baselines` detects drift between
   recorded SHAs and the real upstream commits;
   `specs baseline update` rewrites the table.
@@ -77,8 +84,9 @@ specs cr drain    ──►  git mv into canonical model paths
 | Path                        | Contents                                                                                                                   |
 | --------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
 | `.specs.yaml`               | Per-host configuration; resolves paths and framework.                                                                      |
-| `model/`                    | Canonical model artifacts.                                                                                                 |
-| `change-requests/NNN-slug/` | Work in progress, drained into `model/` on merge.                                                                          |
+| `product/`                  | Stakeholder-facing product requirements.                                                                                   |
+| `model/`                    | Canonical model artifacts (requirements, features, components, services, APIs).                                            |
+| `change-requests/NNN-slug/` | Work in progress, drained into `product/` and `model/` on merge.                                                           |
 | `.specs-framework`          | Framework content (templates, lint config). Either fetched into the user cache (managed) or supplied as a local directory. |
 
 ## Getting started

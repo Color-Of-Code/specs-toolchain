@@ -6,14 +6,14 @@ The **Owner** column below names whichever party is normally responsible. Author
 
 ## Authoring (day-to-day)
 
-| Use case                                                         | Owner                                                        |
-| ---------------------------------------------------------------- | ------------------------------------------------------------ |
-| [Author a change request](author-change-request.md)              | Stakeholder → Author *(actors)*                              |
-| [Scaffold a model artifact](scaffold-model-artifact.md)          | Author / Analyst / Architect *(actors)*                      |
-| [Lint and format specifications](lint-and-format.md)             | Any authoring actor                                          |
-| [Verify requirement ↔ implementer links](verify-traceability.md) | Reviewer *(role)* — typically Analyst / Architect themselves |
-| [Maintain component baselines](maintain-baselines.md)            | Architect *(actor)*                                          |
-| [Visualize the traceability graph](visualize-traceability.md)    | Any authoring actor; consumed by Reviewers and Stakeholders  |
+| Use case                                                         | Owner                                                                 |
+| ---------------------------------------------------------------- | --------------------------------------------------------------------- |
+| [Author a change request](author-change-request.md)              | Stakeholder → Author *(actors)*                                       |
+| [Scaffold a model artifact](scaffold-model-artifact.md)          | Author / Analyst / Architect *(actors)*                               |
+| [Lint and format specifications](lint-and-format.md)             | Any authoring actor                                                   |
+| [Verify traceability links](verify-traceability.md)              | Reviewer *(role)* — typically Author / Analyst / Architect themselves |
+| [Maintain component baselines](maintain-baselines.md)            | Architect *(actor)*                                                   |
+| [Visualize the traceability graph](visualize-traceability.md)    | Any authoring actor; consumed by Reviewers and Stakeholders           |
 
 ## Setup and maintenance (one-off or occasional)
 

@@ -35,6 +35,7 @@ The toolchain resolves `framework_url`/`framework_ref` (or `framework_dir`) from
 | --------------------- | ------------------------------------------------------- |
 | `change_requests_dir` | Override the default `change-requests/` path.           |
 | `model_dir`           | Override the default `model/` path.                     |
+| `product_dir`         | Override the default `product/` path.                   |
 | `baselines_file`      | Override the baselines table location.                  |
 | `style_config`        | Path to a custom `style.yaml` for markdown style rules. |
 | `templates_schema`    | Integer schema version expected by the engine.          |

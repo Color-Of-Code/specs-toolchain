@@ -4,11 +4,27 @@
 
 Three paths matter and are referenced throughout the documentation and in `specs doctor`:
 
-- **specs root** — the directory that contains `.specs.yaml`, `model/`, and `change-requests/`. This is what `specs` operates on.
+- **specs root** — the directory that contains `.specs.yaml`, `model/`, `product/`, and `change-requests/`. This is what `specs` operates on.
 - **host repo** — the git repository that contains the specs root. It can _be_ the specs root (when the repo is dedicated to specs) or contain it as a subdirectory or submodule.
 - **framework dir** — where the generic framework content (`templates/`, `process/`, `skills/`, `agents/`, lint config — collectively `.specs-framework`) is materialised. In **managed** mode this is the user cache dir; in **local** mode it is whatever `framework_dir` points at.
 
 `specs doctor` prints all three so you can verify what was detected.
+
+## Product vs. model
+
+Two trees hold persistent specification artifacts:
+
+- `product/` — **product requirements** (PRs): what the stakeholder asked for. Plain prose, the stakeholder's vocabulary, one PR per coherent demand. Sourced from the initial product description and from every subsequent change request.
+- `model/` — **model artifacts**: requirements (MRs), features, components, services, APIs. The MR is a re-formulation of one or more PRs in a precise, testable form that can be implemented and verified.
+
+Each PR has a `## Realised By` section linking to the MRs that realise it; each MR has a `## Realises` section linking back. Together with the existing `Implemented By` / `Requirements` pair this gives a continuous traceability chain:
+
+```text
+product-requirement ──► requirement ──► feature / component / service / api
+       (PR)               (MR)
+```
+
+This separation is what makes impact analysis tractable: edits to a PR surface as drift on every MR that realises it, and conversely a change in MR scope is traceable back to the PR that motivated it. `specs link check` enforces both directions; `specs visualize traceability` renders the full chain.
 
 ## Framework sources
 

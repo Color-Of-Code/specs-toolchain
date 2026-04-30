@@ -2,13 +2,14 @@
 
 ## Summary
 
-Instantiate a single template — requirement, feature, component, API,
-or service — at a target path with placeholders pre-filled.
+Instantiate a single template — product requirement, requirement, feature,
+component, API, or service — at a target path with placeholders pre-filled.
 
 ## Owner
 
 Depends on the artifact kind (see [../actors.md](../actors.md)):
 
+- **Stakeholder** *(actor)* for `product-requirement`.
 - **Author** *(actor)* for `requirement`.
 - **Analyst** *(actor)* for `feature`.
 - **Architect** *(actor)* for `component`, `service`, `api`.
@@ -24,7 +25,11 @@ structure.
 `specs scaffold <kind> [--cr <NNN>] [--title <t>] [--force] [--dry-run]
 <path>`
 
-`<kind>` ∈ `requirement | feature | component | api | service`.
+`<kind>` ∈ `product-requirement | requirement | feature | component | api | service`.
+
+Without `--cr`, `product-requirement` lands directly under `product/<path>.md`;
+the model kinds land under `model/<kind>s/<path>.md`. With `--cr`, every kind
+goes into the matching `change-requests/CR-NNN-*/<kind>s/` subtree.
 
 Or VS Code palette: **Specs: Scaffold …**.
 

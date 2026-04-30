@@ -2,22 +2,22 @@
 
 ## Summary
 
-Create a numbered change request (CR), draft requirements / features /
-components inside it, then drain the finalised files into their
-canonical homes under `model/`.
+Create a numbered change request (CR), draft product requirements,
+requirements, features, and components inside it, then drain the finalised
+files into their canonical homes under `product/` and `model/`.
 
 ## Owner
 
 The authoring chain itself — see [../actors.md](../actors.md):
 
-- **Stakeholder** *(actor)* (initiator) opens the CR with input describing the need.
-- **Author** *(actor)* drafts the requirements, **Analyst** *(actor)* the features, and **Architect** *(actor)* the components / services / APIs inside the same CR.
+- **Stakeholder** *(actor)* opens the CR and drafts the **product requirements** that describe the demand.
+- **Author** *(actor)* re-formulates those into model **requirements**; **Analyst** *(actor)* writes the features; **Architect** *(actor)* the components / services / APIs — all inside the same CR.
 
 ## Purpose
 
 Keep work-in-progress isolated under `change-requests/NNN-slug/` while
-it is being reviewed, and only promote it to the durable model once
-merged. Avoid stepping on other authors editing the same area.
+it is being reviewed, and only promote it to the durable product/model
+once merged. Avoid stepping on other authors editing the same area.
 
 ## Entry point
 
@@ -30,17 +30,18 @@ id is not already taken (unless `--force`).
 
 ## Exit point
 
-After **drain**: all CR-local model files are `git mv`d into the
-canonical model paths and the original CR folder is empty (or removed),
-ready for the merge commit.
+After **drain**: every CR-local artifact is `git mv`d into its canonical
+location — product requirements into `product/`, model artifacts into the
+matching subtree under `model/` — and the original CR folder is empty (or
+removed), ready for the merge commit.
 
 ## Workflow
 
 1. **Create** the CR shell with `specs cr new`. This instantiates the
    `change-request` template tree under `change-requests/NNN-slug/`.
 2. **Author** content. Use [`specs scaffold`](scaffold-model-artifact.md)
-   with `--cr <NNN>` to add requirements, features, components, APIs,
-   or services *inside* the CR folder.
+   with `--cr <NNN>` to add product requirements, requirements, features,
+   components, APIs, or services *inside* the CR folder.
 3. **Iterate** locally:
     - Run [`specs format`](lint-and-format.md) to keep markdown tidy.
     - Run [`specs lint`](lint-and-format.md) for style and
@@ -48,8 +49,8 @@ ready for the merge commit.
     - Run [`specs cr status`](../commands.md) to list CRs and per-area file counts.
 4. **Review** with collaborators on the CR branch.
 5. **Drain** with `specs cr drain --id <NNN>` (use `--dry-run` first,
-   then `--yes` to apply). The engine `git mv`s files into their
-   canonical model locations.
+   then `--yes` to apply). The engine `git mv`s product requirements into
+   `product/` and model artifacts into the matching `model/` subtree.
 6. **Verify** with [`specs link check`](verify-traceability.md) and
    [`specs lint --baselines`](maintain-baselines.md) before merging.
 
