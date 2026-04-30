@@ -95,6 +95,27 @@ func runGit(dir string, args ...string) error {
 	return cmd.Run()
 }
 
+// fetchManaged ensures the user-cache copy of a managed framework exists at
+// the requested ref. An empty ref defaults to "main". When dryRun is true,
+// the action is printed and the call is skipped; the returned path is empty.
+// The resolved ref is always returned so callers can persist it in
+// .specs.yaml.
+func fetchManaged(url, ref string, dryRun bool) (path, resolvedRef string, err error) {
+	resolvedRef = ref
+	if resolvedRef == "" {
+		resolvedRef = "main"
+	}
+	if dryRun {
+		fmt.Printf("would: fetch %s@%s into managed cache\n", url, resolvedRef)
+		return "", resolvedRef, nil
+	}
+	path, err = cache.Ensure(url, resolvedRef)
+	if err != nil {
+		return "", resolvedRef, exitWith(1, "fetch %s@%s: %v", url, resolvedRef, err)
+	}
+	return path, resolvedRef, nil
+}
+
 // updateManagedFramework fetches the requested ref into the user cache and rewrites
 // framework_ref in .specs.yaml so subsequent invocations resolve to it.
 func updateManagedFramework(cfg *config.Resolved, to string) error {
@@ -102,12 +123,9 @@ func updateManagedFramework(cfg *config.Resolved, to string) error {
 	if ref == "" {
 		ref = cfg.FrameworkRef
 	}
-	if ref == "" {
-		ref = "main"
-	}
-	path, err := cache.Ensure(cfg.FrameworkURL, ref)
+	path, _, err := fetchManaged(cfg.FrameworkURL, ref, false)
 	if err != nil {
-		return exitWith(1, "fetch %s@%s: %v", cfg.FrameworkURL, ref, err)
+		return err
 	}
 	fmt.Printf("managed framework cached at %s\n", path)
 

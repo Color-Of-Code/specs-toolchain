@@ -12,6 +12,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 
 	"gopkg.in/yaml.v3"
 )
@@ -129,6 +130,50 @@ func (r *Registry) Resolve(name string) (Entry, error) {
 		return Entry{}, fmt.Errorf("framework %q: %w", name, os.ErrNotExist)
 	}
 	return e, nil
+}
+
+// Lookup loads the user-level registry and resolves a spec of the form
+// "name" or "name@ref". An empty spec resolves the entry called "default".
+//
+// For URL-based entries, an "@ref" suffix overrides the registered ref.
+// "@ref" is rejected on path-based entries. When the requested name is
+// not registered, the returned error wraps os.ErrNotExist and includes a
+// hint pointing at `specs framework add`.
+func Lookup(spec string) (Entry, error) {
+	name, refOverride := splitRef(strings.TrimSpace(spec))
+	if name == "" {
+		name = "default"
+	}
+
+	r, err := Load("")
+	if err != nil {
+		return Entry{}, err
+	}
+	entry, err := r.Resolve(name)
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			path, _ := DefaultPath()
+			return Entry{}, fmt.Errorf("framework %q is not registered (see %s); add it with `specs framework add %s --url <git-url> [--ref <ref>]` or `specs framework add %s --path <dir>`", name, path, name, name)
+		}
+		return Entry{}, err
+	}
+	if refOverride != "" {
+		if entry.Path != "" {
+			return Entry{}, fmt.Errorf("framework %q is path-based; @ref is not allowed", name)
+		}
+		entry.Ref = refOverride
+	}
+	return entry, nil
+}
+
+// splitRef splits "<name>@<ref>" into (name, ref). A spec with no '@'
+// yields (spec, "").
+func splitRef(spec string) (name, ref string) {
+	at := strings.LastIndex(spec, "@")
+	if at <= 0 || at == len(spec)-1 {
+		return spec, ""
+	}
+	return spec[:at], spec[at+1:]
 }
 
 // Add inserts or replaces an entry. Returns an error if the entry is invalid.

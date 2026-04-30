@@ -6,9 +6,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/Color-Of-Code/specs-toolchain/engine/internal/cache"
 	"github.com/Color-Of-Code/specs-toolchain/engine/internal/config"
-	fwsrc "github.com/Color-Of-Code/specs-toolchain/engine/internal/framework"
+	"github.com/Color-Of-Code/specs-toolchain/engine/internal/registry"
 )
 
 // cmdInit configures a host repository for use with the specs toolchain.
@@ -73,7 +72,7 @@ func cmdInit(args []string) error {
 		return exitWith(1, "%s already exists (use --force to overwrite)", cfgPath)
 	}
 
-	src, err := fwsrc.ResolveSource(*frameworkSpec)
+	entry, err := registry.Lookup(*frameworkSpec)
 	if err != nil {
 		return exitWith(2, "resolve framework: %v", err)
 	}
@@ -83,25 +82,19 @@ func cmdInit(args []string) error {
 	}
 
 	f := &config.File{MinSpecsVersion: Version}
-	if src.Path != "" {
-		// Local source: record framework_dir, do not materialise anything.
-		f.FrameworkDir = src.Path
+	if entry.Path != "" {
+		// Local entry: record framework_dir, do not materialise anything.
+		f.FrameworkDir = entry.Path
 	} else {
-		// Remote source: fetch into the managed cache, record url+ref.
-		ref := src.Ref
-		if ref == "" {
-			ref = "main"
+		// URL entry: fetch into the managed cache, record url+ref.
+		path, ref, err := fetchManaged(entry.URL, entry.Ref, *dryRun)
+		if err != nil {
+			return err
 		}
-		if *dryRun {
-			fmt.Printf("would: fetch %s@%s into managed cache\n", src.URL, ref)
-		} else {
-			path, err := cache.Ensure(src.URL, ref)
-			if err != nil {
-				return exitWith(1, "fetch managed framework: %v", err)
-			}
+		if !*dryRun {
 			fmt.Printf("managed framework cached at %s\n", path)
 		}
-		f.FrameworkURL = src.URL
+		f.FrameworkURL = entry.URL
 		f.FrameworkRef = ref
 	}
 

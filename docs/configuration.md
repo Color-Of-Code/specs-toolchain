@@ -13,19 +13,21 @@ repos:
   application_packages: container/redmine/application_packages
 ```
 
-## Dev mode
+## Local mode
 
-Drop `framework_url` / `framework_ref` and point at a checkout instead:
+Drop `framework_url` / `framework_ref` and point at a directory on disk instead:
 
 ```yaml
-framework_dir: ../specs-framework # or .specs-framework (submodule/folder), or absolute path
+framework_dir: ../specs-framework # or .specs-framework, or any absolute path
 min_specs_version: 0.1.0
 repos: ...
 ```
 
+The directory can be a regular git checkout, a submodule, or a vendored snapshot — the toolchain treats them identically and never modifies the directory itself.
+
 ## Using a named framework
 
-When a [framework registry](#framework-registry) is configured, the toolchain resolves `framework_url`/`framework_ref` (or `framework_dir`) from the named entry. The `.specs.yaml` still stores the resolved values — the registry is only consulted at `init` time.
+The toolchain resolves `framework_url`/`framework_ref` (or `framework_dir`) from a named [framework registry](#framework-registry) entry at `specs init` time. The resolved values are written into `.specs.yaml`; subsequent commands read the file directly without consulting the registry again.
 
 ## Optional knobs
 
@@ -100,8 +102,9 @@ frameworks:
 
 ### Resolution order
 
-When `specs init` determines which framework to use:
+`specs init` resolves the framework as follows:
 
-1. Explicit `--framework <name>[@ref]` value (highest priority): looked up in the registry; an `@ref` suffix overrides the registered ref for URL-based entries.
-2. The registry's `default` entry (if it exists and `--framework` is omitted).
-3. Hard-coded fallback: `https://github.com/Color-Of-Code/specs-framework.git@main`.
+1. Explicit `--framework <name>[@ref]` value: looked up in the registry; an `@ref` suffix overrides the registered ref for URL-based entries.
+2. With no `--framework` flag, the registry's `default` entry is used.
+
+If the requested name (or `default`) is not registered, `specs init` fails with a hint pointing at `specs framework add`. URLs and filesystem paths are not accepted on the command line — register them once and refer to them by name.

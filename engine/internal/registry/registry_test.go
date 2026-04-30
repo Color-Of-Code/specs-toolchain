@@ -4,6 +4,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -116,5 +117,107 @@ func TestLoad_InvalidEntry(t *testing.T) {
 	}
 	if _, err := Load(path); err == nil {
 		t.Error("expected error for invalid entry")
+	}
+}
+
+// withDefaultPath redirects user config lookup to a tempdir and writes the
+// supplied registry. Lookup() reads the result.
+func withDefaultPath(t *testing.T, r *Registry) {
+	t.Helper()
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	t.Setenv("XDG_CONFIG_HOME", filepath.Join(home, ".config"))
+	t.Setenv("LocalAppData", filepath.Join(home, "AppData", "Local"))
+	if r != nil {
+		path, err := DefaultPath()
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := r.Save(path); err != nil {
+			t.Fatal(err)
+		}
+	}
+}
+
+func TestLookup_RegisteredURLEntry(t *testing.T) {
+	withDefaultPath(t, &Registry{Frameworks: map[string]Entry{
+		"acme": {URL: "https://example.com/fw.git", Ref: "v1"},
+	}})
+	got, err := Lookup("acme")
+	if err != nil {
+		t.Fatalf("Lookup: %v", err)
+	}
+	if got.URL != "https://example.com/fw.git" || got.Ref != "v1" || got.Path != "" {
+		t.Errorf("got %+v; want URL+Ref entry", got)
+	}
+}
+
+func TestLookup_RegisteredPathEntry(t *testing.T) {
+	withDefaultPath(t, &Registry{Frameworks: map[string]Entry{
+		"local-dev": {Path: "/tmp/fw"},
+	}})
+	got, err := Lookup("local-dev")
+	if err != nil {
+		t.Fatalf("Lookup: %v", err)
+	}
+	if got.Path != "/tmp/fw" || got.URL != "" || got.Ref != "" {
+		t.Errorf("got %+v; want Path entry", got)
+	}
+}
+
+func TestLookup_RefOverride(t *testing.T) {
+	withDefaultPath(t, &Registry{Frameworks: map[string]Entry{
+		"acme": {URL: "https://example.com/fw.git", Ref: "v1"},
+	}})
+	got, err := Lookup("acme@v2")
+	if err != nil {
+		t.Fatalf("Lookup: %v", err)
+	}
+	if got.Ref != "v2" {
+		t.Errorf("ref override not applied: %+v", got)
+	}
+}
+
+func TestLookup_RefOverrideOnPathEntryFails(t *testing.T) {
+	withDefaultPath(t, &Registry{Frameworks: map[string]Entry{
+		"local-dev": {Path: "/tmp/fw"},
+	}})
+	if _, err := Lookup("local-dev@main"); err == nil {
+		t.Error("expected error for @ref on path-based entry")
+	}
+}
+
+func TestLookup_EmptySpecResolvesDefault(t *testing.T) {
+	withDefaultPath(t, &Registry{Frameworks: map[string]Entry{
+		"default": {URL: "https://example.com/default.git"},
+	}})
+	got, err := Lookup("")
+	if err != nil {
+		t.Fatalf("Lookup: %v", err)
+	}
+	if got.URL != "https://example.com/default.git" {
+		t.Errorf("default lookup failed: %+v", got)
+	}
+}
+
+func TestLookup_UnknownNameFails(t *testing.T) {
+	withDefaultPath(t, &Registry{})
+	_, err := Lookup("nope")
+	if err == nil {
+		t.Fatal("expected error for unknown framework")
+	}
+	if !strings.Contains(err.Error(), "specs framework add") {
+		t.Errorf("expected hint about `specs framework add` in error: %v", err)
+	}
+}
+
+func TestLookup_EmptySpecWithEmptyRegistryFails(t *testing.T) {
+	withDefaultPath(t, &Registry{})
+	_, err := Lookup("")
+	if err == nil {
+		t.Fatal("expected error when no default is registered")
+	}
+	if !strings.Contains(err.Error(), `"default"`) {
+		t.Errorf("expected error to mention 'default': %v", err)
 	}
 }
