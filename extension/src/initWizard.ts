@@ -12,7 +12,7 @@ interface InitAnswers {
 const FRAMEWORK_PROMPT =
   "Registered framework name (--framework). Optional `@ref` overrides the registered ref. Leave empty to use the registry's `default` entry.";
 
-export async function runBootstrapWizard(context: vscode.ExtensionContext): Promise<void> {
+export async function runInitWizard(context: vscode.ExtensionContext): Promise<void> {
   const folder = pickFolder();
   if (!folder) {
     return;

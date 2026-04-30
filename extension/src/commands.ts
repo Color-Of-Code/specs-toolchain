@@ -1,47 +1,46 @@
 // Palette wrappers around engine subcommands.
 import * as vscode from "vscode";
 import { runInTerminal, runAndCapture, findSpecsFolder, findSpecsRoot, getOutput } from "./engine";
-import { runBootstrapWizard } from "./bootstrap";
+import { runInitWizard } from "./initWizard";
 
 type ScaffoldKind = "requirement" | "feature" | "component" | "api" | "service";
+
+// Palette commands that just shell out to the engine. Custom-handler commands
+// (wizards, scaffolders, visualize) are registered separately below.
+const TERMINAL_COMMANDS: ReadonlyArray<readonly [string, readonly string[]]> = [
+  ["specs.lint", ["lint"]],
+  ["specs.lint.links", ["lint", "--links"]],
+  ["specs.lint.style", ["lint", "--style"]],
+  ["specs.lint.baselines", ["lint", "--baselines"]],
+  ["specs.doctor", ["doctor"]],
+  ["specs.frameworkUpdate", ["framework", "update"]],
+  ["specs.cr.status", ["cr", "status"]],
+  ["specs.linkCheck", ["link", "check"]],
+];
 
 export function registerCommands(context: vscode.ExtensionContext): void {
   const reg = (id: string, fn: () => void | Promise<void>) =>
     context.subscriptions.push(vscode.commands.registerCommand(id, fn));
 
-  // Bootstrap wizard.
-  reg("specs.bootstrap", () => runBootstrapWizard(context));
+  for (const [id, args] of TERMINAL_COMMANDS) {
+    reg(id, () => runTerminal(context, [...args]));
+  }
 
-  // Lint family.
-  reg("specs.lint", () => runTerminal(context, ["lint"]));
-  reg("specs.lint.links", () => runTerminal(context, ["lint", "--links"]));
-  reg("specs.lint.style", () => runTerminal(context, ["lint", "--style"]));
-  reg("specs.lint.baselines", () => runTerminal(context, ["lint", "--baselines"]));
-
-  // Diagnostics.
-  reg("specs.doctor", () => runTerminal(context, ["doctor"]));
-
-  // Framework content cache.
-  reg("specs.frameworkUpdate", () => runTerminal(context, ["framework", "update"]));
+  // Init wizard.
+  reg("specs.bootstrap", () => runInitWizard(context));
 
   // Visualize (writes a file in model/ and opens it).
   reg("specs.visualize.dot", () => visualize(context, "dot"));
   reg("specs.visualize.mermaid", () => visualize(context, "mermaid"));
 
   // Scaffold a new model file.
-  reg("specs.scaffold.requirement", () => scaffold(context, "requirement"));
-  reg("specs.scaffold.feature", () => scaffold(context, "feature"));
-  reg("specs.scaffold.component", () => scaffold(context, "component"));
-  reg("specs.scaffold.api", () => scaffold(context, "api"));
-  reg("specs.scaffold.service", () => scaffold(context, "service"));
+  for (const kind of ["requirement", "feature", "component", "api", "service"] as const) {
+    reg(`specs.scaffold.${kind}`, () => scaffold(context, kind));
+  }
 
   // Change-requests.
   reg("specs.cr.new", () => crNew(context));
-  reg("specs.cr.status", () => runTerminal(context, ["cr", "status"]));
   reg("specs.cr.drain", () => crDrain(context));
-
-  // Cross-link consistency.
-  reg("specs.linkCheck", () => runTerminal(context, ["link", "check"]));
 
   // Baseline.
   reg("specs.baseline.update", () => baselineUpdate(context));
