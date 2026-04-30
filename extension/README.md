@@ -20,8 +20,7 @@ monorepo. Releases ship a per-platform `.vsix` attached to each
 
 ## Settings
 
-| Setting                 | Default | Purpose                                                       |
-| ----------------------- | ------- | ------------------------------------------------------------- |
-| `specs.useGlobalBinary` | `false` | Prefer `specs` on `PATH` over the bundled binary.             |
+| Setting                 | Default | Purpose                                                             |
+| ----------------------- | ------- | ------------------------------------------------------------------- |
+| `specs.useGlobalBinary` | `false` | Prefer `specs` on `PATH` over the bundled binary.                   |
 | `specs.enginePath`      | `""`    | Explicit path to a specs engine binary. Overrides bundled and PATH. |
-| `specs.toolsAutoUpdate` | `false` | Run `specs tools update` on activation.                       |

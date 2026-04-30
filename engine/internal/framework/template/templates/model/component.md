@@ -1,9 +1,9 @@
-# <title>
+# Title
 
 | Field        | Value |
 | ------------ | ----- |
 | Status       | Draft |
-| Requirements | — |
-| Baseline     | — |
+| Requirements | —     |
+| Baseline     | —     |
 
 ## Description

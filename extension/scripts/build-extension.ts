@@ -42,9 +42,21 @@ const TARGETS: Record<Target, TargetConfig> = {
 };
 
 function usage(): void {
-	console.error("usage: pnpm run package:extension -- <target> [--version <version>]");
+	console.error("usage: pnpm run package:bundled -- [<target>] [--version <version>]");
 	console.error("targets: linux-x64 linux-arm64 darwin-x64 darwin-arm64 win32-x64");
+	console.error("defaults to the host platform/architecture if <target> is omitted");
 	console.error("version defaults to SPECS_VERSION, then extension/package.json version");
+}
+
+function hostTarget(): Target {
+	const platform = os.platform();
+	const arch = os.arch();
+	if (platform === "linux" && arch === "x64") return "linux-x64";
+	if (platform === "linux" && arch === "arm64") return "linux-arm64";
+	if (platform === "darwin" && arch === "x64") return "darwin-x64";
+	if (platform === "darwin" && arch === "arm64") return "darwin-arm64";
+	if (platform === "win32" && arch === "x64") return "win32-x64";
+	throw new Error(`unsupported host platform/arch: ${platform}/${arch}`);
 }
 
 function parseArgs(argv: string[]): { target: Target; versionOverride?: string } {
@@ -79,9 +91,13 @@ function parseArgs(argv: string[]): { target: Target; versionOverride?: string }
 		throw new Error(`unexpected argument: ${arg}`);
 	}
 
-	if (!target || !(target in TARGETS)) {
+	if (!target) {
+		target = hostTarget();
+	}
+
+	if (!(target in TARGETS)) {
 		usage();
-		throw new Error(`unsupported or missing target: ${target ?? "<none>"}`);
+		throw new Error(`unsupported target: ${target}`);
 	}
 
 	return { target, versionOverride };

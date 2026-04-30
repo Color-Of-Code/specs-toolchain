@@ -12,11 +12,11 @@ import (
 )
 
 func cmdFormat(args []string) error {
-	fs := flag.NewFlagSet("fmt", flag.ContinueOnError)
+	fs := flag.NewFlagSet("format", flag.ContinueOnError)
 	check := fs.Bool("check", false, "check formatting without writing (exit 1 if changes needed)")
 	at := fs.String("at", "", "path to format (default: specs root)")
 	fs.Usage = func() {
-		fmt.Fprintln(os.Stderr, "Usage: specs fmt [--check] [--at <path>] [files...]")
+		fmt.Fprintln(os.Stderr, "Usage: specs format [--check] [--at <path>] [files...]")
 		fmt.Fprintln(os.Stderr, "")
 		fmt.Fprintln(os.Stderr, "Format markdown files (normalize whitespace, align tables, ensure LF endings).")
 		fmt.Fprintln(os.Stderr, "Without arguments, formats all .md files under the specs root.")
@@ -103,15 +103,20 @@ func cmdFormat(args []string) error {
 	return nil
 }
 
-// isExcludedPath checks common excluded directories.
+// isExcludedPath checks common excluded directories. Matches any path
+// component (e.g. extension/node_modules/... is excluded).
 func isExcludedPath(rel string) bool {
 	rel = filepath.ToSlash(rel)
-	excluded := []string{
-		".specs-framework/", ".specs-tools/", ".git/",
-		"node_modules/", ".lint/",
+	excluded := map[string]struct{}{
+		".specs-framework": {},
+		".specs-tools":     {},
+		".git":             {},
+		"node_modules":     {},
+		".lint":            {},
+		"dist":             {},
 	}
-	for _, ex := range excluded {
-		if rel == strings.TrimSuffix(ex, "/") || strings.HasPrefix(rel, ex) {
+	for _, part := range strings.Split(rel, "/") {
+		if _, ok := excluded[part]; ok {
 			return true
 		}
 	}

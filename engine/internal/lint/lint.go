@@ -32,21 +32,22 @@ func (r *Result) warnf(format string, a ...any) {
 	r.Warnings = append(r.Warnings, fmt.Sprintf(format, a...))
 }
 
-// Excluded paths (relative to specs root) that mirror the bash lint script
-// and the style config ignore list.
-var excludedPathPrefixes = []string{
-	".specs-framework" + string(os.PathSeparator),
-	".specs-tools" + string(os.PathSeparator),
-	".lint" + string(os.PathSeparator),
-	"node_modules" + string(os.PathSeparator),
-	".git" + string(os.PathSeparator),
+// Excluded path components (relative to specs root) that mirror the bash
+// lint script and the style config ignore list. Matches at any depth
+// (e.g. extension/node_modules/...).
+var excludedPathComponents = map[string]struct{}{
+	".specs-framework": {},
+	".specs-tools":     {},
+	".lint":            {},
+	"node_modules":     {},
+	".git":             {},
+	"dist":             {},
 }
 
 func isExcludedRel(rel string) bool {
 	rel = filepath.ToSlash(rel)
-	for _, p := range excludedPathPrefixes {
-		p2 := filepath.ToSlash(p)
-		if rel == strings.TrimSuffix(p2, "/") || strings.HasPrefix(rel, p2) {
+	for _, part := range strings.Split(rel, "/") {
+		if _, ok := excludedPathComponents[part]; ok {
 			return true
 		}
 	}

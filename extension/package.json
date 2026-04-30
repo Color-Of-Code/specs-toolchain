@@ -224,11 +224,6 @@
           "type": "string",
           "default": "",
           "description": "Explicit path to the specs engine binary. Overrides bundled and PATH lookup."
-        },
-        "specs.toolsAutoUpdate": {
-          "type": "boolean",
-          "default": false,
-          "description": "Run 'specs tools update' on activation."
         }
       }
     }

@@ -1,8 +1,8 @@
-# <title>
+# Title
 
 | Field        | Value |
 | ------------ | ----- |
 | Status       | Draft |
-| Requirements | — |
+| Requirements | —     |
 
 ## Responsibilities

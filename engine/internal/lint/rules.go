@@ -226,11 +226,17 @@ func checkASTRules(path string, data []byte, cfg *StyleRules) []Violation {
 	return violations
 }
 
-// lineOf extracts the 1-based line number from an AST node.
+// lineOf extracts the 1-based line number from an AST node. Inline nodes
+// have no Lines() of their own; walk up to the nearest block ancestor.
 func lineOf(node ast.Node, lines [][]byte) int {
-	if node.Lines().Len() > 0 {
-		seg := node.Lines().At(0)
-		return countLines(lines, seg.Start)
+	for n := node; n != nil; n = n.Parent() {
+		if n.Type() == ast.TypeInline {
+			continue
+		}
+		if n.Lines().Len() > 0 {
+			seg := n.Lines().At(0)
+			return countLines(lines, seg.Start)
+		}
 	}
 	if node.HasChildren() {
 		return lineOf(node.FirstChild(), lines)

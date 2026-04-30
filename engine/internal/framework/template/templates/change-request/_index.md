@@ -1,4 +1,4 @@
-# CR-XXX <title>
+# CR-XXX Title
 
 | Field   | Value |
 | ------- | ----- |
