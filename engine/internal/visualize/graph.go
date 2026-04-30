@@ -1,9 +1,11 @@
-// Package visualize builds traceability graphs from the model tree.
+// Package visualize builds traceability graphs from the model and product
+// trees.
 //
 // The graph captures the same edges that internal/linkcheck verifies:
 //
-//	requirement -> feature/component/api/service   (## Implemented By)
-//	feature/component/... -> requirement           (## Requirements)
+//	product-requirement -> requirement                  (## Realised By)
+//	requirement -> feature/component/api/service        (## Implemented By)
+//	feature/component/... -> requirement                (## Requirements)
 //
 // Output formats: DOT (graphviz) and Mermaid (`flowchart`).
 package visualize
@@ -28,9 +30,9 @@ type Edge struct {
 // (the file's H1, or the basename when no H1 is present).
 type Node struct {
 	ID    string // sanitised, unique per file
-	Path  string // model-relative
+	Path  string // workspace-relative; product-requirement nodes are prefixed with "product/"
 	Label string
-	Kind  string // requirement | feature | component | api | service
+	Kind  string // product-requirement | requirement | feature | component | api | service
 }
 
 // Graph is the resolved traceability graph for a model tree.
@@ -45,14 +47,16 @@ var (
 	h1Re            = regexp.MustCompile(`(?m)^#\s+(.+?)\s*$`)
 )
 
-// Build walks modelDir and returns the graph.
-func Build(modelDir string) (*Graph, error) {
+// Build walks modelDir and productDir and returns the graph. productDir may
+// be empty or non-existent; in that case product-requirement nodes are
+// simply absent from the result.
+func Build(modelDir, productDir string) (*Graph, error) {
 	if _, err := os.Stat(modelDir); err != nil {
 		return nil, fmt.Errorf("model dir %s: %w", modelDir, err)
 	}
 
 	nodesByPath := map[string]*Node{}
-	addNode := func(absPath string) {
+	addModelNode := func(absPath string) {
 		if _, ok := nodesByPath[absPath]; ok {
 			return
 		}
@@ -61,20 +65,42 @@ func Build(modelDir string) (*Graph, error) {
 			return
 		}
 		rel = filepath.ToSlash(rel)
-		kind := kindFor(rel)
+		kind := modelKindFor(rel)
 		if kind == "" {
 			return
 		}
 		nodesByPath[absPath] = &Node{
-			ID:    sanitiseID(rel),
+			ID:    sanitiseID("model/" + rel),
 			Path:  rel,
 			Label: readH1(absPath, rel),
 			Kind:  kind,
 		}
 	}
+	addProductNode := func(absPath string) {
+		if productDir == "" {
+			return
+		}
+		if _, ok := nodesByPath[absPath]; ok {
+			return
+		}
+		rel, err := filepath.Rel(productDir, absPath)
+		if err != nil {
+			return
+		}
+		rel = filepath.ToSlash(rel)
+		display := "product/" + rel
+		nodesByPath[absPath] = &Node{
+			ID:    sanitiseID(display),
+			Path:  display,
+			Label: readH1(absPath, rel),
+			Kind:  "product-requirement",
+		}
+	}
 
 	var edges []Edge
-	walk := func(area, section string) {
+	// walkModel walks an area within modelDir for a given section header,
+	// ensuring nodes on both sides of each edge.
+	walkModel := func(area, section string, addTarget func(string)) {
 		root := filepath.Join(modelDir, area)
 		if _, err := os.Stat(root); err != nil {
 			return
@@ -94,13 +120,50 @@ func Build(modelDir string) (*Graph, error) {
 			if body == "" {
 				return nil
 			}
-			addNode(p)
+			addModelNode(p)
 			for _, t := range linksIn(body) {
 				abs := resolveTarget(p, t)
 				if abs == "" {
 					continue
 				}
-				addNode(abs)
+				addTarget(abs)
+				if _, ok := nodesByPath[abs]; !ok {
+					continue
+				}
+				edges = append(edges, Edge{From: p, To: abs})
+			}
+			return nil
+		})
+	}
+	walkProduct := func(section string) {
+		if productDir == "" {
+			return
+		}
+		if _, err := os.Stat(productDir); err != nil {
+			return
+		}
+		_ = filepath.Walk(productDir, func(p string, info os.FileInfo, err error) error {
+			if err != nil || info == nil || info.IsDir() {
+				return nil
+			}
+			if !strings.HasSuffix(p, ".md") || filepath.Base(p) == "_index.md" {
+				return nil
+			}
+			data, err := os.ReadFile(p)
+			if err != nil {
+				return nil
+			}
+			body := extractSection(string(data), section)
+			if body == "" {
+				return nil
+			}
+			addProductNode(p)
+			for _, t := range linksIn(body) {
+				abs := resolveTarget(p, t)
+				if abs == "" {
+					continue
+				}
+				addModelNode(abs)
 				if _, ok := nodesByPath[abs]; !ok {
 					continue
 				}
@@ -110,9 +173,10 @@ func Build(modelDir string) (*Graph, error) {
 		})
 	}
 
-	walk("requirements", "Implemented By")
+	walkProduct("Realised By")
+	walkModel("requirements", "Implemented By", addModelNode)
 	for _, area := range []string{"features", "components", "apis", "services"} {
-		walk(area, "Requirements")
+		walkModel(area, "Requirements", addModelNode)
 	}
 
 	g := &Graph{}
@@ -150,10 +214,10 @@ func WriteDOT(out io.Writer, g *Graph) error {
 	fmt.Fprintln(out, "digraph traceability {")
 	fmt.Fprintln(out, "  rankdir=LR;")
 	fmt.Fprintln(out, "  node [shape=box, style=\"rounded,filled\", fontname=\"Helvetica\"];")
-	for _, kind := range []string{"requirement", "feature", "component", "api", "service"} {
+	for _, kind := range []string{"product-requirement", "requirement", "feature", "component", "api", "service"} {
 		fmt.Fprintf(out, "  // %s nodes\n", kind)
-		fmt.Fprintf(out, "  subgraph cluster_%s {\n", kind)
-		fmt.Fprintf(out, "    label=%q; style=dashed;\n", strings.ToUpper(kind[:1])+kind[1:]+"s")
+		fmt.Fprintf(out, "  subgraph cluster_%s {\n", strings.ReplaceAll(kind, "-", "_"))
+		fmt.Fprintf(out, "    label=%q; style=dashed;\n", clusterLabel(kind))
 		fmt.Fprintf(out, "    node [fillcolor=%q];\n", colorFor(kind))
 		for _, n := range g.Nodes {
 			if n.Kind != kind {
@@ -176,6 +240,8 @@ func WriteMermaid(out io.Writer, g *Graph) error {
 	for _, n := range g.Nodes {
 		shapeOpen, shapeClose := "[", "]"
 		switch n.Kind {
+		case "product-requirement":
+			shapeOpen, shapeClose = "([", "])"
 		case "requirement":
 			shapeOpen, shapeClose = "[[", "]]"
 		case "component":
@@ -189,7 +255,7 @@ func WriteMermaid(out io.Writer, g *Graph) error {
 	return nil
 }
 
-func kindFor(rel string) string {
+func modelKindFor(rel string) string {
 	switch {
 	case strings.HasPrefix(rel, "requirements/"):
 		return "requirement"
@@ -205,8 +271,28 @@ func kindFor(rel string) string {
 	return ""
 }
 
+func clusterLabel(kind string) string {
+	switch kind {
+	case "product-requirement":
+		return "Product requirements"
+	case "requirement":
+		return "Requirements"
+	case "feature":
+		return "Features"
+	case "component":
+		return "Components"
+	case "api":
+		return "APIs"
+	case "service":
+		return "Services"
+	}
+	return kind
+}
+
 func colorFor(kind string) string {
 	switch kind {
+	case "product-requirement":
+		return "#fce4ec"
 	case "requirement":
 		return "#e3f2fd"
 	case "feature":

@@ -232,10 +232,23 @@ func cmdCRDrain(args []string) error {
 	type move struct{ src, dst string }
 	var moves []move
 
-	// CR-local subtrees that map 1:1 onto model/.
-	for _, area := range []string{"requirements", "features", "components", "architecture"} {
-		srcRoot := filepath.Join(crDir, area)
-		dstRoot := filepath.Join(cfg.ModelDir, area)
+	// Per-area drain destinations. Most CR-local subtrees mirror the model/
+	// layout 1:1; product-requirements/ flattens into the canonical product/
+	// tree (the kind is the tree, no nested folder).
+	type drainArea struct {
+		name string
+		dst  string
+	}
+	areas := []drainArea{
+		{"product-requirements", cfg.ProductDir},
+		{"requirements", filepath.Join(cfg.ModelDir, "requirements")},
+		{"features", filepath.Join(cfg.ModelDir, "features")},
+		{"components", filepath.Join(cfg.ModelDir, "components")},
+		{"architecture", filepath.Join(cfg.ModelDir, "architecture")},
+	}
+	for _, a := range areas {
+		srcRoot := filepath.Join(crDir, a.name)
+		dstRoot := a.dst
 		_ = filepath.Walk(srcRoot, func(p string, info os.FileInfo, walkErr error) error {
 			if walkErr != nil || info == nil || info.IsDir() {
 				return nil

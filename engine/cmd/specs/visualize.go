@@ -47,7 +47,7 @@ func cmdVisualizeTraceability(args []string) error {
 	if err != nil {
 		return err
 	}
-	g, err := visualize.Build(cfg.ModelDir)
+	g, err := visualize.Build(cfg.ModelDir, cfg.ProductDir)
 	if err != nil {
 		return exitWith(1, "%v", err)
 	}

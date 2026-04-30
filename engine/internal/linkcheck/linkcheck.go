@@ -1,9 +1,13 @@
 // Package linkcheck verifies bidirectional consistency between requirements
-// and the features/components/APIs/services that implement them.
+// and the features/components/APIs/services that implement them, and between
+// product requirements and the model requirements that realise them.
 //
 // Conventions in the framework:
 //
-//   - A requirement file (model/requirements/<area>/<NNN>-<slug>.md) has an
+//   - A product-requirement file (product/<area>/*.md) has a `## Realised By`
+//     section listing the model requirements that realise it.
+//   - A requirement file (model/requirements/<area>/*.md) has a `## Realises`
+//     section listing the product requirements it realises, and an
 //     `## Implemented By` section listing the documents that implement it.
 //   - A feature/component/api/service file has a `## Requirements` section
 //     listing the requirements it implements.
@@ -43,13 +47,17 @@ var linkRe = regexp.MustCompile(`\]\(([^)]+)\)`)
 // sectionHeaderRe matches a level-2 heading.
 var sectionHeaderRe = regexp.MustCompile(`(?m)^##\s+(.+?)\s*$`)
 
-// CheckBidirectional walks modelDir and reports edges that lack a reverse.
+// CheckBidirectional walks modelDir and productDir and reports edges that
+// lack a reverse:
 //
-//	requirements/.../*.md  ## Implemented By  -> targets
-//	features|components|apis|services/.../*.md  ## Requirements  -> targets
+//	product/.../*.md                   ## Realised By      -> requirements
+//	model/requirements/.../*.md        ## Realises         -> product
+//	model/requirements/.../*.md        ## Implemented By   -> impls
+//	model/{features,components,apis,services}/.../*.md  ## Requirements -> reqs
 //
-// For each forward edge A -> B, the reverse expectation is asserted on B.
-func CheckBidirectional(out io.Writer, modelDir string, r *Result) {
+// productDir may be empty or non-existent; in that case the product axis is
+// skipped silently and only the requirement <-> implementer pair is checked.
+func CheckBidirectional(out io.Writer, modelDir, productDir string, r *Result) {
 	fmt.Fprintln(out, "== requirement <-> implementer cross-links ==")
 	if _, err := os.Stat(modelDir); err != nil {
 		r.warnf("model dir %s missing; skipping link check", modelDir)
@@ -60,10 +68,12 @@ func CheckBidirectional(out io.Writer, modelDir string, r *Result) {
 		from string // absolute path to source file
 		to   string // absolute path to target file (resolved)
 	}
-	var fromReqs, fromImpls []edge
+	var fromReqs, fromImpls, fromPRs, fromRealises []edge
 
-	walkAreas := func(area, section string, sink *[]edge) {
-		root := filepath.Join(modelDir, area)
+	walkRoot := func(root, section string, sink *[]edge) {
+		if root == "" {
+			return
+		}
 		if _, err := os.Stat(root); err != nil {
 			return
 		}
@@ -93,26 +103,28 @@ func CheckBidirectional(out io.Writer, modelDir string, r *Result) {
 		})
 	}
 
-	walkAreas("requirements", "Implemented By", &fromReqs)
+	walkRoot(filepath.Join(modelDir, "requirements"), "Implemented By", &fromReqs)
+	walkRoot(filepath.Join(modelDir, "requirements"), "Realises", &fromRealises)
 	for _, area := range []string{"features", "components", "apis", "services"} {
-		walkAreas(area, "Requirements", &fromImpls)
+		walkRoot(filepath.Join(modelDir, area), "Requirements", &fromImpls)
 	}
+	walkRoot(productDir, "Realised By", &fromPRs)
 
 	// Build reverse-lookup sets for O(1) symmetry checks.
-	reqHasImpl := make(map[string]map[string]bool) // req -> set of impls
-	for _, e := range fromReqs {
-		if reqHasImpl[e.from] == nil {
-			reqHasImpl[e.from] = map[string]bool{}
+	indexBy := func(es []edge) map[string]map[string]bool {
+		m := make(map[string]map[string]bool)
+		for _, e := range es {
+			if m[e.from] == nil {
+				m[e.from] = map[string]bool{}
+			}
+			m[e.from][e.to] = true
 		}
-		reqHasImpl[e.from][e.to] = true
+		return m
 	}
-	implHasReq := make(map[string]map[string]bool)
-	for _, e := range fromImpls {
-		if implHasReq[e.from] == nil {
-			implHasReq[e.from] = map[string]bool{}
-		}
-		implHasReq[e.from][e.to] = true
-	}
+	reqHasImpl := indexBy(fromReqs)   // req -> set of impls
+	implHasReq := indexBy(fromImpls)  // impl -> set of reqs
+	prHasReq := indexBy(fromPRs)      // PR  -> set of reqs
+	reqHasPR := indexBy(fromRealises) // req -> set of PRs
 
 	count := 0
 	for _, e := range fromReqs {
@@ -134,6 +146,28 @@ func CheckBidirectional(out io.Writer, modelDir string, r *Result) {
 		if !reqHasImpl[e.to][e.from] {
 			r.errf("missing reverse: %s\n  -> Requirements links to %s\n  but %s has no `## Implemented By` link back to it",
 				rel(modelDir, e.from), rel(modelDir, e.to), rel(modelDir, e.to))
+			count++
+		}
+	}
+	for _, e := range fromPRs {
+		// PR -> req: target must be a model requirement.
+		if !inReqArea(modelDir, e.to) {
+			continue
+		}
+		if !reqHasPR[e.to][e.from] {
+			r.errf("missing reverse: %s\n  -> Realised By links to %s\n  but %s has no `## Realises` link back to it",
+				relAny(productDir, e.from), rel(modelDir, e.to), rel(modelDir, e.to))
+			count++
+		}
+	}
+	for _, e := range fromRealises {
+		// req -> PR: target must be in productDir.
+		if productDir == "" || !inProductArea(productDir, e.to) {
+			continue
+		}
+		if !prHasReq[e.to][e.from] {
+			r.errf("missing reverse: %s\n  -> Realises links to %s\n  but %s has no `## Realised By` link back to it",
+				rel(modelDir, e.from), relAny(productDir, e.to), relAny(productDir, e.to))
 			count++
 		}
 	}
@@ -231,10 +265,32 @@ func inImplArea(modelDir, p string) bool {
 		strings.HasPrefix(r, "services/")
 }
 
+// inProductArea returns true when p lives anywhere under productDir.
+func inProductArea(productDir, p string) bool {
+	if productDir == "" {
+		return false
+	}
+	rel, err := filepath.Rel(productDir, p)
+	if err != nil {
+		return false
+	}
+	r := filepath.ToSlash(rel)
+	return r != "" && !strings.HasPrefix(r, "../")
+}
+
 func rel(base, p string) string {
 	r, err := filepath.Rel(base, p)
 	if err != nil {
 		return p
 	}
 	return r
+}
+
+// relAny formats p relative to base when possible, otherwise returns p
+// unchanged. Used for product-tree paths in error messages.
+func relAny(base, p string) string {
+	if base == "" {
+		return p
+	}
+	return rel(base, p)
 }

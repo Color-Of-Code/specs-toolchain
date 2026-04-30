@@ -29,6 +29,7 @@ type doctorJSON struct {
 	FrameworkRef      string            `json:"framework_ref,omitempty"`
 	FrameworkRev      string            `json:"framework_rev,omitempty"`
 	ModelDir          string            `json:"model_dir"`
+	ProductDir        string            `json:"product_dir"`
 	ChangeRequestsDir string            `json:"change_requests_dir"`
 	BaselinesFile     string            `json:"baselines_file"`
 	StyleConfig       string            `json:"style_config"`
@@ -93,6 +94,7 @@ func cmdDoctor(args []string) error {
 		fmt.Println("framework dir:    <missing> (run `specs init` or set framework_url/framework_dir)")
 	}
 	fmt.Printf("model dir:        %s\n", cfg.ModelDir)
+	fmt.Printf("product dir:      %s\n", cfg.ProductDir)
 	fmt.Printf("change-requests:  %s\n", cfg.ChangeRequestsDir)
 	fmt.Printf("baselines file:   %s%s\n", cfg.BaselinesFile, existsSuffix(cfg.BaselinesFile))
 	fmt.Printf("style config:     %s%s\n", cfg.StyleConfig, existsSuffix(cfg.StyleConfig))
@@ -199,6 +201,7 @@ func emitDoctorJSON(cfg *config.Resolved) error {
 		FrameworkURL:      cfg.FrameworkURL,
 		FrameworkRef:      cfg.FrameworkRef,
 		ModelDir:          cfg.ModelDir,
+		ProductDir:        cfg.ProductDir,
 		ChangeRequestsDir: cfg.ChangeRequestsDir,
 		BaselinesFile:     cfg.BaselinesFile,
 		StyleConfig:       cfg.StyleConfig,

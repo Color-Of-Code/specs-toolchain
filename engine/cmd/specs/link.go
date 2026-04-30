@@ -40,7 +40,7 @@ func cmdLinkCheck(args []string) error {
 		return err
 	}
 	r := &linkcheck.Result{}
-	linkcheck.CheckBidirectional(os.Stdout, cfg.ModelDir, r)
+	linkcheck.CheckBidirectional(os.Stdout, cfg.ModelDir, cfg.ProductDir, r)
 	for _, w := range r.Warnings {
 		fmt.Fprintln(os.Stderr, "warning:", w)
 	}

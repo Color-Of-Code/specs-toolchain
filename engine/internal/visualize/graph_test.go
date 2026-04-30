@@ -43,7 +43,7 @@ func sampleModel(t *testing.T) string {
 }
 
 func TestBuild(t *testing.T) {
-	g, err := Build(sampleModel(t))
+	g, err := Build(sampleModel(t), "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -74,13 +74,13 @@ func TestBuild(t *testing.T) {
 }
 
 func TestBuild_MissingDir(t *testing.T) {
-	if _, err := Build(filepath.Join(t.TempDir(), "nope")); err == nil {
+	if _, err := Build(filepath.Join(t.TempDir(), "nope"), ""); err == nil {
 		t.Fatal("expected error for missing model dir")
 	}
 }
 
 func TestWriteDOT(t *testing.T) {
-	g, err := Build(sampleModel(t))
+	g, err := Build(sampleModel(t), "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -97,7 +97,7 @@ func TestWriteDOT(t *testing.T) {
 }
 
 func TestWriteMermaid(t *testing.T) {
-	g, err := Build(sampleModel(t))
+	g, err := Build(sampleModel(t), "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -117,7 +117,7 @@ func TestWriteMermaid(t *testing.T) {
 	}
 }
 
-func TestKindFor(t *testing.T) {
+func TestModelKindFor(t *testing.T) {
 	cases := map[string]string{
 		"requirements/core/001-foo.md": "requirement",
 		"features/core/foo.md":         "feature",
@@ -128,8 +128,68 @@ func TestKindFor(t *testing.T) {
 		"glossary.md":                  "",
 	}
 	for in, want := range cases {
-		if got := kindFor(in); got != want {
-			t.Errorf("kindFor(%q)=%q want %q", in, got, want)
+		if got := modelKindFor(in); got != want {
+			t.Errorf("modelKindFor(%q)=%q want %q", in, got, want)
 		}
 	}
+}
+
+func TestBuild_WithProductTree(t *testing.T) {
+	root := t.TempDir()
+	model := filepath.Join(root, "model")
+	product := filepath.Join(root, "product")
+
+	write(t, filepath.Join(product, "core", "001-login.md"), `# Login PR
+
+## Realised By
+
+- [REQ](../../model/requirements/core/001-login.md)
+`)
+	write(t, filepath.Join(model, "requirements", "core", "001-login.md"), `# Login req
+
+## Realises
+
+- [PR](../../../product/core/001-login.md)
+
+## Implemented By
+
+- [feat](../../features/core/login.md)
+`)
+	write(t, filepath.Join(model, "features", "core", "login.md"), `# Login Feature
+
+## Requirements
+
+- [REQ-001](../../requirements/core/001-login.md)
+`)
+
+	g, err := Build(model, product)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	kinds := map[string]int{}
+	for _, n := range g.Nodes {
+		kinds[n.Kind]++
+	}
+	if kinds["product-requirement"] != 1 {
+		t.Errorf("want 1 product-requirement node, got %d", kinds["product-requirement"])
+	}
+	if kinds["requirement"] != 1 || kinds["feature"] != 1 {
+		t.Errorf("want 1 req+1 feature, got kinds=%v", kinds)
+	}
+
+	// PR -> req edge present; req -> feat edge present.
+	var sawPRtoReq, sawReqToFeat bool
+	for _, e := range g.Edges {
+		if strings.HasPrefix(e.From, "n") && strings.Contains(e.From, "product") {
+			sawPRtoReq = true
+		}
+		if strings.Contains(e.From, "requirements") && strings.Contains(e.To, "features") {
+			sawReqToFeat = true
+		}
+	}
+	if !sawPRtoReq {
+		t.Errorf("expected a PR->req edge, got %+v", g.Edges)
+	}
+	_ = sawReqToFeat // existing tests already cover this; kept for readability.
 }

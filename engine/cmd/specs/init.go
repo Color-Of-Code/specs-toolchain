@@ -34,7 +34,7 @@ import (
 func cmdInit(args []string) error {
 	fs := flag.NewFlagSet("init", flag.ContinueOnError)
 	frameworkSpec := fs.String("framework", "", "registered framework name (or name@ref for URL-based entries); empty resolves the \"default\" entry. Register sources with `specs framework add` first.")
-	withModel := fs.Bool("with-model", false, "create empty model/ and change-requests/ skeletons")
+	withModel := fs.Bool("with-model", false, "create empty model/, product/, and change-requests/ skeletons")
 	withVSCode := fs.Bool("with-vscode", false, "write .vscode/tasks.json")
 	force := fs.Bool("force", false, "overwrite an existing .specs.yaml")
 	dryRun := fs.Bool("dry-run", false, "print actions without performing them")
@@ -131,7 +131,7 @@ func saveConfig(cfgPath string, f *config.File, dryRun bool) error {
 // finalizeInit writes optional skeletons after the config is in place.
 func finalizeInit(specsRoot string, withModel, withVSCode, dryRun bool) error {
 	if withModel {
-		for _, sub := range []string{"model", "change-requests"} {
+		for _, sub := range []string{"model", "product", "change-requests"} {
 			p := filepath.Join(specsRoot, sub)
 			if err := runOrLog(dryRun, "mkdir -p "+p, func() error { return os.MkdirAll(p, 0o755) }); err != nil {
 				return err

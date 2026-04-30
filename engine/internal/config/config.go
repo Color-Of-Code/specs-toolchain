@@ -47,6 +47,7 @@ type File struct {
 	FrameworkRef      string            `yaml:"framework_ref,omitempty"`
 	ChangeRequestsDir string            `yaml:"change_requests_dir,omitempty"`
 	ModelDir          string            `yaml:"model_dir,omitempty"`
+	ProductDir        string            `yaml:"product_dir,omitempty"`
 	BaselinesFile     string            `yaml:"baselines_file,omitempty"`
 	StyleConfig       string            `yaml:"style_config,omitempty"`
 	MinSpecsVersion   string            `yaml:"min_specs_version,omitempty"`
@@ -67,6 +68,7 @@ type Resolved struct {
 	FrameworkRef      string // managed mode: pinned tag/branch/commit
 	ChangeRequestsDir string // absolute path
 	ModelDir          string // absolute path
+	ProductDir        string // absolute path
 	BaselinesFile     string // absolute path; may not exist
 	StyleConfig       string // absolute path to style.yaml; may be empty (use embedded defaults)
 	MinSpecsVersion   string
@@ -151,6 +153,7 @@ func Load(start string) (*Resolved, error) {
 	// Resolve other dirs/files (relative paths anchored to SpecsRoot).
 	r.ChangeRequestsDir = absOr(r.SpecsRoot, f.ChangeRequestsDir, "change-requests")
 	r.ModelDir = absOr(r.SpecsRoot, f.ModelDir, "model")
+	r.ProductDir = absOr(r.SpecsRoot, f.ProductDir, "product")
 	r.BaselinesFile = absOr(r.SpecsRoot, f.BaselinesFile, filepath.Join("model", "baselines", "repo-baseline.md"))
 
 	// Resolve style config: style_config > framework_dir fallback.

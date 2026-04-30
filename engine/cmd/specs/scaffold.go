@@ -29,7 +29,7 @@ import (
 func cmdScaffold(args []string) error {
 	if len(args) == 0 {
 		fmt.Fprintln(os.Stderr, "Usage: specs scaffold <kind> [--cr <NNN>] [--title <title>] [--force] [--dry-run] <path>")
-		fmt.Fprintln(os.Stderr, "Kinds: requirement, feature, component, api, service")
+		fmt.Fprintln(os.Stderr, "Kinds: product-requirement, requirement, feature, component, api, service")
 		return exitWith(2, "missing kind")
 	}
 	kind := args[0]
@@ -71,7 +71,7 @@ func cmdScaffold(args []string) error {
 
 	tplName, dirName, ok := scaffoldKindMap(kind)
 	if !ok {
-		return exitWith(2, "unknown kind %q (want: requirement|feature|component|api|service)", kind)
+		return exitWith(2, "unknown kind %q (want: product-requirement|requirement|feature|component|api|service)", kind)
 	}
 	tplPath := filepath.Join(cfg.FrameworkDir, "templates", tplName)
 	if _, err := os.Stat(tplPath); err != nil {
@@ -87,6 +87,8 @@ func cmdScaffold(args []string) error {
 			return err
 		}
 		destBase = filepath.Join(crDir, dirName)
+	} else if kind == "product-requirement" {
+		destBase = cfg.ProductDir
 	} else {
 		destBase = filepath.Join(cfg.ModelDir, dirName)
 	}
@@ -115,6 +117,8 @@ func cmdScaffold(args []string) error {
 
 func scaffoldKindMap(kind string) (tpl, dir string, ok bool) {
 	switch kind {
+	case "product-requirement":
+		return "product-requirement.md", "product-requirements", true
 	case "requirement":
 		return "requirement.md", "requirements", true
 	case "feature":
@@ -363,14 +367,15 @@ func cmdCRStatus(args []string) error {
 		return err
 	}
 	type crRecord struct {
-		ID           string `json:"id"`
-		Slug         string `json:"slug"`
-		Dir          string `json:"dir"`
-		HasIndex     bool   `json:"has_index"`
-		Requirements int    `json:"requirements"`
-		Features     int    `json:"features"`
-		Components   int    `json:"components"`
-		Architecture int    `json:"architecture"`
+		ID                  string `json:"id"`
+		Slug                string `json:"slug"`
+		Dir                 string `json:"dir"`
+		HasIndex            bool   `json:"has_index"`
+		ProductRequirements int    `json:"product_requirements"`
+		Requirements        int    `json:"requirements"`
+		Features            int    `json:"features"`
+		Components          int    `json:"components"`
+		Architecture        int    `json:"architecture"`
 	}
 	var records []crRecord
 	for _, e := range entries {
@@ -384,14 +389,15 @@ func cmdCRStatus(args []string) error {
 			hasIdx = true
 		}
 		records = append(records, crRecord{
-			ID:           id,
-			Slug:         slug,
-			Dir:          dir,
-			HasIndex:     hasIdx,
-			Requirements: countFiles(filepath.Join(dir, "requirements")),
-			Features:     countFiles(filepath.Join(dir, "features")),
-			Components:   countFiles(filepath.Join(dir, "components")),
-			Architecture: countFiles(filepath.Join(dir, "architecture")),
+			ID:                  id,
+			Slug:                slug,
+			Dir:                 dir,
+			HasIndex:            hasIdx,
+			ProductRequirements: countFiles(filepath.Join(dir, "product-requirements")),
+			Requirements:        countFiles(filepath.Join(dir, "requirements")),
+			Features:            countFiles(filepath.Join(dir, "features")),
+			Components:          countFiles(filepath.Join(dir, "components")),
+			Architecture:        countFiles(filepath.Join(dir, "architecture")),
 		})
 	}
 	if *jsonOut {
@@ -402,15 +408,15 @@ func cmdCRStatus(args []string) error {
 		}
 		return enc.Encode(records)
 	}
-	fmt.Printf("%-8s %-40s %5s %5s %5s %5s %s\n", "ID", "Slug", "Reqs", "Feats", "Comps", "Arch", "Index")
+	fmt.Printf("%-8s %-40s %5s %5s %5s %5s %5s %s\n", "ID", "Slug", "PReqs", "Reqs", "Feats", "Comps", "Arch", "Index")
 	for _, r := range records {
 		idx := "-"
 		if r.HasIndex {
 			idx = "ok"
 		}
-		fmt.Printf("%-8s %-40s %5d %5d %5d %5d %s\n",
+		fmt.Printf("%-8s %-40s %5d %5d %5d %5d %5d %s\n",
 			r.ID, truncate(r.Slug, 40),
-			r.Requirements, r.Features, r.Components, r.Architecture, idx)
+			r.ProductRequirements, r.Requirements, r.Features, r.Components, r.Architecture, idx)
 	}
 	return nil
 }
