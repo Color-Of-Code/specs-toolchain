@@ -6,8 +6,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/Color-Of-Code/specs-toolchain/cli/internal/config"
-	"github.com/Color-Of-Code/specs-toolchain/cli/internal/tools"
+	"github.com/Color-Of-Code/specs-toolchain/engine/internal/config"
+	"github.com/Color-Of-Code/specs-toolchain/engine/internal/tools"
 )
 
 // cmdTools dispatches subcommands managing the .specs-framework content layer.

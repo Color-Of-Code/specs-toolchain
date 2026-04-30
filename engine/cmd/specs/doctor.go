@@ -9,8 +9,8 @@ import (
 	"path/filepath"
 	"runtime"
 
-	"github.com/Color-Of-Code/specs-toolchain/cli/internal/config"
-	"github.com/Color-Of-Code/specs-toolchain/cli/internal/toolsmanifest"
+	"github.com/Color-Of-Code/specs-toolchain/engine/internal/config"
+	"github.com/Color-Of-Code/specs-toolchain/engine/internal/toolsmanifest"
 )
 
 // doctorJSON is the stable schema consumed by the VS Code extension and
@@ -51,7 +51,7 @@ func cmdDoctor(args []string) error {
 	jsonOut := fs.Bool("json", false, "emit machine-readable JSON to stdout (no human prose, no external-tool checks)")
 	fs.Usage = func() {
 		fmt.Fprintln(os.Stderr, "Usage: specs doctor [--json]")
-		fmt.Fprintln(os.Stderr, "Diagnose specs CLI environment, layout, and version drift.")
+		fmt.Fprintln(os.Stderr, "Diagnose specs engine environment, layout, and version drift.")
 		fs.PrintDefaults()
 	}
 	if err := fs.Parse(args); err != nil {
@@ -67,7 +67,7 @@ func cmdDoctor(args []string) error {
 		return emitDoctorJSON(cfg)
 	}
 
-	fmt.Printf("specs CLI:        %s (%s/%s)\n", Version, runtime.GOOS, runtime.GOARCH)
+	fmt.Printf("specs engine:     %s (%s/%s)\n", Version, runtime.GOOS, runtime.GOARCH)
 	if cfg.ConfigPath != "" {
 		fmt.Printf("config file:      %s\n", cfg.ConfigPath)
 	} else {
@@ -124,7 +124,7 @@ func cmdDoctor(args []string) error {
 	reportTool("dot", false)
 
 	if cfg.MinSpecsVersion != "" && Version != "dev" && Version < cfg.MinSpecsVersion {
-		return exitWith(1, "installed CLI %s is older than min_specs_version %s", Version, cfg.MinSpecsVersion)
+		return exitWith(1, "installed engine %s is older than min_specs_version %s", Version, cfg.MinSpecsVersion)
 	}
 	return nil
 }

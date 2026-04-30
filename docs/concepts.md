@@ -16,7 +16,7 @@ A **framework source** is the origin from which `.specs-framework` content is ob
 
 ### Remote URL (default)
 
-A git URL that the CLI clones or caches. This is how most users consume the official `specs-framework` or a company fork:
+A git URL that the engine clones or caches. This is how most users consume the official `specs-framework` or a company fork:
 
 ```yaml
 tools_url: https://github.com/Color-Of-Code/specs-framework.git
@@ -33,7 +33,7 @@ tools_dir: ../specs-framework
 
 ### Empty seed
 
-For organisations that want to build a framework **from scratch** without forking an existing one. The CLI pre-seeds an empty directory with the minimal directory skeleton expected by the toolchain (`templates/`, `process/`, `skills/`, `agents/`). This is an advanced, low-level option — it produces only the bare structure; all content must be authored by the caller.
+For organisations that want to build a framework **from scratch** without forking an existing one. The engine pre-seeds an empty directory with the minimal directory skeleton expected by the toolchain (`templates/`, `process/`, `skills/`, `agents/`). This is an advanced, low-level option — it produces only the bare structure; all content must be authored by the caller.
 
 ```bash
 specs framework seed --out /path/to/my-framework
@@ -96,9 +96,9 @@ specs framework seed --out <dir>           # create an empty skeleton
 
 Regardless of the source, the framework content does **not** have to live inside the host repo. Pick one of two consumption modes:
 
-### managed (default) — hidden, CLI-managed, read-only
+### managed (default) — hidden, engine-managed, read-only
 
-The CLI fetches `.specs-framework` once into the user data dir and re-uses it across every host project on the machine. End users never see the content, never commit it, never update it manually.
+The engine fetches `.specs-framework` once into the user data dir and re-uses it across every host project on the machine. End users never see the content, never commit it, never update it manually.
 
 - Location: `os.UserCacheDir()` + `/specs-toolchain/tools/<ref>/`. On Linux that resolves to `${XDG_CACHE_HOME:-~/.cache}/specs-toolchain/tools/<ref>/`; on macOS `~/Library/Caches/specs-toolchain/tools/<ref>/`; on Windows `%LocalAppData%\specs-toolchain\tools\<ref>`.
 - Version pin: `tools_ref` in `.specs.yaml` (a tag or commit). The host commits **only** `.specs.yaml`; nothing else.

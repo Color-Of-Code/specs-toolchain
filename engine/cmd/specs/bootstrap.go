@@ -7,7 +7,7 @@ import (
 	"os/exec"
 	"path/filepath"
 
-	"github.com/Color-Of-Code/specs-toolchain/cli/internal/tools"
+	"github.com/Color-Of-Code/specs-toolchain/engine/internal/tools"
 )
 
 // cmdBootstrap scaffolds a new host with .specs.yaml pointing at the

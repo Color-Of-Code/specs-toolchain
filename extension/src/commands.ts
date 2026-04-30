@@ -1,6 +1,6 @@
-// Phase E1 — palette wrappers around CLI subcommands.
+// Phase E1 — palette wrappers around engine subcommands.
 import * as vscode from "vscode";
-import { runInTerminal, runAndCapture, findSpecsFolder, findSpecsRoot, getOutput } from "./cli";
+import { runInTerminal, runAndCapture, findSpecsFolder, findSpecsRoot, getOutput } from "./engine";
 import { runBootstrapWizard } from "./bootstrap";
 
 type ScaffoldKind = "requirement" | "feature" | "component" | "api" | "service";

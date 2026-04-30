@@ -1,4 +1,4 @@
-module github.com/Color-Of-Code/specs-toolchain/cli
+module github.com/Color-Of-Code/specs-toolchain/engine
 
 go 1.26.2
 

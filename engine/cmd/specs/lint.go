@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/Color-Of-Code/specs-toolchain/cli/internal/config"
-	"github.com/Color-Of-Code/specs-toolchain/cli/internal/lint"
-	"github.com/Color-Of-Code/specs-toolchain/cli/internal/tools"
+	"github.com/Color-Of-Code/specs-toolchain/engine/internal/config"
+	"github.com/Color-Of-Code/specs-toolchain/engine/internal/lint"
+	"github.com/Color-Of-Code/specs-toolchain/engine/internal/tools"
 )
 
 func cmdLint(args []string) error {

@@ -8,7 +8,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/Color-Of-Code/specs-toolchain/cli/internal/tools"
+	"github.com/Color-Of-Code/specs-toolchain/engine/internal/tools"
 	"gopkg.in/yaml.v3"
 )
 
@@ -34,7 +34,7 @@ const (
 type ToolsMode string
 
 const (
-	ToolsModeManaged   ToolsMode = "managed" // CLI-managed read-only checkout in the user cache dir
+	ToolsModeManaged   ToolsMode = "managed" // engine-managed read-only checkout in the user cache dir
 	ToolsModeSubmodule ToolsMode = "submodule"
 	ToolsModeFolder    ToolsMode = "folder" // plain folder; may or may not be a git working tree
 	ToolsModeVendor    ToolsMode = "vendor" // vendored snapshot (no .git)
@@ -237,7 +237,7 @@ func detectSpecsMode(hostRoot, specsRoot string) SpecsMode {
 			return SpecsModeSubmodule
 		}
 		// .git inside but not a declared submodule: treat as nested repo
-		// (still effectively a submodule from CLI perspective).
+		// (still effectively a submodule from the engine's perspective).
 		return SpecsModeSubmodule
 	}
 	return SpecsModeFolder

@@ -220,10 +220,10 @@
           "default": false,
           "description": "Prefer the 'specs' binary on PATH over the one bundled with the extension."
         },
-        "specs.cliPath": {
+        "specs.enginePath": {
           "type": "string",
           "default": "",
-          "description": "Explicit path to the specs CLI binary. Overrides bundled and PATH lookup."
+          "description": "Explicit path to the specs engine binary. Overrides bundled and PATH lookup."
         },
         "specs.toolsAutoUpdate": {
           "type": "boolean",
@@ -241,7 +241,7 @@
     "fetch-mermaid": "node -e \"require('https').get('https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js',r=>r.pipe(require('fs').createWriteStream('media/mermaid.min.js')))\"",
     "package": "vsce package --no-dependencies",
     "package:bundled": "node --experimental-strip-types ./scripts/build-extension.ts",
-    "deploy-dev": "cd ../cli/cmd/specs && go build -o ../../../specs && cd ../../../extension && pnpm run compile && pnpm run symlink",
+    "deploy-dev": "cd ../engine/cmd/specs && go build -o ../../../specs && cd ../../../extension && pnpm run compile && pnpm run symlink",
     "symlink": "node ./scripts/create-symlink.mjs"
   },
   "devDependencies": {

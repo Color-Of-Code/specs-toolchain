@@ -3,7 +3,7 @@
 VS Code support for the [specs-toolchain](https://github.com/Color-Of-Code/specs-toolchain)
 framework. The extension bundles a matching `specs` binary; once
 installed, every Specs command is reachable from the palette without
-any separate CLI installation.
+any separate engine installation.
 
 This package is part of the [specs-toolchain](https://github.com/Color-Of-Code/specs-toolchain)
 monorepo. Releases ship a per-platform `.vsix` attached to each
@@ -20,11 +20,11 @@ monorepo. Releases ship a per-platform `.vsix` attached to each
 
 ## Settings
 
-| Setting                 | Default | Purpose                                                    |
-| ----------------------- | ------- | ---------------------------------------------------------- |
-| `specs.useGlobalBinary` | `false` | Prefer `specs` on `PATH` over the bundled binary.          |
-| `specs.cliPath`         | `""`    | Explicit path to a CLI binary. Overrides bundled and PATH. |
-| `specs.toolsAutoUpdate` | `false` | Run `specs tools update` on activation.                    |
+| Setting                 | Default | Purpose                                                       |
+| ----------------------- | ------- | ------------------------------------------------------------- |
+| `specs.useGlobalBinary` | `false` | Prefer `specs` on `PATH` over the bundled binary.             |
+| `specs.enginePath`      | `""`    | Explicit path to a specs engine binary. Overrides bundled and PATH. |
+| `specs.toolsAutoUpdate` | `false` | Run `specs tools update` on activation.                       |
 
 ## Status
 

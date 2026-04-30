@@ -1,4 +1,4 @@
-// Command specs is the user-scope CLI that operates on host repositories
+// Command specs is the user-scope engine that operates on host repositories
 // using the specs framework. See README.md for an overview.
 package main
 
@@ -38,7 +38,7 @@ func init() {
 }
 
 func usage() {
-	fmt.Fprintf(os.Stderr, "specs %s — user-scope CLI for the specs framework\n\n", Version)
+	fmt.Fprintf(os.Stderr, "specs %s — user-scope engine for the specs framework\n\n", Version)
 	fmt.Fprintln(os.Stderr, "Usage: specs <command> [flags]")
 	fmt.Fprintln(os.Stderr, "")
 	fmt.Fprintln(os.Stderr, "Commands:")

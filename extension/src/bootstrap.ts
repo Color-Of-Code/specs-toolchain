@@ -1,7 +1,7 @@
 // Phase E2 — bootstrap wizard. Maps multi-step QuickPick answers to a
 // 'specs bootstrap ...' invocation.
 import * as vscode from "vscode";
-import { runInTerminal, runAndCapture, getOutput } from "./cli";
+import { runInTerminal, runAndCapture, getOutput } from "./engine";
 
 interface BootstrapAnswers {
   layout: "folder" | "submodule";

@@ -1,20 +1,20 @@
-.PHONY: lint format format-check check build build-cli build-extension package-extension deploy-dev
+.PHONY: lint format format-check check build build-engine build-extension package-extension deploy-dev
 
 lint:
-	cd cli && go run ./cmd/specs lint --style
+	cd engine && go run ./cmd/specs lint --style
 
 format:
-	cd cli && go run ./cmd/specs format
+	cd engine && go run ./cmd/specs format
 
 format-check:
-	cd cli && go run ./cmd/specs format --check
+	cd engine && go run ./cmd/specs format --check
 
 check: format-check lint
 
-build: build-cli build-extension
+build: build-engine build-extension
 
-build-cli:
-	cd cli/cmd/specs && go build -o ../../../specs
+build-engine:
+	cd engine/cmd/specs && go build -o ../../../specs
 
 build-extension:
 	cd extension && pnpm run compile
@@ -22,5 +22,5 @@ build-extension:
 package-extension:
 	cd extension && pnpm run package:bundled
 
-deploy-dev: build-cli build-extension
+deploy-dev: build-engine build-extension
 	cd extension && pnpm run symlink

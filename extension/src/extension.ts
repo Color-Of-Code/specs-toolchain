@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { getOutput } from "./cli";
+import { getOutput } from "./engine";
 import { registerCommands } from "./commands";
 import { registerCRTree } from "./crTree";
 import { registerModelTree } from "./modelTree";

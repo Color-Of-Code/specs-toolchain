@@ -1,4 +1,4 @@
-// Resolves and invokes the bundled (or user-configured) specs CLI binary.
+// Resolves and invokes the bundled (or user-configured) specs engine binary.
 import * as path from "path";
 import * as fs from "fs";
 import * as cp from "child_process";
@@ -15,14 +15,14 @@ export function getOutput(): vscode.OutputChannel {
 
 /**
  * Resolution order:
- *   1. specs.cliPath setting (absolute path or relative to workspace)
+ *   1. specs.enginePath setting (absolute path or relative to workspace)
  *   2. specs.useGlobalBinary === true: 'specs' on PATH
  *   3. extension's bundled binary at <extensionPath>/bin/specs[.exe]
  *   4. fallback: 'specs' on PATH
  */
 export function resolveBinary(context: vscode.ExtensionContext): string {
   const cfg = vscode.workspace.getConfiguration("specs");
-  const explicit = cfg.get<string>("cliPath", "").trim();
+  const explicit = cfg.get<string>("enginePath", "").trim();
   if (explicit) {
     return explicit;
   }
@@ -41,7 +41,7 @@ export interface RunResult {
   exitCode: number;
 }
 
-/** Runs the CLI and captures stdout/stderr. Logs to the Specs output channel. */
+/** Runs the engine and captures stdout/stderr. Logs to the Specs output channel. */
 export async function runAndCapture(
   context: vscode.ExtensionContext,
   args: string[],
@@ -66,7 +66,7 @@ export async function runAndCapture(
   });
 }
 
-/** Runs the CLI in a dedicated VS Code terminal so the user can interact with it. */
+/** Runs the engine in a dedicated VS Code terminal so the user can interact with it. */
 export function runInTerminal(
   context: vscode.ExtensionContext,
   args: string[],
@@ -75,7 +75,7 @@ export function runInTerminal(
 ): vscode.Terminal {
   const bin = resolveBinary(context);
   const term = vscode.window.createTerminal({ name, cwd });
-  // Quote args containing spaces; CLI args here are simple flags/values.
+  // Quote args containing spaces; engine args here are simple flags/values.
   const quoted = args.map((a) => (/[\s"'$]/.test(a) ? JSON.stringify(a) : a));
   term.sendText(`${bin} ${quoted.join(" ")}`);
   term.show();

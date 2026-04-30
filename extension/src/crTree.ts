@@ -2,7 +2,7 @@
 import * as path from "path";
 import * as fs from "fs";
 import * as vscode from "vscode";
-import { runAndCapture, findSpecsFolder, findSpecsRoot, getOutput } from "./cli";
+import { runAndCapture, findSpecsFolder, findSpecsRoot, getOutput } from "./engine";
 
 interface CRRecord {
   id: string;

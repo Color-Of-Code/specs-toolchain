@@ -2,7 +2,7 @@
 import * as path from "path";
 import * as fs from "fs";
 import * as vscode from "vscode";
-import { findSpecsFolder, findSpecsRoot } from "./cli";
+import { findSpecsFolder, findSpecsRoot } from "./engine";
 
 type Node = DirNode | FileNode;
 

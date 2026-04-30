@@ -3,4 +3,5 @@
 /extension/bin/
 /extension/*.vsix
 /specs
-/cli/specs
+/engine/specs
+/dist/

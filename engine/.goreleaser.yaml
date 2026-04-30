@@ -1,4 +1,4 @@
-# GoReleaser configuration for the specs CLI.
+# GoReleaser configuration for the specs engine.
 # Build cross-platform binaries on `git tag` and publish them via GitHub
 # Releases. See https://goreleaser.com/.
 version: 2

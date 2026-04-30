@@ -14,16 +14,19 @@ jobs:
           go-version: "1.26"
       - name: Vet
         run: go vet ./...
-        working-directory: cli
+        working-directory: engine
       - name: Test
         run: go test ./...
-        working-directory: cli
+        working-directory: engine
       - name: Build
         run: go build ./...
-        working-directory: cli
+        working-directory: engine
 
   extension:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: extension
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -34,11 +37,11 @@ jobs:
         with:
           node-version: "24"
           cache: pnpm
-          cache-dependency-path: pnpm-lock.yaml
+          cache-dependency-path: extension/pnpm-lock.yaml
       - name: Install
         run: pnpm install --frozen-lockfile
       - name: Type-check & compile
-        run: pnpm --filter ./extension run compile
+        run: pnpm run compile
 
   markdown:
     runs-on: ubuntu-latest
@@ -49,7 +52,7 @@ jobs:
           go-version: "1.26"
       - name: Format (check)
         run: go run ./cmd/specs format --check
-        working-directory: cli
+        working-directory: engine
       - name: Markdown style
         run: go run ./cmd/specs lint --style
-        working-directory: cli
+        working-directory: engine

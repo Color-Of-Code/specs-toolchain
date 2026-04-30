@@ -21,13 +21,13 @@ jobs:
           go-version: "1.26"
       - name: Run tests
         run: go test ./...
-        working-directory: cli
+        working-directory: engine
       - uses: goreleaser/goreleaser-action@v6
         with:
           distribution: goreleaser
           version: "~> v2"
           args: release --clean
-          workdir: cli
+          workdir: engine
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Compute version metadata
@@ -38,7 +38,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: goreleaser-dist
-          path: cli/dist/
+          path: engine/dist/
           retention-days: 1
 
   vsix:
@@ -63,16 +63,19 @@ jobs:
         with:
           node-version: "24"
           cache: pnpm
-          cache-dependency-path: pnpm-lock.yaml
-      - name: Install workspace dependencies
+          cache-dependency-path: extension/pnpm-lock.yaml
+      - name: Install dependencies
         run: pnpm install --frozen-lockfile
+        working-directory: extension
       - name: Download GoReleaser binaries
         uses: actions/download-artifact@v4
         with:
           name: goreleaser-dist
+          # build-extension.ts looks for archives under <repo-root>/dist/.
           path: dist/
       - name: Build .vsix for ${{ matrix.target }}
-        run: pnpm run package:extension -- ${{ matrix.target }}
+        run: pnpm run package:bundled -- ${{ matrix.target }}
+        working-directory: extension
         env:
           SPECS_VERSION: ${{ needs.release.outputs.version }}
       - name: Attach .vsix to release

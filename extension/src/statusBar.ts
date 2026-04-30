@@ -1,7 +1,7 @@
 // Phase E4 — Status bar item showing current CR slug or tools_dir SHA.
 import * as cp from "child_process";
 import * as vscode from "vscode";
-import { runAndCapture, findSpecsFolder, findSpecsRoot } from "./cli";
+import { runAndCapture, findSpecsFolder, findSpecsRoot } from "./engine";
 
 interface DoctorJSON {
   version: string;
@@ -14,7 +14,7 @@ interface DoctorJSON {
 }
 
 // Coalesce burst events (e.g. multiple file saves in quick succession) into
-// a single CLI invocation.
+// a single engine invocation.
 const REFRESH_DEBOUNCE_MS = 250;
 
 export function registerStatusBar(context: vscode.ExtensionContext): void {

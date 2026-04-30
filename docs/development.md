@@ -2,16 +2,16 @@
 
 The repository is split in two halves with separate toolchains:
 
-- `cli/` — the Go CLI (the engine).
-- `extension/` — the VS Code extension that wraps the CLI. It is a standalone pnpm project; all Node tooling lives there.
+- `engine/` — the Go engine binary (this is what the `specs` command runs).
+- `extension/` — the VS Code extension that wraps the engine. It is a standalone pnpm project; all Node tooling lives there.
 
 A small top-level [`Makefile`](../Makefile) ties them together for the common cases (build, lint, format, package, deploy-dev).
 
 ## Quick reference
 
 ```bash
-make build              # build CLI + extension
-make build-cli          # CLI binary only -> ./specs
+make build              # build engine + extension
+make build-engine       # engine binary only -> ./specs
 make build-extension    # compile extension TypeScript
 make package-extension  # produce a .vsix
 make deploy-dev         # build + symlink extension into ~/.vscode/extensions
@@ -21,10 +21,10 @@ make format-check       # exit 1 if any .md needs formatting
 make lint               # specs lint --style
 ```
 
-## CLI
+## Engine
 
 ```bash
-cd cli
+cd engine
 go test ./...
 go build ./...
 go install ./cmd/specs    # installs into $(go env GOBIN)
@@ -33,7 +33,7 @@ go install ./cmd/specs    # installs into $(go env GOBIN)
 Or run without installing:
 
 ```bash
-make build-cli            # produces ./specs at the repo root
+make build-engine         # produces ./specs at the repo root
 ```
 
 ## VS Code extension
@@ -51,7 +51,7 @@ See [extension/README.md](../extension/README.md) for the extension-specific set
 
 ## Markdown lint & format
 
-Repo-level docs are checked and formatted entirely by the Go CLI — no Node.js tools required. Style defaults are compiled into the binary ([`cli/internal/lint/style_defaults.yaml`](../cli/internal/lint/style_defaults.yaml)).
+Repo-level docs are checked and formatted entirely by the engine — no Node.js tools required. Style defaults are compiled into the binary ([`engine/internal/lint/style_defaults.yaml`](../engine/internal/lint/style_defaults.yaml)).
 
 ```bash
 specs format             # format all .md files in place
@@ -72,7 +72,7 @@ The `markdown` job in [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) 
 
 ## Releases
 
-Cross-platform release builds are produced by GoReleaser on git tags (`v*.*.*`). See [`cli/.goreleaser.yaml`](../cli/.goreleaser.yaml). Per-platform `.vsix` artifacts are produced by [`extension/scripts/build-extension.ts`](../extension/scripts/build-extension.ts), which stages the matching CLI binary into the extension before packaging:
+Cross-platform release builds are produced by GoReleaser on git tags (`v*.*.*`). See [`engine/.goreleaser.yaml`](../engine/.goreleaser.yaml). Per-platform `.vsix` artifacts are produced by [`extension/scripts/build-extension.ts`](../extension/scripts/build-extension.ts), which stages the matching engine binary into the extension before packaging:
 
 ```bash
 cd extension
@@ -103,7 +103,7 @@ To incrementally test the extension without reinstalling on every iteration, use
    ```
 
    This will:
-   - Build the `specs` CLI binary into `./specs` and (via the script) `extension/bin/`.
+   - Build the `specs` engine binary into `./specs` and (via the script) `extension/bin/`.
    - Compile the TypeScript extension source.
    - Symlink the `extension` folder into `~/.vscode/extensions/Color-Of-Code.specs`.
 

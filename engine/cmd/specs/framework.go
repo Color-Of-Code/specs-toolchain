@@ -7,8 +7,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/Color-Of-Code/specs-toolchain/cli/internal/framework"
-	"github.com/Color-Of-Code/specs-toolchain/cli/internal/registry"
+	"github.com/Color-Of-Code/specs-toolchain/engine/internal/framework"
+	"github.com/Color-Of-Code/specs-toolchain/engine/internal/registry"
 )
 
 func cmdFramework(args []string) error {

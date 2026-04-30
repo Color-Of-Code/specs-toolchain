@@ -10,7 +10,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/Color-Of-Code/specs-toolchain/cli/internal/config"
+	"github.com/Color-Of-Code/specs-toolchain/engine/internal/config"
 )
 
 // cmdBaseline dispatches `specs baseline <subcommand>`.
