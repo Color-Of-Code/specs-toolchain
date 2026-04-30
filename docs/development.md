@@ -19,13 +19,13 @@ See [extension/README.md](../extension/README.md) for the extension-specific set
 
 ## Markdown lint & format
 
-Repo-level docs are checked with [markdownlint-cli2](https://github.com/DavidAnson/markdownlint-cli2) and formatted with [Prettier](https://prettier.io/). Configs: [`.markdownlint-cli2.jsonc`](../.markdownlint-cli2.jsonc), [`.prettierrc.json`](../.prettierrc.json), [`.prettierignore`](../.prettierignore).
+Repo-level docs are checked by the built-in Go style linter (`specs lint --style`) and formatted with [Prettier](https://prettier.io/). Configs: [`cli/internal/lint/style_defaults.yaml`](../cli/internal/lint/style_defaults.yaml) (compiled-in defaults), [`.prettierrc.json`](../.prettierrc.json), [`.prettierignore`](../.prettierignore).
 
 ```bash
-pnpm install         # once, at the repo root
-pnpm run md:check    # prettier --check + markdownlint (what CI runs)
+pnpm install         # once, at the repo root (for Prettier)
+pnpm run md:check    # prettier --check + specs lint --style (what CI runs)
 pnpm run md:format   # prettier --write
-pnpm run md:fix      # markdownlint --fix
+pnpm run md:lint     # specs lint --style only
 ```
 
 The `markdown` job in [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) runs the same checks on every push and pull request.
@@ -53,9 +53,9 @@ pnpm run build:extension   # builds VS Code extension
 All markdown lint and formatting checks only apply to `docs/*.md`.
 
 ```bash
-pnpm run md:check   # prettier --check + markdownlint (docs only)
+pnpm run md:check   # prettier --check + specs lint --style (docs only)
 pnpm run md:format  # prettier --write (docs only)
-pnpm run md:fix     # markdownlint --fix (docs only)
+pnpm run md:lint    # specs lint --style (docs only)
 ```
 
 The `markdown` job in [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) runs the same checks on every push and pull request.

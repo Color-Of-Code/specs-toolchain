@@ -44,6 +44,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26"
       - uses: pnpm/action-setup@v4
         with:
           version: 10.33.2
@@ -57,5 +60,6 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Prettier (check)
         run: pnpm run format:check
-      - name: markdownlint
-        run: pnpm run md:lint
+      - name: Markdown style
+        run: go run ./cmd/specs lint --style
+        working-directory: cli

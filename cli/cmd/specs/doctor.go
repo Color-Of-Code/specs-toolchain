@@ -32,7 +32,7 @@ type doctorJSON struct {
 	ModelDir          string            `json:"model_dir"`
 	ChangeRequestsDir string            `json:"change_requests_dir"`
 	BaselinesFile     string            `json:"baselines_file"`
-	MarkdownlintCfg   string            `json:"markdownlint_config"`
+	StyleConfig       string            `json:"style_config"`
 	MinSpecsVersion   string            `json:"min_specs_version,omitempty"`
 	TemplatesSchema   int               `json:"templates_schema,omitempty"`
 	Manifest          *manifestJSON     `json:"tools_manifest,omitempty"`
@@ -120,7 +120,6 @@ func cmdDoctor(args []string) error {
 	fmt.Println("")
 	fmt.Println("External tools:")
 	reportTool("git", true)
-	reportTool("markdownlint-cli2", false)
 	reportTool("pnpm", false)
 	reportTool("dot", false)
 
@@ -206,7 +205,7 @@ func emitDoctorJSON(cfg *config.Resolved) error {
 		ModelDir:          cfg.ModelDir,
 		ChangeRequestsDir: cfg.ChangeRequestsDir,
 		BaselinesFile:     cfg.BaselinesFile,
-		MarkdownlintCfg:   cfg.StyleConfig,
+		StyleConfig:       cfg.StyleConfig,
 		MinSpecsVersion:   cfg.MinSpecsVersion,
 		TemplatesSchema:   cfg.TemplatesSchema,
 		Repos:             repos,

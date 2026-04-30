@@ -29,14 +29,13 @@ When a [framework registry](#framework-registry) is configured, the toolchain re
 
 ## Optional knobs
 
-| Key                   | Purpose                                                             |
-| --------------------- | ------------------------------------------------------------------- |
-| `change_requests_dir` | Override the default `change-requests/` path.                       |
-| `model_dir`           | Override the default `model/` path.                                 |
-| `baselines_file`      | Override the baselines table location.                              |
-| `style_config`        | Path to a custom `style.yaml` for markdown style rules.             |
-| `markdownlint_config` | **Deprecated** — alias for `style_config` (kept for compatibility). |
-| `templates_schema`    | Path to a custom templates schema.                                  |
+| Key                   | Purpose                                                 |
+| --------------------- | ------------------------------------------------------- |
+| `change_requests_dir` | Override the default `change-requests/` path.           |
+| `model_dir`           | Override the default `model/` path.                     |
+| `baselines_file`      | Override the baselines table location.                  |
+| `style_config`        | Path to a custom `style.yaml` for markdown style rules. |
+| `templates_schema`    | Path to a custom templates schema.                      |
 
 Defaults are sensible; only set these when overriding.
 

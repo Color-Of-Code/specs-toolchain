@@ -44,40 +44,38 @@ const (
 // File is the on-disk schema for .specs.yaml. Unknown fields are tolerated
 // so newer hosts can opt-in to features without breaking older binaries.
 type File struct {
-	SpecsRoot          string            `yaml:"specs_root,omitempty"`
-	ToolsDir           string            `yaml:"tools_dir,omitempty"`
-	ToolsURL           string            `yaml:"tools_url,omitempty"`
-	ToolsRef           string            `yaml:"tools_ref,omitempty"`
-	ChangeRequestsDir  string            `yaml:"change_requests_dir,omitempty"`
-	ModelDir           string            `yaml:"model_dir,omitempty"`
-	BaselinesFile      string            `yaml:"baselines_file,omitempty"`
-	StyleConfig        string            `yaml:"style_config,omitempty"`
-	MarkdownlintConfig string            `yaml:"markdownlint_config,omitempty"` // deprecated: use style_config
-	MinSpecsVersion    string            `yaml:"min_specs_version,omitempty"`
-	TemplatesSchema    int               `yaml:"templates_schema,omitempty"`
-	Repos              map[string]string `yaml:"repos,omitempty"`
+	SpecsRoot         string            `yaml:"specs_root,omitempty"`
+	ToolsDir          string            `yaml:"tools_dir,omitempty"`
+	ToolsURL          string            `yaml:"tools_url,omitempty"`
+	ToolsRef          string            `yaml:"tools_ref,omitempty"`
+	ChangeRequestsDir string            `yaml:"change_requests_dir,omitempty"`
+	ModelDir          string            `yaml:"model_dir,omitempty"`
+	BaselinesFile     string            `yaml:"baselines_file,omitempty"`
+	StyleConfig       string            `yaml:"style_config,omitempty"`
+	MinSpecsVersion   string            `yaml:"min_specs_version,omitempty"`
+	TemplatesSchema   int               `yaml:"templates_schema,omitempty"`
+	Repos             map[string]string `yaml:"repos,omitempty"`
 }
 
 // Resolved is a fully-resolved configuration with absolute paths and
 // detected layout modes.
 type Resolved struct {
-	ConfigPath         string // empty when no .specs.yaml was found
-	SpecsRoot          string // absolute path; always set
-	HostRoot           string // git repo root; equal to SpecsRoot if mode is repo-root or standalone
-	SpecsMode          SpecsMode
-	ToolsDir           string // absolute path; may be empty if missing
-	ToolsMode          ToolsMode
-	ToolsURL           string // managed mode: upstream git URL
-	ToolsRef           string // managed mode: pinned tag/branch/commit
-	ChangeRequestsDir  string // absolute path
-	ModelDir           string // absolute path
-	BaselinesFile      string // absolute path; may not exist
-	StyleConfig        string // absolute path to style.yaml; may be empty (use embedded defaults)
-	MarkdownlintConfig string // deprecated: resolved from style_config or legacy markdownlint_config
-	MinSpecsVersion    string
-	TemplatesSchema    int
-	Repos              map[string]string // logical name -> path relative to HostRoot's parent (workspace)
-	Source             *File             // raw file (nil if no .specs.yaml)
+	ConfigPath        string // empty when no .specs.yaml was found
+	SpecsRoot         string // absolute path; always set
+	HostRoot          string // git repo root; equal to SpecsRoot if mode is repo-root or standalone
+	SpecsMode         SpecsMode
+	ToolsDir          string // absolute path; may be empty if missing
+	ToolsMode         ToolsMode
+	ToolsURL          string // managed mode: upstream git URL
+	ToolsRef          string // managed mode: pinned tag/branch/commit
+	ChangeRequestsDir string // absolute path
+	ModelDir          string // absolute path
+	BaselinesFile     string // absolute path; may not exist
+	StyleConfig       string // absolute path to style.yaml; may be empty (use embedded defaults)
+	MinSpecsVersion   string
+	TemplatesSchema   int
+	Repos             map[string]string // logical name -> path relative to HostRoot's parent (workspace)
+	Source            *File             // raw file (nil if no .specs.yaml)
 }
 
 // Load discovers and parses .specs.yaml starting from start (or CWD if empty).
@@ -158,18 +156,12 @@ func Load(start string) (*Resolved, error) {
 	r.ModelDir = absOr(r.SpecsRoot, f.ModelDir, "model")
 	r.BaselinesFile = absOr(r.SpecsRoot, f.BaselinesFile, filepath.Join("model", "baselines", "repo-baseline.md"))
 
-	// Resolve style config: style_config > markdownlint_config (deprecated) > tools_dir fallback.
-	switch {
-	case f.StyleConfig != "":
+	// Resolve style config: style_config > tools_dir fallback.
+	if f.StyleConfig != "" {
 		r.StyleConfig = absRelTo(r.SpecsRoot, f.StyleConfig)
-	case f.MarkdownlintConfig != "":
-		// Deprecated key: still honour it but resolve to the new field.
-		r.StyleConfig = absRelTo(r.SpecsRoot, f.MarkdownlintConfig)
-	case r.ToolsDir != "":
+	} else if r.ToolsDir != "" {
 		r.StyleConfig = filepath.Join(r.ToolsDir, "lint", "style.yaml")
 	}
-	// Keep MarkdownlintConfig in sync for any legacy callers.
-	r.MarkdownlintConfig = r.StyleConfig
 
 	r.MinSpecsVersion = f.MinSpecsVersion
 	r.TemplatesSchema = f.TemplatesSchema

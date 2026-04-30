@@ -33,7 +33,7 @@ func (r *Result) warnf(format string, a ...any) {
 }
 
 // Excluded paths (relative to specs root) that mirror the bash lint script
-// and the markdownlint config ignore list.
+// and the style config ignore list.
 var excludedPathPrefixes = []string{
 	".specs-framework" + string(os.PathSeparator),
 	".specs-tools" + string(os.PathSeparator),
