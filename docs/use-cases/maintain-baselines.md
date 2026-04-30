@@ -6,6 +6,11 @@ Verify or refresh the SHAs recorded for each tracked component in the
 baselines table, so reviewers see exactly which upstream commit a
 component spec was written against.
 
+## Actors
+
+**Architect** — owns components and the baselines table that pins each
+of them to an upstream commit.
+
 ## Purpose
 
 Detect when an upstream `repos:` entry has moved on without the spec

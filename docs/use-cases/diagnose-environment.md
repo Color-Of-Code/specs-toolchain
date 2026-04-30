@@ -6,6 +6,10 @@ Print the engine version, resolved specs root, host repo, framework dir,
 framework mode, and any version-drift warnings between the binary and the
 framework content.
 
+## Actors
+
+Any actor — first call when something is not working locally.
+
 ## Purpose
 
 A first-call diagnostic for any "something's not working" report. It

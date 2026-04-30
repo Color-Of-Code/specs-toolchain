@@ -6,6 +6,13 @@ Check that every requirement listed as `Implemented By` a feature or
 component is reciprocally listed in that feature/component's
 `Requirements` section, and vice versa.
 
+## Actors
+
+- **Analyst** — owns the requirement ↔ feature links.
+- **Architect** — owns the feature ↔ component / service / API links.
+
+Both run this check before submitting a CR for review.
+
 ## Purpose
 
 Guarantee bidirectional traceability across the model. One-way links

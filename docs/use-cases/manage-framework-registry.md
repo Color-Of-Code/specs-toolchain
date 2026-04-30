@@ -7,6 +7,11 @@ Maintain the user-level mapping from short framework names (e.g.
 `specs init` and `specs bootstrap` can be invoked with `--framework
 <name>` instead of raw URLs.
 
+## Actors
+
+Per-machine setup task — performed by each contributor on their own
+workstation. Not part of the authoring chain.
+
 ## Purpose
 
 Standardise framework selection across teams and machines, and keep

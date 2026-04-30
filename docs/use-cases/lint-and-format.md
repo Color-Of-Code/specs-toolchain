@@ -5,6 +5,11 @@
 Auto-format markdown files in place, and run style / link / baseline
 lint checks against the specs tree.
 
+## Actors
+
+Any actor — Author, Analyst, and Architect all run these commands while
+iterating on a CR. Also run by CI on every push.
+
 ## Purpose
 
 Keep the corpus consistent (table alignment, list markers, blank lines,

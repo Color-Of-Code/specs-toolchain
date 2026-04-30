@@ -6,6 +6,11 @@ Create a brand-new repository (or sub-tree) ready to author specs in: a
 `.specs.yaml` configuration, the chosen framework-mode wiring, and optional
 `model/` and `.vscode/tasks.json` scaffolding — in a single command.
 
+## Actors
+
+One-off setup task — performed by whoever stands up the host repo. Not
+part of the authoring chain.
+
 ## Purpose
 
 Get from "empty directory" to "I can run `specs lint` and start writing

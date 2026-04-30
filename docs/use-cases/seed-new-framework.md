@@ -7,6 +7,11 @@ Pre-create the minimal directory skeleton of a fresh framework
 directory, ready for the caller to author content and publish to a git
 remote.
 
+## Actors
+
+Advanced setup task — performed once by an organisation that needs a
+bespoke framework. Not part of the authoring chain in a host project.
+
 ## Purpose
 
 Support organisations that need a bespoke framework rather than forking

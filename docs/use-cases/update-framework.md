@@ -5,6 +5,11 @@
 Refresh `.specs-framework` content (templates, process, skills, agents,
 lint config) to a newer ref of the configured framework source.
 
+## Actors
+
+Maintenance task — performed by whoever maintains the host repo. Not
+part of the authoring chain.
+
 ## Purpose
 
 Pick up template fixes, new lint rules, or process updates published by

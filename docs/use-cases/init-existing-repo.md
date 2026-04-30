@@ -6,6 +6,11 @@ Add specs configuration (`.specs.yaml`, optional VS Code tasks) to a
 repository that already exists and may already contain a `model/` or
 `change-requests/` tree.
 
+## Actors
+
+One-off setup task — performed by whoever onboards the existing repo to
+the toolchain. Not part of the authoring chain.
+
 ## Purpose
 
 Onboard an existing project to the specs toolchain non-destructively:

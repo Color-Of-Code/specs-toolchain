@@ -5,6 +5,11 @@
 Write `.vscode/tasks.json` so every specs engine command is reachable
 from the VS Code task runner with no manual JSON authoring.
 
+## Actors
+
+One-off setup task — performed by any contributor who wants editor
+integration locally.
+
 ## Purpose
 
 Give contributors who prefer the editor (over the terminal) a one-key

@@ -6,6 +6,15 @@ Create a numbered change request (CR), draft requirements / features /
 components inside it, then drain the finalised files into their
 canonical homes under `model/`.
 
+## Actors
+
+- **Stakeholder** (initiator) — opens the CR with input describing the
+  need.
+- **Author** drafts the requirements, **Analyst** the features, and
+  **Architect** the components / services / APIs inside the same CR.
+
+See [../actors.md](../actors.md).
+
 ## Purpose
 
 Keep work-in-progress isolated under `change-requests/NNN-slug/` while

@@ -5,6 +5,14 @@
 Instantiate a single template — requirement, feature, component, API,
 or service — at a target path with placeholders pre-filled.
 
+## Actors
+
+Main actor depends on the artifact kind:
+
+- **Author** for `requirement`.
+- **Analyst** for `feature`.
+- **Architect** for `component`, `service`, `api`.
+
 ## Purpose
 
 Eliminate copy-paste of template files; ensure new artifacts start
