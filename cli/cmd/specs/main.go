@@ -32,6 +32,7 @@ func init() {
 		{"link", "verify cross-links between requirements and implementers (check)", cmdLink},
 		{"visualize", "render the traceability graph (DOT or Mermaid)", cmdVisualize},
 		{"vscode", "manage .vscode integration (init)", cmdVSCode},
+		{"framework", "manage framework templates (seed)", cmdFramework},
 	}
 }
 
