@@ -1,0 +1,30 @@
+# Visualize the traceability graph
+
+## Summary
+
+Render the requirement ↔ feature ↔ component graph as a Graphviz DOT
+file or a Mermaid diagram suitable for embedding in markdown.
+
+## Purpose
+
+Provide reviewers and stakeholders a visual overview of coverage: which
+requirements have implementers, which are orphaned, and how features
+fan out into components.
+
+## Entry point
+
+`specs visualize traceability [--format dot|mermaid] [--out <path>]`
+
+Or VS Code palette: **Specs: Visualize traceability** (renders in a
+webview).
+
+## Exit point
+
+A graph written to `--out` (or stdout) in the requested format. The
+VS Code panel shows the rendered diagram interactively.
+
+## Iteration
+
+Regenerate after every CR drain or before review milestones. Pair
+with [`specs link check`](verify-traceability.md) to confirm the
+visual gaps correspond to real link asymmetries (or vice versa).
