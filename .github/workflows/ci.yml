@@ -47,19 +47,9 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: "1.26"
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 10.33.2
-          run_install: false
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "24"
-          cache: pnpm
-          cache-dependency-path: pnpm-lock.yaml
-      - name: Install
-        run: pnpm install --frozen-lockfile
-      - name: Prettier (check)
-        run: pnpm run format:check
+      - name: Format (check)
+        run: go run ./cmd/specs format --check
+        working-directory: cli
       - name: Markdown style
         run: go run ./cmd/specs lint --style
         working-directory: cli

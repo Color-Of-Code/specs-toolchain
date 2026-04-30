@@ -1,8 +1,0 @@
-node_modules/
-extension/node_modules/
-extension/out/
-extension/bin/
-cli/dist/
-dist/
-*.vsix
-pnpm-lock.yaml

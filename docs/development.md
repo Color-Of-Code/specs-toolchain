@@ -19,12 +19,19 @@ See [extension/README.md](../extension/README.md) for the extension-specific set
 
 ## Markdown lint & format
 
-Repo-level docs are checked by the built-in Go style linter (`specs lint --style`) and formatted with [Prettier](https://prettier.io/). Configs: [`cli/internal/lint/style_defaults.yaml`](../cli/internal/lint/style_defaults.yaml) (compiled-in defaults), [`.prettierrc.json`](../.prettierrc.json), [`.prettierignore`](../.prettierignore).
+Repo-level docs are checked and formatted entirely by the Go CLI — no Node.js tools required. Style defaults are compiled into the binary ([`cli/internal/lint/style_defaults.yaml`](../cli/internal/lint/style_defaults.yaml)).
 
 ```bash
-pnpm install         # once, at the repo root (for Prettier)
-pnpm run md:check    # prettier --check + specs lint --style (what CI runs)
-pnpm run md:format   # prettier --write
+specs format          # format all .md files in place
+specs format --check  # check formatting (exit 1 if changes needed)
+specs lint --style    # run style lint rules
+```
+
+Or via pnpm scripts:
+
+```bash
+pnpm run md:format   # specs format
+pnpm run md:check    # specs format --check + specs lint --style (what CI runs)
 pnpm run md:lint     # specs lint --style only
 ```
 
@@ -47,18 +54,6 @@ You can also build them individually:
 pnpm run build:cli         # builds Go CLI
 pnpm run build:extension   # builds VS Code extension
 ```
-
-## Markdown lint & format (docs only)
-
-All markdown lint and formatting checks only apply to `docs/*.md`.
-
-```bash
-pnpm run md:check   # prettier --check + specs lint --style (docs only)
-pnpm run md:format  # prettier --write (docs only)
-pnpm run md:lint    # specs lint --style (docs only)
-```
-
-The `markdown` job in [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) runs the same checks on every push and pull request.
 
 ## Releases
 
