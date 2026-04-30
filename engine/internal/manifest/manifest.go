@@ -1,7 +1,7 @@
-// Package toolsmanifest reads tools-manifest.yaml from a framework dir to
+// Package manifest reads framework-manifest.yaml from a framework dir to
 // support compatibility checks between the host's pinned templates_schema
 // and the materialised content layer.
-package toolsmanifest
+package manifest
 
 import (
 	"fmt"
@@ -12,7 +12,7 @@ import (
 )
 
 // FileName is the canonical name of the manifest at the root of a framework dir.
-const FileName = "tools-manifest.yaml"
+const FileName = "framework-manifest.yaml"
 
 // Manifest mirrors the on-disk schema. Unknown fields are tolerated so the
 // manifest can grow without breaking older binaries.
@@ -21,13 +21,13 @@ type Manifest struct {
 	Version         string `yaml:"version,omitempty"`
 }
 
-// Load reads <toolsDir>/tools-manifest.yaml. Returns (nil, nil) when the
+// Load reads <frameworkDir>/framework-manifest.yaml. Returns (nil, nil) when the
 // file is absent so callers can choose to enforce or ignore.
-func Load(toolsDir string) (*Manifest, error) {
-	if toolsDir == "" {
+func Load(frameworkDir string) (*Manifest, error) {
+	if frameworkDir == "" {
 		return nil, nil
 	}
-	p := filepath.Join(toolsDir, FileName)
+	p := filepath.Join(frameworkDir, FileName)
 	data, err := os.ReadFile(p)
 	if err != nil {
 		if os.IsNotExist(err) {

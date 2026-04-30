@@ -9,7 +9,7 @@ import (
 	"runtime"
 
 	"github.com/Color-Of-Code/specs-toolchain/engine/internal/config"
-	"github.com/Color-Of-Code/specs-toolchain/engine/internal/toolsmanifest"
+	"github.com/Color-Of-Code/specs-toolchain/engine/internal/manifest"
 )
 
 // doctorJSON is the stable schema consumed by the VS Code extension and
@@ -103,13 +103,13 @@ func cmdDoctor(args []string) error {
 		fmt.Printf("templates_schema: %d (host requires)\n", cfg.TemplatesSchema)
 	}
 	if cfg.FrameworkDir != "" {
-		if m, err := toolsmanifest.Load(cfg.FrameworkDir); err != nil {
+		if m, err := manifest.Load(cfg.FrameworkDir); err != nil {
 			fmt.Printf("framework manifest: error: %v\n", err)
 		} else if m == nil {
 			fmt.Println("framework manifest: <not present>")
 		} else {
 			fmt.Printf("framework manifest: templates_schema=%d version=%s\n", m.TemplatesSchema, m.Version)
-			if ok, msg := toolsmanifest.Compatible(cfg.TemplatesSchema, m); !ok {
+			if ok, msg := manifest.Compatible(cfg.TemplatesSchema, m); !ok {
 				return exitWith(1, "%s", msg)
 			}
 		}
@@ -211,10 +211,10 @@ func emitDoctorJSON(cfg *config.Resolved) error {
 		if rev := gitShortRev(cfg.FrameworkDir); rev != "" {
 			d.FrameworkRev = rev
 		}
-		if m, err := toolsmanifest.Load(cfg.FrameworkDir); err == nil && m != nil {
+		if m, err := manifest.Load(cfg.FrameworkDir); err == nil && m != nil {
 			d.Manifest = &manifestJSON{TemplatesSchema: m.TemplatesSchema, Version: m.Version}
 		}
-		if ok, msg := toolsmanifest.Compatible(cfg.TemplatesSchema, d.Manifest.toToolsManifest()); !ok {
+		if ok, msg := manifest.Compatible(cfg.TemplatesSchema, d.Manifest.toManifest()); !ok {
 			d.Compatible = false
 			d.CompatibleMessage = msg
 		}
@@ -224,9 +224,9 @@ func emitDoctorJSON(cfg *config.Resolved) error {
 	return enc.Encode(d)
 }
 
-func (m *manifestJSON) toToolsManifest() *toolsmanifest.Manifest {
+func (m *manifestJSON) toManifest() *manifest.Manifest {
 	if m == nil {
 		return nil
 	}
-	return &toolsmanifest.Manifest{TemplatesSchema: m.TemplatesSchema, Version: m.Version}
+	return &manifest.Manifest{TemplatesSchema: m.TemplatesSchema, Version: m.Version}
 }

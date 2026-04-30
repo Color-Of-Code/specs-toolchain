@@ -8,7 +8,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/Color-Of-Code/specs-toolchain/engine/internal/tools"
+	"github.com/Color-Of-Code/specs-toolchain/engine/internal/cache"
 	"gopkg.in/yaml.v3"
 )
 
@@ -134,7 +134,7 @@ func Load(start string) (*Resolved, error) {
 	r.FrameworkURL = f.FrameworkURL
 	r.FrameworkRef = f.FrameworkRef
 	if f.FrameworkURL != "" {
-		cachePath, err := tools.ManagedPath(f.FrameworkRef)
+		cachePath, err := cache.ManagedPath(f.FrameworkRef)
 		if err != nil {
 			return nil, fmt.Errorf("resolve managed cache path: %w", err)
 		}

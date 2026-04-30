@@ -8,8 +8,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/Color-Of-Code/specs-toolchain/engine/internal/cache"
 	"github.com/Color-Of-Code/specs-toolchain/engine/internal/config"
-	"github.com/Color-Of-Code/specs-toolchain/engine/internal/tools"
 )
 
 // cmdScaffold instantiates one of the canonical templates from .specs-framework
@@ -61,7 +61,7 @@ func cmdScaffold(args []string) error {
 		return exitWith(2, "could not determine specs root")
 	}
 	if cfg.FrameworkMode == config.FrameworkModeManaged {
-		if _, err := tools.Ensure(cfg.FrameworkURL, cfg.FrameworkRef); err != nil {
+		if _, err := cache.Ensure(cfg.FrameworkURL, cfg.FrameworkRef); err != nil {
 			return exitWith(1, "fetch managed framework: %v", err)
 		}
 	}
@@ -259,7 +259,7 @@ func cmdCRNew(args []string) error {
 		return err
 	}
 	if cfg.FrameworkMode == config.FrameworkModeManaged {
-		if _, err := tools.Ensure(cfg.FrameworkURL, cfg.FrameworkRef); err != nil {
+		if _, err := cache.Ensure(cfg.FrameworkURL, cfg.FrameworkRef); err != nil {
 			return exitWith(1, "fetch managed framework: %v", err)
 		}
 	}

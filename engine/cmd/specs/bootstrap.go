@@ -7,7 +7,7 @@ import (
 	"os/exec"
 	"path/filepath"
 
-	"github.com/Color-Of-Code/specs-toolchain/engine/internal/tools"
+	"github.com/Color-Of-Code/specs-toolchain/engine/internal/cache"
 )
 
 // cmdBootstrap scaffolds a new host with .specs.yaml pointing at the
@@ -140,7 +140,7 @@ func cmdBootstrap(args []string) error {
 		if *dryRun {
 			fmt.Printf("would: fetch %s@%s into managed cache\n", *frameworkURL, *frameworkRef)
 		} else {
-			path, err := tools.Ensure(*frameworkURL, *frameworkRef)
+			path, err := cache.Ensure(*frameworkURL, *frameworkRef)
 			if err != nil {
 				return exitWith(1, "fetch managed framework: %v", err)
 			}

@@ -100,7 +100,7 @@ Regardless of the source, the framework content does **not** have to live inside
 
 The engine fetches `.specs-framework` once into the user data dir and re-uses it across every host project on the machine. End users never see the content, never commit it, never update it manually.
 
-- Location: `os.UserCacheDir()` + `/specs-toolchain/tools/<ref>/`. On Linux that resolves to `${XDG_CACHE_HOME:-~/.cache}/specs-toolchain/tools/<ref>/`; on macOS `~/Library/Caches/specs-toolchain/tools/<ref>/`; on Windows `%LocalAppData%\specs-toolchain\tools\<ref>`.
+- Location: `os.UserCacheDir()` + `/specs-toolchain/framework/<ref>/`. On Linux that resolves to `${XDG_CACHE_HOME:-~/.cache}/specs-toolchain/framework/<ref>/`; on macOS `~/Library/Caches/specs-toolchain/framework/<ref>/`; on Windows `%LocalAppData%\specs-toolchain\framework\<ref>`.
 - Version pin: `framework_ref` in `.specs.yaml` (a tag or commit). The host commits **only** `.specs.yaml`; nothing else.
 - Refreshing: `specs framework update --to <ref>` rewrites `framework_ref` and re-fetches if needed.
 - This is what `specs bootstrap` and `specs init` give you by default.

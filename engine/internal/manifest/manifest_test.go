@@ -1,4 +1,4 @@
-package toolsmanifest
+package manifest
 
 import (
 	"os"

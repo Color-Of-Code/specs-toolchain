@@ -7,7 +7,7 @@ import "embed"
 
 // Template is the embedded filesystem rooted at the template/ directory.
 // It contains the minimal framework skeleton (templates/, lint/, process/,
-// skills/, agents/, tools-manifest.yaml).
+// skills/, agents/, framework-manifest.yaml).
 //
 //go:embed all:template
 var Template embed.FS

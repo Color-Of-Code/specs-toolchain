@@ -7,10 +7,10 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/Color-Of-Code/specs-toolchain/engine/internal/cache"
 	"github.com/Color-Of-Code/specs-toolchain/engine/internal/config"
 	"github.com/Color-Of-Code/specs-toolchain/engine/internal/framework"
 	"github.com/Color-Of-Code/specs-toolchain/engine/internal/registry"
-	"github.com/Color-Of-Code/specs-toolchain/engine/internal/tools"
 )
 
 func cmdFramework(args []string) error {
@@ -107,7 +107,7 @@ func updateManagedFramework(cfg *config.Resolved, to string) error {
 	if ref == "" {
 		ref = "main"
 	}
-	path, err := tools.Ensure(cfg.FrameworkURL, ref)
+	path, err := cache.Ensure(cfg.FrameworkURL, ref)
 	if err != nil {
 		return exitWith(1, "fetch %s@%s: %v", cfg.FrameworkURL, ref, err)
 	}

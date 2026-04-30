@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/Color-Of-Code/specs-toolchain/engine/internal/cache"
 	"github.com/Color-Of-Code/specs-toolchain/engine/internal/config"
 	"github.com/Color-Of-Code/specs-toolchain/engine/internal/lint"
-	"github.com/Color-Of-Code/specs-toolchain/engine/internal/tools"
 )
 
 func cmdLint(args []string) error {
@@ -37,7 +37,7 @@ func cmdLint(args []string) error {
 
 	// Managed mode: fetch into the user cache on first use.
 	if cfg.FrameworkMode == config.FrameworkModeManaged {
-		if _, err := tools.Ensure(cfg.FrameworkURL, cfg.FrameworkRef); err != nil {
+		if _, err := cache.Ensure(cfg.FrameworkURL, cfg.FrameworkRef); err != nil {
 			return exitWith(1, "fetch managed framework: %v", err)
 		}
 	}
