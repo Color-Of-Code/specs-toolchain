@@ -38,7 +38,7 @@ ready for the merge commit.
     - Run [`specs format`](lint-and-format.md) to keep markdown tidy.
     - Run [`specs lint`](lint-and-format.md) for style and
       cross-reference checks.
-    - Run [`specs cr status`](#) to list CRs and per-area file counts.
+    - Run [`specs cr status`](../commands.md) to list CRs and per-area file counts.
 4. **Review** with collaborators on the CR branch.
 5. **Drain** with `specs cr drain --id <NNN>` (use `--dry-run` first,
    then `--yes` to apply). The engine `git mv`s files into their
