@@ -59,7 +59,7 @@ also keeps component baselines aligned with their upstream repositories.
 
 - Scaffolds artifacts:
   `specs scaffold component|service|api --cr <NNN> <path>`.
-- Maintains the components table: `specs baseline update`.
+- Maintains canonical component baselines: `specs baseline update`.
 - Verifies traceability: `specs graph validate`,
   `specs visualize traceability`.
 

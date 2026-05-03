@@ -1,66 +1,205 @@
 package main
 
-import "testing"
+import (
+	"os"
+	"os/exec"
+	"path/filepath"
+	"strings"
+	"testing"
 
-func TestRewriteBaselineRow_PreservesPadding(t *testing.T) {
-	// Cell 4 (the SHA) has surrounding whitespace that should survive.
-	line := "| comp | repo | / | `oldsha` | 2025-01-01 |"
-	repos := map[string]string{"repo": "."}
-	// We can't actually run `git log` in unit tests; use a path-style that
-	// triggers the placeholder skip path so the function returns without
-	// invoking git.
-	skip := "| comp | repo | _placeholder_ | `oldsha` | 2025-01-01 |"
-	got, action, err := rewriteBaselineRow(skip, repos, t.TempDir(), "")
+	"github.com/Color-Of-Code/specs-toolchain/engine/internal/config"
+	"github.com/Color-Of-Code/specs-toolchain/engine/internal/graph"
+)
+
+func TestCmdBaselineUpdateWritesCanonicalGraph(t *testing.T) {
+	workspace := t.TempDir()
+	specsDir := filepath.Join(workspace, "specs")
+	repoDir := filepath.Join(workspace, "repos", "host")
+	for _, path := range []string{
+		filepath.Join(specsDir, "model", "traceability"),
+		filepath.Join(specsDir, "model", "components"),
+		repoDir,
+	} {
+		if err := os.MkdirAll(path, 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
+	initGitRepo(t, repoDir, map[string]string{"README.md": "# upstream\n"})
+	actualCommit := gitOutputTest(t, repoDir, "rev-parse", "HEAD")
+
+	if err := config.Save(filepath.Join(specsDir, config.FileName), &config.File{
+		Repos: map[string]string{"host-repo": "repos/host"},
+	}); err != nil {
+		t.Fatal(err)
+	}
+	componentPath := filepath.Join(specsDir, "model", "components", "alpha-component.md")
+	componentBody := strings.Join([]string{
+		"# Alpha Component",
+		"",
+		"| Field | Value |",
+		"| ----- | ----- |",
+		"| Status | Draft |",
+		"| Requirements | — |",
+		"| Baseline | — |",
+	}, "\n")
+	if err := os.WriteFile(componentPath, []byte(componentBody), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := graph.Write(filepath.Join(specsDir, "model", "traceability", "graph.yaml"), &graph.Graph{
+		Baselines: []graph.BaselineEntry{{
+			Component: "model/components/alpha-component",
+			Repo:      "host-repo",
+			Path:      "/",
+			Commit:    strings.Repeat("0", 40),
+		}},
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	cwd, err := os.Getwd()
 	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
+		t.Fatal(err)
 	}
-	if action != "skip-placeholder" {
-		t.Fatalf("expected skip-placeholder, got %q", action)
-	}
-	if got != skip {
-		t.Fatalf("placeholder rows must be returned unchanged\nin:  %q\nout: %q", skip, got)
+	defer func() {
+		if err := os.Chdir(cwd); err != nil {
+			t.Fatalf("restore cwd: %v", err)
+		}
+	}()
+	if err := os.Chdir(specsDir); err != nil {
+		t.Fatal(err)
 	}
 
-	// Filter mismatch -> skip-filter, line unchanged.
-	got, action, err = rewriteBaselineRow(line, repos, t.TempDir(), "other")
+	if err := cmdBaselineUpdate(nil); err != nil {
+		t.Fatalf("cmdBaselineUpdate() error = %v", err)
+	}
+
+	reloaded, err := graph.Load(filepath.Join(specsDir, "model", "traceability", "graph.yaml"))
 	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
+		t.Fatal(err)
 	}
-	if action != "skip-filter" {
-		t.Fatalf("expected skip-filter, got %q", action)
+	if len(reloaded.Baselines) != 1 || reloaded.Baselines[0].Commit != actualCommit {
+		t.Fatalf("updated baselines = %+v, want commit %s", reloaded.Baselines, actualCommit)
 	}
-	if got != line {
-		t.Fatalf("filtered rows must be returned unchanged")
+	updatedComponent, err := os.ReadFile(componentPath)
+	if err != nil {
+		t.Fatal(err)
 	}
-
-	// Unknown repo -> error.
-	_, _, err = rewriteBaselineRow(line, map[string]string{}, t.TempDir(), "")
-	if err == nil {
-		t.Fatal("expected error for unknown repo")
-	}
-
-	// Non-table line -> skip-placeholder.
-	got, action, _ = rewriteBaselineRow("not a table line", repos, t.TempDir(), "")
-	if action != "skip-placeholder" || got != "not a table line" {
-		t.Fatalf("non-table lines must skip; got action=%q out=%q", action, got)
+	if !strings.Contains(string(updatedComponent), "`host-repo:/@"+actualCommit+"`") {
+		t.Fatalf("component baseline field not regenerated:\n%s", string(updatedComponent))
 	}
 }
 
-func TestReplacePreservingPadding(t *testing.T) {
-	cases := []struct {
-		in    string
-		value string
-		want  string
-	}{
-		{" `oldsha` ", "newsha", " `newsha` "},
-		{"   `x`   ", "y", "   `y`   "},
-		{"`x`", "y", "`y`"},
-		{"  ", "y", "  `y`  "},
-	}
-	for _, tc := range cases {
-		got := replacePreservingPadding(tc.in, tc.value)
-		if got != tc.want {
-			t.Errorf("replacePreservingPadding(%q,%q)=%q want %q", tc.in, tc.value, got, tc.want)
+func TestCmdBaselineUpdateDryRunDoesNotWriteGraph(t *testing.T) {
+	workspace := t.TempDir()
+	specsDir := filepath.Join(workspace, "specs")
+	repoDir := filepath.Join(workspace, "repos", "host")
+	for _, path := range []string{
+		filepath.Join(specsDir, "model", "traceability"),
+		filepath.Join(specsDir, "model", "components"),
+		repoDir,
+	} {
+		if err := os.MkdirAll(path, 0o755); err != nil {
+			t.Fatal(err)
 		}
+	}
+	initGitRepo(t, repoDir, map[string]string{"README.md": "# upstream\n"})
+
+	if err := config.Save(filepath.Join(specsDir, config.FileName), &config.File{
+		Repos: map[string]string{"host-repo": "repos/host"},
+	}); err != nil {
+		t.Fatal(err)
+	}
+	componentPath := filepath.Join(specsDir, "model", "components", "alpha-component.md")
+	componentBody := strings.Join([]string{
+		"# Alpha Component",
+		"",
+		"| Field | Value |",
+		"| ----- | ----- |",
+		"| Status | Draft |",
+		"| Requirements | — |",
+		"| Baseline | — |",
+	}, "\n")
+	if err := os.WriteFile(componentPath, []byte(componentBody), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	oldCommit := strings.Repeat("1", 40)
+	if err := graph.Write(filepath.Join(specsDir, "model", "traceability", "graph.yaml"), &graph.Graph{
+		Baselines: []graph.BaselineEntry{{
+			Component: "model/components/alpha-component",
+			Repo:      "host-repo",
+			Path:      "/",
+			Commit:    oldCommit,
+		}},
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	cwd, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() {
+		if err := os.Chdir(cwd); err != nil {
+			t.Fatalf("restore cwd: %v", err)
+		}
+	}()
+	if err := os.Chdir(specsDir); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := cmdBaselineUpdate([]string{"--dry-run"}); err != nil {
+		t.Fatalf("cmdBaselineUpdate() dry-run error = %v", err)
+	}
+
+	reloaded, err := graph.Load(filepath.Join(specsDir, "model", "traceability", "graph.yaml"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(reloaded.Baselines) != 1 || reloaded.Baselines[0].Commit != oldCommit {
+		t.Fatalf("dry-run baselines = %+v, want unchanged commit %s", reloaded.Baselines, oldCommit)
+	}
+	updatedComponent, err := os.ReadFile(componentPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(string(updatedComponent), "host-repo:/@") {
+		t.Fatalf("dry-run should not rewrite component markdown:\n%s", string(updatedComponent))
+	}
+}
+
+func initGitRepo(t *testing.T, dir string, files map[string]string) {
+	t.Helper()
+	runGitTest(t, dir, "init")
+	runGitTest(t, dir, "config", "user.email", "specs@example.com")
+	runGitTest(t, dir, "config", "user.name", "Specs Tests")
+	for path, content := range files {
+		fullPath := filepath.Join(dir, path)
+		if err := os.MkdirAll(filepath.Dir(fullPath), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(fullPath, []byte(content), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	runGitTest(t, dir, "add", ".")
+	runGitTest(t, dir, "commit", "-m", "initial")
+}
+
+func gitOutputTest(t *testing.T, dir string, args ...string) string {
+	t.Helper()
+	cmd := exec.Command("git", append([]string{"-C", dir}, args...)...)
+	out, err := cmd.Output()
+	if err != nil {
+		t.Fatalf("git %s: %v", strings.Join(args, " "), err)
+	}
+	return strings.TrimSpace(string(out))
+}
+
+func runGitTest(t *testing.T, dir string, args ...string) {
+	t.Helper()
+	cmd := exec.Command("git", append([]string{"-C", dir}, args...)...)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("git %s: %v\n%s", strings.Join(args, " "), err, string(output))
 	}
 }

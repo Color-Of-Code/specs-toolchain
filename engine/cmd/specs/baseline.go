@@ -7,10 +7,10 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"regexp"
 	"strings"
 
 	"github.com/Color-Of-Code/specs-toolchain/engine/internal/config"
+	"github.com/Color-Of-Code/specs-toolchain/engine/internal/graph"
 )
 
 // cmdBaseline dispatches `specs baseline <subcommand>`.
@@ -33,22 +33,18 @@ func cmdBaseline(args []string) error {
 	}
 }
 
-// baselineRowRe matches a Components-table row whose first cell is a link.
-var baselineRowRe = regexp.MustCompile(`^\|\s*\[`)
-
-// cmdBaselineUpdate rewrites the Components table in the baseline file:
-// for every link-rowed entry, it queries git for the actual last-touching
-// commit and replaces the recorded SHA. Other lines are preserved.
+// cmdBaselineUpdate rewrites canonical baseline entries in the graph manifest
+// and then regenerates the projected component Baseline field values.
 //
 // Flags:
 //
-//	--only <component-substring>   restrict the update to rows whose first
-//	                               cell contains the substring (e.g. a slug)
+//	--only <component-substring>   restrict the update to baseline entries
+//	                               whose component id contains the substring
 //	--dry-run                      print proposed changes only
 func cmdBaselineUpdate(args []string) error {
 	fs := flag.NewFlagSet("baseline update", flag.ContinueOnError)
-	only := fs.String("only", "", "only update rows whose first cell contains this substring")
-	dryRun := fs.Bool("dry-run", false, "print the proposed table without writing")
+	only := fs.String("only", "", "only update baseline entries whose component id contains this substring")
+	dryRun := fs.Bool("dry-run", false, "print the proposed baseline updates without writing")
 	fs.Usage = func() {
 		fmt.Fprintln(os.Stderr, "Usage: specs baseline update [--only <substr>] [--dry-run]")
 		fs.PrintDefaults()
@@ -61,137 +57,90 @@ func cmdBaselineUpdate(args []string) error {
 	if err != nil {
 		return err
 	}
-	if cfg.BaselinesFile == "" {
-		return exitWith(1, "no baselines file configured")
-	}
-	data, err := os.ReadFile(cfg.BaselinesFile)
+	g, err := graph.Load(cfg.GraphManifest)
 	if err != nil {
-		return exitWith(1, "read %s: %v", cfg.BaselinesFile, err)
+		return exitWith(1, "load graph %s: %v", cfg.GraphManifest, err)
+	}
+	if err := validateBaselineRepos(g, cfg.Repos); err != nil {
+		return exitWith(1, "validate %s: %v", cfg.GraphManifest, err)
 	}
 
 	workspace := filepath.Dir(cfg.HostRoot)
-	lines := strings.Split(string(data), "\n")
 
 	updated := 0
 	skipped := 0
-	inSection := false
-	for i, line := range lines {
-		t := strings.TrimSpace(line)
-		if strings.HasPrefix(t, "## ") && strings.Contains(t, "Components") {
-			inSection = true
+	for index, entry := range g.Baselines {
+		if !matchesBaselineFilter(entry.Component, *only) {
+			skipped++
 			continue
 		}
-		if inSection && strings.HasPrefix(t, "## ") {
-			inSection = false
-			continue
-		}
-		if !inSection || !baselineRowRe.MatchString(line) {
-			continue
-		}
-		newLine, action, err := rewriteBaselineRow(line, cfg.Repos, workspace, *only)
+		actualCommit, err := resolveBaselineCommit(entry, cfg.Repos, workspace)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "warning: %v\n", err)
 			skipped++
 			continue
 		}
-		switch action {
-		case "updated":
-			if newLine != line {
-				if *dryRun {
-					fmt.Println("- " + line)
-					fmt.Println("+ " + newLine)
-				}
-				lines[i] = newLine
-				updated++
-			}
-		case "skip-filter", "skip-placeholder":
-			skipped++
+		if actualCommit == entry.Commit {
+			continue
 		}
+		if *dryRun {
+			fmt.Println("- " + formatBaselineChange(entry.Component, entry.Repo, entry.Path, entry.Commit))
+			fmt.Println("+ " + formatBaselineChange(entry.Component, entry.Repo, entry.Path, actualCommit))
+		}
+		g.Baselines[index].Commit = actualCommit
+		updated++
 	}
 
 	if *dryRun {
-		fmt.Printf("would update %d row(s); skipped %d\n", updated, skipped)
+		fmt.Printf("would update %d baseline(s); skipped %d\n", updated, skipped)
 		return nil
 	}
 	if updated == 0 {
 		fmt.Println("no changes")
 		return nil
 	}
-	if err := os.WriteFile(cfg.BaselinesFile, []byte(strings.Join(lines, "\n")), 0o644); err != nil {
-		return err
+	if err := graph.Write(cfg.GraphManifest, g); err != nil {
+		return exitWith(1, "write graph: %v", err)
 	}
-	fmt.Printf("updated %d row(s) in %s\n", updated, cfg.BaselinesFile)
+	result, err := graph.GenerateMarkdown(cfg.ModelDir, cfg.ProductDir, g, false)
+	if err != nil {
+		return exitWith(1, "generate markdown: %v", err)
+	}
+	fmt.Printf("updated %d baseline(s) in %s\n", updated, cfg.GraphManifest)
+	fmt.Printf("updated markdown files: %d\n", len(result.UpdatedFiles))
 	return nil
 }
 
-// rewriteBaselineRow returns line with the SHA cell replaced by the actual
-// last-touching commit for (repo, path). action is one of "updated",
-// "skip-filter", "skip-placeholder".
-func rewriteBaselineRow(line string, repos map[string]string, workspace, only string) (string, string, error) {
-	// Preserve any leading/trailing whitespace in cells; we operate on the
-	// inner content between pipes.
-	t := strings.TrimRight(line, "\n\r")
-	if !strings.HasPrefix(strings.TrimSpace(t), "|") {
-		return line, "skip-placeholder", nil
-	}
-	// Split by | preserving cells; the very first and last empty entries
-	// come from the leading/trailing pipes.
-	cells := strings.Split(t, "|")
-	if len(cells) < 6 {
-		return line, "skip-placeholder", nil
-	}
-	component := strings.TrimSpace(cells[1])
-	repoCell := strings.TrimSpace(cells[2])
-	pathCell := strings.TrimSpace(cells[3])
-	repo := strings.Trim(repoCell, "` ")
-	pathInside := strings.Trim(pathCell, "` ")
+func matchesBaselineFilter(component, only string) bool {
+	return only == "" || strings.Contains(component, only)
+}
 
-	if pathInside == "" || strings.HasPrefix(pathInside, "_") || strings.HasPrefix(pathInside, "(") {
-		return line, "skip-placeholder", nil
-	}
-	if only != "" && !strings.Contains(component, only) {
-		return line, "skip-filter", nil
-	}
-	repoPath, ok := repos[repo]
+func resolveBaselineCommit(entry graph.BaselineEntry, repos map[string]string, workspace string) (string, error) {
+	repoPath, ok := repos[entry.Repo]
 	if !ok {
-		return line, "", fmt.Errorf("unknown repo %q (add to repos: in .specs.yaml); component=%q", repo, component)
+		return "", fmt.Errorf("unknown repo %q (add to repos: in .specs.yaml); component=%q", entry.Repo, entry.Component)
 	}
 	absRepo := filepath.Join(workspace, repoPath)
 	if _, err := os.Stat(filepath.Join(absRepo, ".git")); err != nil {
-		return line, "", fmt.Errorf("repo not checked out at %s: %v", absRepo, err)
+		return "", fmt.Errorf("repo not checked out at %s: %v", absRepo, err)
 	}
 	gitArgs := []string{"-C", absRepo, "log", "-1", "--format=%H"}
-	if pathInside != "/" {
-		gitArgs = append(gitArgs, "--", pathInside)
+	if entry.Path != "/" {
+		gitArgs = append(gitArgs, "--", entry.Path)
 	}
 	out, err := exec.Command("git", gitArgs...).Output()
 	if err != nil {
-		return line, "", fmt.Errorf("git log failed for %s:%s: %v", repo, pathInside, err)
+		return "", fmt.Errorf("git log failed for %s:%s: %v", entry.Repo, entry.Path, err)
 	}
 	sha := strings.TrimSpace(string(out))
 	if sha == "" {
-		return line, "", fmt.Errorf("no git history for %s:%s", repo, pathInside)
+		return "", fmt.Errorf("no git history for %s:%s", entry.Repo, entry.Path)
 	}
-
-	// Replace cell 4 (the recorded SHA). Preserve surrounding whitespace.
-	old := cells[4]
-	newCell := replacePreservingPadding(old, sha)
-	cells[4] = newCell
-	return strings.Join(cells, "|"), "updated", nil
+	return sha, nil
 }
 
-// replacePreservingPadding replaces the non-whitespace content of cell with
-// "`<value>`" while keeping the leading and trailing whitespace of cell.
-func replacePreservingPadding(cell, value string) string {
-	leading := ""
-	for i := 0; i < len(cell) && (cell[i] == ' ' || cell[i] == '\t'); i++ {
-		leading += string(cell[i])
-	}
-	trailing := ""
-	for i := len(cell) - 1; i >= 0 && (cell[i] == ' ' || cell[i] == '\t'); i-- {
-		trailing = string(cell[i]) + trailing
-	}
-	return leading + "`" + value + "`" + trailing
+func formatBaselineChange(component, repo, repoPath, commit string) string {
+	return fmt.Sprintf("%s | %s | %s | %s", component, repo, repoPath, commit)
 }
 
 // cmdCRDrain interactively migrates files from a CR's local working tree

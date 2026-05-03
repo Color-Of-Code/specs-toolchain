@@ -64,7 +64,8 @@ specs cr drain    ──►  git mv into canonical model paths
   artifacts, and uses valid baseline repo mappings.
 - **Component baselines** — `specs lint --baselines` detects drift between
   recorded SHAs and the real upstream commits;
-  `specs baseline update` rewrites the table.
+  `specs baseline update` refreshes canonical baseline entries and regenerates
+  component baseline fields.
 - **Visual traceability** — `specs visualize traceability` renders the
   graph as DOT or Mermaid.
 - **Diagnostics** — `specs doctor` prints engine version, resolved paths,

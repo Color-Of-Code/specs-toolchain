@@ -15,7 +15,7 @@ Every command below is reachable as `specs <command>` on the terminal. Most are 
 - `specs cr new --id <NNN> --slug <slug> [--title <t>] [--force] [--dry-run]` — create a new change request from the template tree.
 - `specs cr status` — list change requests with file counts per area.
 - `specs cr drain --id <NNN> [--yes] [--dry-run]` — interactively `git mv` CR-local files to canonical model homes.
-- `specs baseline update [--only <substr>] [--dry-run]` — rewrite stale SHAs in the Components table from `git log`.
+- `specs baseline update [--only <substr>] [--dry-run]` — refresh stale canonical baseline SHAs from `git log` and regenerate component baseline fields.
 - `specs graph validate [--manifest <path>] [--json]` — validate the canonical traceability graph files, referenced markdown artifacts, and baseline repo mappings.
 - `specs graph import-markdown [--manifest <path>] [--force] [--dry-run] [--json]` — import the current markdown relationship fields and baseline table into canonical graph YAML.
 - `specs graph generate-markdown [--manifest <path>] [--dry-run] [--json]` — project canonical graph relations back into markdown field tables.
