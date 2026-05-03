@@ -41,9 +41,19 @@ type graphGenerateJSON struct {
 	DryRun       bool   `json:"dry_run"`
 }
 
+type graphCacheJSON struct {
+	ManifestPath  string `json:"manifest_path"`
+	CachePath     string `json:"cache_path"`
+	NodeCount     int    `json:"node_count"`
+	EdgeCount     int    `json:"edge_count"`
+	BaselineCount int    `json:"baseline_count"`
+	LayoutCount   int    `json:"layout_count"`
+	DryRun        bool   `json:"dry_run"`
+}
+
 func cmdGraph(args []string) error {
 	if len(args) == 0 {
-		fmt.Fprintln(os.Stderr, "Usage: specs graph <validate|import-markdown|generate-markdown>")
+		fmt.Fprintln(os.Stderr, "Usage: specs graph <validate|import-markdown|generate-markdown|rebuild-cache>")
 		return exitWith(2, "missing subcommand")
 	}
 	switch args[0] {
@@ -53,12 +63,81 @@ func cmdGraph(args []string) error {
 		return cmdGraphImportMarkdown(args[1:])
 	case "generate-markdown":
 		return cmdGraphGenerateMarkdown(args[1:])
+	case "rebuild-cache":
+		return cmdGraphRebuildCache(args[1:])
 	case "-h", "--help", "help":
-		fmt.Fprintln(os.Stderr, "Usage: specs graph <validate|import-markdown|generate-markdown> [flags]")
+		fmt.Fprintln(os.Stderr, "Usage: specs graph <validate|import-markdown|generate-markdown|rebuild-cache> [flags]")
 		return nil
 	default:
 		return exitWith(2, "unknown subcommand: specs graph %s", args[0])
 	}
+}
+
+func cmdGraphRebuildCache(args []string) error {
+	fs := flag.NewFlagSet("graph rebuild-cache", flag.ContinueOnError)
+	manifestPath := fs.String("manifest", "", "path to graph manifest to read (default: graph_manifest from .specs.yaml)")
+	cachePath := fs.String("cache", "", "path to SQLite cache file to write (default: graph_cache from .specs.yaml)")
+	dryRun := fs.Bool("dry-run", false, "report the cache rebuild summary without writing")
+	jsonOut := fs.Bool("json", false, "emit machine-readable cache summary")
+	fs.Usage = func() {
+		fmt.Fprintln(os.Stderr, "Usage: specs graph rebuild-cache [--manifest <path>] [--cache <path>] [--dry-run] [--json]")
+		fs.PrintDefaults()
+	}
+	if err := fs.Parse(args); err != nil {
+		return err
+	}
+	if len(fs.Args()) != 0 {
+		return exitWith(2, "unexpected arguments: %v", fs.Args())
+	}
+
+	cfg, err := config.Load("")
+	if err != nil {
+		return err
+	}
+	path, err := resolveGraphManifestPath(cfg, *manifestPath)
+	if err != nil {
+		return err
+	}
+	cache, err := resolveGraphCachePath(cfg, *cachePath)
+	if err != nil {
+		return err
+	}
+	g, err := graph.Load(path)
+	if err != nil {
+		return exitWith(1, "load graph %s: %v", path, err)
+	}
+	if err := validateBaselineRepos(g, cfg.Repos); err != nil {
+		return exitWith(1, "validate %s: %v", path, err)
+	}
+	stats, err := graph.RebuildCache(cache, g, *dryRun)
+	if err != nil {
+		return exitWith(1, "rebuild cache %s: %v", cache, err)
+	}
+	summary := graphCacheJSON{
+		ManifestPath:  path,
+		CachePath:     stats.CachePath,
+		NodeCount:     stats.NodeCount,
+		EdgeCount:     stats.EdgeCount,
+		BaselineCount: stats.BaselineCount,
+		LayoutCount:   stats.LayoutCount,
+		DryRun:        *dryRun,
+	}
+	if *jsonOut {
+		enc := json.NewEncoder(os.Stdout)
+		enc.SetIndent("", "  ")
+		return enc.Encode(summary)
+	}
+	verb := "rebuilt"
+	if *dryRun {
+		verb = "would rebuild"
+	}
+	fmt.Printf("%s cache:     %s\n", verb, summary.CachePath)
+	fmt.Printf("graph manifest:   %s\n", summary.ManifestPath)
+	fmt.Printf("nodes:            %d\n", summary.NodeCount)
+	fmt.Printf("edges:            %d\n", summary.EdgeCount)
+	fmt.Printf("baselines:        %d\n", summary.BaselineCount)
+	fmt.Printf("layout nodes:     %d\n", summary.LayoutCount)
+	return nil
 }
 
 func cmdGraphGenerateMarkdown(args []string) error {
@@ -246,6 +325,17 @@ func cmdGraphValidate(args []string) error {
 func resolveGraphManifestPath(cfg *config.Resolved, override string) (string, error) {
 	if override == "" {
 		return cfg.GraphManifest, nil
+	}
+	path, err := filepath.Abs(override)
+	if err != nil {
+		return "", err
+	}
+	return path, nil
+}
+
+func resolveGraphCachePath(cfg *config.Resolved, override string) (string, error) {
+	if override == "" {
+		return cfg.GraphCache, nil
 	}
 	path, err := filepath.Abs(override)
 	if err != nil {

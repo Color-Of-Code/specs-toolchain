@@ -1,6 +1,6 @@
 # specs-toolchain
 
-Tooling for the [specs framework](https://github.com/Color-Of-Code/specs-framework): lint, scaffolding, change-request lifecycle, traceability links, canonical graph import, generation, and validation, and baseline updates for any host project that uses the framework.
+Tooling for the [specs framework](https://github.com/Color-Of-Code/specs-framework): lint, scaffolding, change-request lifecycle, traceability links, canonical graph import, generation, validation, and cache rebuild, and baseline updates for any host project that uses the framework.
 
 It ships in two flavours that share the same engine:
 

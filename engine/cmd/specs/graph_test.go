@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"io"
 	"os"
 	"path/filepath"
@@ -169,6 +170,56 @@ func TestCmdGraphGenerateMarkdownUpdatesFiles(t *testing.T) {
 	}
 	if !strings.Contains(string(requirementBody), "| Realises | [Alpha](../../product/alpha.md) |") {
 		t.Fatalf("missing generated Realises row:\n%s", string(requirementBody))
+	}
+}
+
+func TestCmdGraphRebuildCacheWritesSQLite(t *testing.T) {
+	dir := t.TempDir()
+	specsDir := filepath.Join(dir, "specs")
+	if err := os.MkdirAll(filepath.Join(specsDir, "model", "traceability"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := config.Save(filepath.Join(specsDir, config.FileName), &config.File{
+		Repos: map[string]string{"host-repo": "repos/host"},
+	}); err != nil {
+		t.Fatal(err)
+	}
+	writeGraphFixture(t, specsDir)
+
+	cwd, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() {
+		if err := os.Chdir(cwd); err != nil {
+			t.Fatalf("restore cwd: %v", err)
+		}
+	}()
+	if err := os.Chdir(specsDir); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := cmdGraphRebuildCache(nil); err != nil {
+		t.Fatalf("cmdGraphRebuildCache() error = %v", err)
+	}
+	db, err := sql.Open("sqlite", filepath.Join(specsDir, ".specs-cache", "traceability.sqlite"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer db.Close()
+	var edges int
+	if err := db.QueryRow(`SELECT COUNT(*) FROM edges`).Scan(&edges); err != nil {
+		t.Fatal(err)
+	}
+	if edges != 2 {
+		t.Fatalf("edges = %d, want 2", edges)
+	}
+	var baselines int
+	if err := db.QueryRow(`SELECT COUNT(*) FROM baselines`).Scan(&baselines); err != nil {
+		t.Fatal(err)
+	}
+	if baselines != 1 {
+		t.Fatalf("baselines = %d, want 1", baselines)
 	}
 }
 

@@ -1,6 +1,6 @@
 # Command reference
 
-Every command below is reachable as `specs <command>` on the terminal. Most are also exposed in the VS Code palette as **Specs: …**; admin-only commands (`init`, `format`, `graph validate`, `graph import-markdown`, `graph generate-markdown`, `vscode init`, `framework list|add|remove|seed`) are terminal-only. All write commands accept `--dry-run` where applicable.
+Every command below is reachable as `specs <command>` on the terminal. Most are also exposed in the VS Code palette as **Specs: …**; admin-only commands (`init`, `format`, `graph validate`, `graph import-markdown`, `graph generate-markdown`, `graph rebuild-cache`, `vscode init`, `framework list|add|remove|seed`) are terminal-only. All write commands accept `--dry-run` where applicable.
 
 ## Core commands
 
@@ -19,6 +19,7 @@ Every command below is reachable as `specs <command>` on the terminal. Most are 
 - `specs graph validate [--manifest <path>] [--json]` — validate the canonical traceability graph files and baseline repo mappings.
 - `specs graph import-markdown [--manifest <path>] [--force] [--dry-run] [--json]` — import the current markdown relationship fields and baseline table into canonical graph YAML.
 - `specs graph generate-markdown [--manifest <path>] [--dry-run] [--json]` — project canonical graph relations back into markdown field tables.
+- `specs graph rebuild-cache [--manifest <path>] [--cache <path>] [--dry-run] [--json]` — rebuild the derived SQLite cache from canonical graph YAML.
 - `specs link check` — verify symmetry between requirements (`Implemented By`) and features/components (`Requirements`).
 - `specs visualize traceability [--format dot|mermaid] [--out <path>]` — render the requirement ↔ implementer graph.
 - `specs vscode init [--force]` — write `.vscode/tasks.json` with every Specs task.
