@@ -19,17 +19,19 @@ into components.
 
 ## Entry point
 
-`specs visualize traceability [--format dot|mermaid|json] [--out <path>]`
+`specs visualize traceability [--format dot|mermaid|json] [--out <path>] [--serve] [--listen <addr>]`
 
 Or VS Code palette: **Specs: Visualize traceability** (renders in a
-webview).
+webview). For a browser-based view, run `specs visualize traceability --serve`
+and open the printed local URL.
 
 ## Exit point
 
-A graph written to `--out` (or stdout) in the requested format. DOT and
-Mermaid are suitable for review artifacts; JSON is suitable for downstream
-tooling and UI consumers. The
-VS Code panel shows the rendered diagram interactively.
+A graph written to `--out` (or stdout) in the requested format, or a local
+web server hosting the same Cytoscape-based graph UI. DOT and Mermaid are
+suitable for review artifacts; JSON is suitable for downstream tooling and UI
+consumers. The VS Code panel and the local server both read the canonical
+graph JSON.
 
 ## Iteration
 

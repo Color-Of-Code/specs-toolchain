@@ -192,6 +192,8 @@ function renderHtml(
 ): string {
   const mediaRoot = vscode.Uri.joinPath(context.extensionUri, "media");
   const cytoscapeUri = webview.asWebviewUri(vscode.Uri.joinPath(mediaRoot, "cytoscape.min.js"));
+  const appUri = webview.asWebviewUri(vscode.Uri.joinPath(mediaRoot, "traceability-view.js"));
+  const styleUri = webview.asWebviewUri(vscode.Uri.joinPath(mediaRoot, "traceability-view.css"));
   const nonce = randomNonce();
   const csp = [
     `default-src 'none'`,
@@ -201,11 +203,14 @@ function renderHtml(
     `font-src ${webview.cspSource}`,
   ].join("; ");
   const safeGraph = escapeScriptText(JSON.stringify(graph));
-  const fallbackInline = !fs.existsSync(
+  const requiredAssets = [
     path.join(context.extensionPath, "media", "cytoscape.min.js"),
-  );
+    path.join(context.extensionPath, "media", "traceability-view.js"),
+    path.join(context.extensionPath, "media", "traceability-view.css"),
+  ];
+  const fallbackInline = requiredAssets.some((current) => !fs.existsSync(current));
   const fallbackBanner = fallbackInline
-    ? `<div class="banner">cytoscape.min.js not bundled - the diagram will not render. Run pnpm install and pnpm run compile in extension/.</div>`
+    ? `<div class="banner">traceability web assets are not bundled - the diagram will not render. Run pnpm run compile in extension/.</div>`
     : "";
 
   return `<!doctype html>
@@ -213,165 +218,57 @@ function renderHtml(
 <head>
 <meta charset="utf-8" />
 <meta http-equiv="Content-Security-Policy" content="${csp}">
+<link rel="stylesheet" href="${styleUri}">
 <style>
-  :root {
-    color-scheme: light dark;
-  }
   body {
-    font-family: var(--vscode-font-family);
-    padding: 12px;
     color: var(--vscode-foreground);
-    background:
-      radial-gradient(circle at top left, color-mix(in srgb, var(--vscode-textLink-foreground) 14%, transparent), transparent 28%),
-      linear-gradient(180deg, color-mix(in srgb, var(--vscode-editor-background) 92%, white), var(--vscode-editor-background));
+    background: var(--vscode-editor-background);
   }
-  .toolbar { margin-bottom: 12px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-  button {
-    background: var(--vscode-button-background);
-    color: var(--vscode-button-foreground);
-    border: none;
-    padding: 6px 12px;
-    cursor: pointer;
-    border-radius: 999px;
-  }
-  button:hover { background: var(--vscode-button-hoverBackground); }
-  .meta {
-    margin-left: auto;
-    font-size: 12px;
-    color: var(--vscode-descriptionForeground);
-  }
-  .banner {
-    background: var(--vscode-inputValidation-warningBackground);
-    color: var(--vscode-inputValidation-warningForeground);
-    padding: 6px 10px;
-    margin-bottom: 12px;
-    border-radius: 10px;
-  }
-  .hint {
-    margin: 0 0 12px;
-    font-size: 12px;
-    color: var(--vscode-descriptionForeground);
-  }
-  #graph {
-    height: calc(100vh - 140px);
-    min-height: 420px;
-    border-radius: 18px;
-    border: 1px solid color-mix(in srgb, var(--vscode-panel-border) 70%, transparent);
-    background: color-mix(in srgb, var(--vscode-editor-background) 94%, white);
-    box-shadow: 0 10px 30px color-mix(in srgb, var(--vscode-editor-foreground) 10%, transparent);
+  .traceability-shell {
+    --traceability-bg: var(--vscode-editor-background);
+    --traceability-fg: var(--vscode-foreground);
+    --traceability-link: var(--vscode-textLink-foreground);
+    --traceability-muted: var(--vscode-descriptionForeground);
+    --traceability-border: var(--vscode-panel-border);
+    --traceability-button-bg: var(--vscode-button-background);
+    --traceability-button-fg: var(--vscode-button-foreground);
+    --traceability-button-hover: var(--vscode-button-hoverBackground);
+    --traceability-warning-bg: var(--vscode-inputValidation-warningBackground);
+    --traceability-warning-fg: var(--vscode-inputValidation-warningForeground);
+    font-family: var(--vscode-font-family);
   }
 </style>
 </head>
-<body>
+<body class="traceability-shell">
 ${fallbackBanner}
 <div class="toolbar">
   <button id="refresh">Refresh</button>
   <button id="fit">Fit</button>
   <button id="export-json">Export JSON</button>
   <button id="export-dot">Export DOT</button>
-  <div class="meta">${graph.nodes.length} nodes / ${graph.edges.length} edges</div>
+  <div class="meta" id="meta">${graph.nodes.length} nodes / ${graph.edges.length} edges</div>
 </div>
 <p class="hint">Click a node to open its markdown artifact. The preview reads canonical graph JSON from the engine.</p>
 <div id="graph"></div>
-${fallbackInline ? "" : `<script nonce="${nonce}" src="${cytoscapeUri}"></script>`}
+${fallbackInline ? "" : `<script nonce="${nonce}" src="${cytoscapeUri}"></script><script nonce="${nonce}" src="${appUri}"></script>`}
 <script nonce="${nonce}">
   const vscode = acquireVsCodeApi();
   const graph = ${safeGraph};
-  const palette = {
-    'product-requirement': '#e66b6b',
-    requirement: '#4f8bd6',
-    feature: '#e29c45',
-    component: '#5f9d72',
-    api: '#7b6ccf',
-    service: '#c7739f',
-  };
-  function shapeForKind(kind) {
-    switch (kind) {
-      case 'product-requirement': return 'round-hexagon';
-      case 'requirement': return 'round-rectangle';
-      case 'feature': return 'ellipse';
-      case 'component': return 'cut-rectangle';
-      case 'api': return 'diamond';
-      case 'service': return 'barrel';
-      default: return 'round-rectangle';
-    }
-  }
-  function lineStyleForKind(kind) {
-    return kind === 'realization' ? 'solid' : 'dashed';
-  }
-  const elements = [
-    ...graph.nodes.map((node) => ({
-      data: { id: node.id, label: node.label, path: node.path, kind: node.kind },
-      position: node.layout ? { x: node.layout.x, y: node.layout.y } : undefined,
-      locked: Boolean(node.layout && node.layout.locked),
-    })),
-    ...graph.edges.map((edge, index) => ({
-      data: { id: 'e' + index, source: edge.source, target: edge.target, kind: edge.kind },
-    })),
-  ];
-  const hasLayout = graph.nodes.length > 0 && graph.nodes.every((node) => Boolean(node.layout));
   document.getElementById('refresh').addEventListener('click', () => vscode.postMessage({ type: 'refresh' }));
   document.getElementById('export-json').addEventListener('click', () => vscode.postMessage({ type: 'export-json' }));
   document.getElementById('export-dot').addEventListener('click', () => vscode.postMessage({ type: 'export-dot' }));
-  if (typeof cytoscape !== 'undefined') {
-    const cy = cytoscape({
+  if (typeof TraceabilityUI !== 'undefined') {
+    const ui = TraceabilityUI.mount({
+      graph,
       container: document.getElementById('graph'),
-      elements,
-      layout: hasLayout
-        ? { name: 'preset', padding: 32, fit: true }
-        : { name: 'breadthfirst', directed: true, padding: 40, spacingFactor: 1.15, avoidOverlap: true },
-      style: [
-        {
-          selector: 'node',
-          style: {
-            label: 'data(label)',
-            shape: (ele) => shapeForKind(ele.data('kind')),
-            width: 'label',
-            height: 'label',
-            padding: '14px',
-            'text-wrap': 'wrap',
-            'text-max-width': '160px',
-            'font-size': 12,
-            'font-weight': 600,
-            color: '#10222e',
-            'text-valign': 'center',
-            'text-halign': 'center',
-            'border-width': 2,
-            'border-color': '#173042',
-            'background-color': (ele) => palette[ele.data('kind')] || '#7a8791',
-          },
-        },
-        {
-          selector: 'node:selected',
-          style: {
-            'border-width': 4,
-            'border-color': '#f5f1c7',
-            'overlay-opacity': 0,
-          },
-        },
-        {
-          selector: 'edge',
-          style: {
-            width: 2.2,
-            'curve-style': 'bezier',
-            'line-style': (ele) => lineStyleForKind(ele.data('kind')),
-            'line-color': '#6d7f88',
-            'target-arrow-color': '#6d7f88',
-            'target-arrow-shape': 'triangle',
-            'arrow-scale': 1.15,
-          },
-        },
-      ],
+      fitButton: document.getElementById('fit'),
+      metaElement: document.getElementById('meta'),
+      onOpenPath: (path) => vscode.postMessage({ type: 'open-path', payload: path }),
+      emptyMessage: 'No traceability data found.',
     });
-    document.getElementById('fit').addEventListener('click', () => cy.fit(undefined, 40));
-    cy.on('tap', 'node', (event) => {
-      const path = event.target.data('path');
-      if (path) {
-        vscode.postMessage({ type: 'open-path', payload: path });
-      }
-    });
+    void ui;
   } else {
-    document.getElementById('graph').innerHTML = '<pre style="padding: 16px; color: var(--vscode-errorForeground)">cytoscape failed to load</pre>';
+    document.getElementById('graph').innerHTML = '<pre style="padding: 16px; color: var(--vscode-errorForeground)">traceability UI failed to load</pre>';
   }
 </script>
 </body>

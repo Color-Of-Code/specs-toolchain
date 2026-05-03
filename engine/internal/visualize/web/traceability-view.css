@@ -1,0 +1,67 @@
+:root {
+  color-scheme: light dark;
+}
+
+body.traceability-shell {
+  margin: 0;
+  padding: 12px;
+  color: var(--traceability-fg, #e6eef5);
+  background:
+    radial-gradient(circle at top left, color-mix(in srgb, var(--traceability-link, #5aa9ff) 14%, transparent), transparent 28%),
+    linear-gradient(180deg, color-mix(in srgb, var(--traceability-bg, #0f1722) 92%, white), var(--traceability-bg, #0f1722));
+  font-family: var(--traceability-font, system-ui, sans-serif);
+}
+
+.toolbar {
+  margin-bottom: 12px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.toolbar button,
+.toolbar .toolbar-link {
+  background: var(--traceability-button-bg, #204a68);
+  color: var(--traceability-button-fg, #f5fbff);
+  border: none;
+  padding: 6px 12px;
+  cursor: pointer;
+  border-radius: 999px;
+  text-decoration: none;
+  font: inherit;
+}
+
+.toolbar button:hover,
+.toolbar .toolbar-link:hover {
+  background: var(--traceability-button-hover, #2e648d);
+}
+
+.meta {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--traceability-muted, #94aab9);
+}
+
+.banner {
+  background: var(--traceability-warning-bg, #6a5300);
+  color: var(--traceability-warning-fg, #fff6d1);
+  padding: 6px 10px;
+  margin-bottom: 12px;
+  border-radius: 10px;
+}
+
+.hint {
+  margin: 0 0 12px;
+  font-size: 12px;
+  color: var(--traceability-muted, #94aab9);
+}
+
+#graph {
+  height: calc(100vh - 140px);
+  min-height: 420px;
+  border-radius: 18px;
+  border: 1px solid color-mix(in srgb, var(--traceability-border, #456078) 70%, transparent);
+  background: color-mix(in srgb, var(--traceability-bg, #0f1722) 94%, white);
+  box-shadow: 0 10px 30px color-mix(in srgb, var(--traceability-fg, #e6eef5) 10%, transparent);
+}

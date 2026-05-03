@@ -29,7 +29,7 @@ func init() {
 		{"cr", "change-request operations (new, status, drain)", cmdCR},
 		{"baseline", "verify or update component baselines (check, update)", cmdBaseline},
 		{"graph", "manage canonical traceability graph data (validate)", cmdGraph},
-		{"visualize", "render the traceability graph (DOT or Mermaid)", cmdVisualize},
+		{"visualize", "render or serve the traceability graph (DOT, Mermaid, JSON, web)", cmdVisualize},
 		{"vscode", "manage .vscode integration (init)", cmdVSCode},
 		{"framework", "manage framework templates and content layer (list, add, remove, seed, update)", cmdFramework},
 	}

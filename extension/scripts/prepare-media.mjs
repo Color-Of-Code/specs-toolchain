@@ -5,12 +5,21 @@ import { fileURLToPath } from "node:url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const extensionDir = path.resolve(__dirname, "..");
+const repoRoot = path.resolve(extensionDir, "..");
 const mediaDir = path.join(extensionDir, "media");
 
 const assets = [
   {
-    source: path.join(extensionDir, "node_modules", "cytoscape", "dist", "cytoscape.min.js"),
+    source: path.join(repoRoot, "engine", "internal", "visualize", "web", "cytoscape.min.js"),
     target: path.join(mediaDir, "cytoscape.min.js"),
+  },
+  {
+    source: path.join(repoRoot, "engine", "internal", "visualize", "web", "traceability-view.js"),
+    target: path.join(mediaDir, "traceability-view.js"),
+  },
+  {
+    source: path.join(repoRoot, "engine", "internal", "visualize", "web", "traceability-view.css"),
+    target: path.join(mediaDir, "traceability-view.css"),
   },
 ];
 
