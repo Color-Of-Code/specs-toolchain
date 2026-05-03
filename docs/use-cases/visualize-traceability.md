@@ -29,7 +29,8 @@ same save-layout action. Both UIs can also add a new traceability edge by
 choosing a relation kind and two nodes, or remove the currently selected
 traceability edge, then persist the updated canonical relations. The shared
 UI also shows an inline inspector for the active node, relation, or pending
-add-edge selection.
+add-edge selection. Edge additions and removals require confirmation before
+the shared UI persists the canonical relation update.
 
 ## Exit point
 

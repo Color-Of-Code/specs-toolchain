@@ -102,6 +102,26 @@
     options.detailsElement.innerHTML = markup;
   }
 
+  function relationDisplayLabel(kind) {
+    return relationSpec(kind).label;
+  }
+
+  function nodeDisplayLabel(node) {
+    if (!node) {
+      return "unknown node";
+    }
+    return node.data("label") || node.id();
+  }
+
+  function confirmRelationChange(action, relation) {
+    if (typeof window === "undefined" || typeof window.confirm !== "function") {
+      return true;
+    }
+    const sourceLabel = relation.sourceLabel || relation.source;
+    const targetLabel = relation.targetLabel || relation.target;
+    return window.confirm(`${action} ${relationDisplayLabel(relation.kind)} relation?\n\n${sourceLabel}\n-> ${targetLabel}`);
+  }
+
   function emptyGraph() {
     return { nodes: [], edges: [] };
   }
@@ -398,7 +418,7 @@
         { label: "Source ID", value: edge.data("source") },
         { label: "Target", value: targetNode ? targetNode.data("label") || targetNode.id() : edge.data("target") },
         { label: "Target ID", value: edge.data("target") },
-      ], canSaveRelations ? "Use Remove Selected Edge to delete this relation." : "");
+      ], canSaveRelations ? "Use Remove Selected Edge to delete this relation. The UI asks for confirmation before persisting the change." : "");
     }
 
     function describeCreateMode() {
@@ -409,12 +429,12 @@
           { label: "Source kind", value: displayKind(spec.sourceKind) },
           { label: "Target kind", value: displayKind(spec.targetKind) },
           { label: "Source ID", value: edgeSourceNode.id() },
-        ], `Select a ${displayKind(spec.targetKind)} target to create this relation.`);
+        ], `Select a ${displayKind(spec.targetKind)} target to create this relation. The UI asks for confirmation before saving it.`);
       }
       return detailsMarkup("Add Edge", spec.label, [
         { label: "Source kind", value: displayKind(spec.sourceKind) },
         { label: "Target kind", value: displayKind(spec.targetKind) },
-      ], `Select a ${displayKind(spec.sourceKind)} source node to start.`);
+      ], `Select a ${displayKind(spec.sourceKind)} source node to start. The UI asks for confirmation before saving the relation.`);
     }
 
     function updateDetailsPanel() {
@@ -525,12 +545,21 @@
         target: targetNode.id(),
         kind: currentRelationKind(),
       };
+      const nextEdgePreview = {
+        ...nextEdge,
+        sourceLabel: nodeDisplayLabel(edgeSourceNode),
+        targetLabel: nodeDisplayLabel(targetNode),
+      };
       if (nextEdge.source === nextEdge.target) {
         setMetaStatus(options, "edge source and target must differ");
         return;
       }
       if (relationAlreadyExists(nextEdge.source, nextEdge.target, nextEdge.kind)) {
         setMetaStatus(options, "edge already exists");
+        return;
+      }
+      if (!confirmRelationChange("Add", nextEdgePreview)) {
+        setMetaStatus(options, "edge creation cancelled");
         return;
       }
       const originalLabel = options.addEdgeButton ? options.addEdgeButton.textContent : "Add Edge";
@@ -644,12 +673,25 @@
         if (!selectedEdge || !canSaveRelations || !cy) {
           return;
         }
+        const edgeToRemove = selectedEdge;
+        const removalPreview = {
+          source: edgeToRemove.data("source"),
+          target: edgeToRemove.data("target"),
+          kind: edgeToRemove.data("kind"),
+          sourceLabel: nodeDisplayLabel(resolveNode(edgeToRemove.data("source"))),
+          targetLabel: nodeDisplayLabel(resolveNode(edgeToRemove.data("target"))),
+        };
+        if (!confirmRelationChange("Remove", removalPreview)) {
+          setMetaStatus(options, "edge removal cancelled");
+          updateDetailsPanel();
+          return;
+        }
         const originalLabel = options.removeEdgeButton.textContent;
         options.removeEdgeButton.disabled = true;
         options.removeEdgeButton.textContent = "Removing...";
         try {
-          await persistRelations(options, cy, { omitEdgeId: selectedEdge.id() });
-          selectedEdge.remove();
+          await persistRelations(options, cy, { omitEdgeId: edgeToRemove.id() });
+          edgeToRemove.remove();
           selectedEdge = undefined;
           selectedNode = undefined;
           updateMetaSummary(options, cy.nodes().length, cy.edges().length);
