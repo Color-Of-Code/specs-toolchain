@@ -1,0 +1,168 @@
+package main
+
+import (
+	"io"
+	"os"
+	"path/filepath"
+	"strings"
+	"testing"
+
+	"github.com/Color-Of-Code/specs-toolchain/engine/internal/config"
+	"github.com/Color-Of-Code/specs-toolchain/engine/internal/graph"
+)
+
+func TestCmdGraphValidateJSON(t *testing.T) {
+	dir := t.TempDir()
+	specsDir := filepath.Join(dir, "specs")
+	if err := os.MkdirAll(filepath.Join(specsDir, "model", "traceability"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := config.Save(filepath.Join(specsDir, config.FileName), &config.File{
+		Repos: map[string]string{"host-repo": "repos/host"},
+	}); err != nil {
+		t.Fatal(err)
+	}
+	writeGraphFixture(t, specsDir)
+
+	cwd, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() {
+		if err := os.Chdir(cwd); err != nil {
+			t.Fatalf("restore cwd: %v", err)
+		}
+	}()
+	if err := os.Chdir(specsDir); err != nil {
+		t.Fatal(err)
+	}
+
+	stdout, restore := captureStdout(t)
+	defer restore()
+
+	if err := cmdGraphValidate([]string{"--json"}); err != nil {
+		t.Fatalf("cmdGraphValidate() error = %v", err)
+	}
+	out := stdout()
+	for _, want := range []string{
+		`"manifest_path":`,
+		`"node_count": 4`,
+		`"realization_edge_count": 1`,
+		`"feature_implementation_edge_count": 1`,
+		`"baseline_count": 1`,
+	} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("output missing %q:\n%s", want, out)
+		}
+	}
+}
+
+func TestValidateBaselineReposRejectsUnknownRepo(t *testing.T) {
+	g := &graph.Graph{
+		Baselines: []graph.BaselineEntry{{
+			Component: "model/components/alpha-component",
+			Repo:      "missing-repo",
+			Path:      "/",
+			Commit:    "0123456789abcdef0123456789abcdef01234567",
+		}},
+	}
+	err := validateBaselineRepos(g, map[string]string{"known": "repos/known"})
+	if err == nil || !strings.Contains(err.Error(), `missing-repo`) {
+		t.Fatalf("validateBaselineRepos() error = %v, want missing repo error", err)
+	}
+}
+
+func writeGraphFixture(t *testing.T, specsDir string) {
+	t.Helper()
+	traceabilityDir := filepath.Join(specsDir, "model", "traceability")
+	files := map[string]string{
+		"graph.yaml": strings.Join([]string{
+			"schema_version: 1",
+			"node_id_format: repo_relative_markdown_path_without_extension",
+			"parts:",
+			"  - name: realizations",
+			"    file: realizations.yaml",
+			"    kind: realization",
+			"    required: true",
+			"  - name: feature_implementations",
+			"    file: feature_implementations.yaml",
+			"    kind: feature_implementation",
+			"    required: true",
+			"  - name: component_implementations",
+			"    file: component_implementations.yaml",
+			"    kind: component_implementation",
+			"    required: true",
+			"  - name: service_implementations",
+			"    file: service_implementations.yaml",
+			"    kind: service_implementation",
+			"    required: true",
+			"  - name: api_implementations",
+			"    file: api_implementations.yaml",
+			"    kind: api_implementation",
+			"    required: true",
+			"  - name: baselines",
+			"    file: baselines.yaml",
+			"    kind: baseline",
+			"    required: false",
+			"generation:",
+			"  markdown_relationship_fields: true",
+			"  markdown_baseline_fields: true",
+			"  stable_sort: lexical_id",
+		}, "\n"),
+		"realizations.yaml": strings.Join([]string{
+			"kind: realization",
+			"entries:",
+			"  - source: product/alpha",
+			"    targets:",
+			"      - model/requirements/alpha-requirement",
+		}, "\n"),
+		"feature_implementations.yaml": strings.Join([]string{
+			"kind: feature_implementation",
+			"entries:",
+			"  - source: model/requirements/alpha-requirement",
+			"    targets:",
+			"      - model/features/alpha-feature",
+		}, "\n"),
+		"component_implementations.yaml": "kind: component_implementation\nentries: []\n",
+		"service_implementations.yaml":   "kind: service_implementation\nentries: []\n",
+		"api_implementations.yaml":       "kind: api_implementation\nentries: []\n",
+		"baselines.yaml": strings.Join([]string{
+			"kind: baseline",
+			"entries:",
+			"  - component: model/components/alpha-component",
+			"    repo: host-repo",
+			"    path: /",
+			"    commit: 0123456789abcdef0123456789abcdef01234567",
+		}, "\n"),
+	}
+	for name, content := range files {
+		if err := os.WriteFile(filepath.Join(traceabilityDir, name), []byte(content), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+}
+
+func captureStdout(t *testing.T) (func() string, func()) {
+	t.Helper()
+	original := os.Stdout
+	reader, writer, err := os.Pipe()
+	if err != nil {
+		t.Fatal(err)
+	}
+	os.Stdout = writer
+
+	return func() string {
+			if err := writer.Close(); err != nil {
+				t.Fatal(err)
+			}
+			data, err := io.ReadAll(reader)
+			if err != nil {
+				t.Fatal(err)
+			}
+			return string(data)
+		}, func() {
+			os.Stdout = original
+			_ = reader.Close()
+			_ = writer.Close()
+		}
+}
