@@ -45,7 +45,7 @@ func TestNewTraceabilityUIHandlerServesUIAndArtifacts(t *testing.T) {
 		contentType string
 		contains    []string
 	}{
-		{path: "/", contentType: "text/html", contains: []string{"Specs: Traceability", "/graph.json", "/assets/traceability-view.js", "/layout", "/relations", "Save Layout", "Remove Selected Edge"}},
+		{path: "/", contentType: "text/html", contains: []string{"Specs: Traceability", "/graph.json", "/assets/traceability-view.js", "/layout", "/relations", "Save Layout", "Remove Selected Edge", "Add Edge", "relation-kind", "component_implementation"}},
 		{path: "/graph.json", contentType: "application/json", contains: []string{`"id": "product/alpha"`, `"source": "product/alpha"`}},
 		{path: "/graph.dot", contentType: "text/vnd.graphviz", contains: []string{"digraph traceability", "nproduct_alpha -> nmodel_requirements_alpha_requirement;"}},
 		{path: "/assets/traceability-view.js", contentType: "text/javascript", contains: []string{"window.TraceabilityUI", "cytoscape"}},
@@ -225,6 +225,71 @@ func TestNewTraceabilityUIHandlerSavesRelations(t *testing.T) {
 	}
 	if !strings.Contains(string(body), `"source": "model/requirements/alpha-requirement"`) {
 		t.Fatalf("graph.json should still contain feature implementation edge\n%s", string(body))
+	}
+}
+
+func TestNewTraceabilityUIHandlerAddsRelations(t *testing.T) {
+	dir := t.TempDir()
+	specsDir := filepath.Join(dir, "specs")
+	for _, path := range []string{
+		filepath.Join(specsDir, "model", "traceability"),
+		filepath.Join(specsDir, "product"),
+		filepath.Join(specsDir, "model", "requirements"),
+		filepath.Join(specsDir, "model", "features"),
+		filepath.Join(specsDir, "model", "components"),
+	} {
+		if err := os.MkdirAll(path, 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := config.Save(filepath.Join(specsDir, config.FileName), &config.File{}); err != nil {
+		t.Fatal(err)
+	}
+	writeGraphFixture(t, specsDir)
+
+	handler, err := newTraceabilityUIHandler(specsDir)
+	if err != nil {
+		t.Fatalf("newTraceabilityUIHandler() error = %v", err)
+	}
+	server := httptest.NewServer(handler)
+	defer server.Close()
+
+	payload := `{"edges":[{"source":"product/alpha","target":"model/requirements/alpha-requirement","kind":"realization"},{"source":"model/requirements/alpha-requirement","target":"model/features/alpha-feature","kind":"feature_implementation"},{"source":"model/requirements/alpha-requirement","target":"model/components/alpha-component","kind":"component_implementation"}]}`
+	resp, err := http.Post(server.URL+"/relations", "application/json", strings.NewReader(payload))
+	if err != nil {
+		t.Fatalf("POST /relations add: %v", err)
+	}
+	body, err := io.ReadAll(resp.Body)
+	resp.Body.Close()
+	if err != nil {
+		t.Fatalf("read POST /relations add body: %v", err)
+	}
+	if resp.StatusCode != http.StatusNoContent {
+		t.Fatalf("POST /relations add status = %d, want 204\n%s", resp.StatusCode, string(body))
+	}
+
+	componentData, err := os.ReadFile(filepath.Join(specsDir, "model", "traceability", "component_implementations.yaml"))
+	if err != nil {
+		t.Fatalf("read component_implementations.yaml: %v", err)
+	}
+	if !strings.Contains(string(componentData), "model/components/alpha-component") {
+		t.Fatalf("component_implementations.yaml missing added component edge\n%s", string(componentData))
+	}
+
+	resp, err = http.Get(server.URL + "/graph.json")
+	if err != nil {
+		t.Fatalf("GET /graph.json after add: %v", err)
+	}
+	body, err = io.ReadAll(resp.Body)
+	resp.Body.Close()
+	if err != nil {
+		t.Fatalf("read GET /graph.json after add: %v", err)
+	}
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("GET /graph.json after add status = %d, want 200\n%s", resp.StatusCode, string(body))
+	}
+	if !strings.Contains(string(body), `"target": "model/components/alpha-component"`) {
+		t.Fatalf("graph.json missing added component edge\n%s", string(body))
 	}
 }
 

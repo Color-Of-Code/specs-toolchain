@@ -305,6 +305,14 @@ ${fallbackBanner}
 <div class="toolbar">
   <button id="refresh">Refresh</button>
   <button id="fit">Fit</button>
+  <select id="relation-kind" aria-label="Relation kind">
+    <option value="realization">Realization</option>
+    <option value="feature_implementation">Feature</option>
+    <option value="component_implementation">Component</option>
+    <option value="service_implementation">Service</option>
+    <option value="api_implementation">API</option>
+  </select>
+  <button id="add-edge">Add Edge</button>
   <button id="remove-edge">Remove Selected Edge</button>
   <button id="save-layout">Save Layout</button>
   <button id="export-json">Export JSON</button>
@@ -343,6 +351,8 @@ ${fallbackInline ? "" : `<script nonce="${nonce}" src="${cytoscapeUri}"></script
       graph,
       container: document.getElementById('graph'),
       fitButton: document.getElementById('fit'),
+      addEdgeButton: document.getElementById('add-edge'),
+      relationKindSelect: document.getElementById('relation-kind'),
       removeEdgeButton: document.getElementById('remove-edge'),
       saveButton: document.getElementById('save-layout'),
       metaElement: document.getElementById('meta'),

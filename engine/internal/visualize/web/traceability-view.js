@@ -62,6 +62,10 @@
     ];
   }
 
+  function createClientEdgeId() {
+    return `e${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
+  }
+
   function roundCoord(value) {
     return Math.round(value * 100) / 100;
   }
@@ -196,7 +200,7 @@
     }
   }
 
-  function collectRelations(cy, omitEdgeId) {
+  function collectRelations(cy, omitEdgeId, appendEdges) {
     return cy.edges().toArray()
       .filter((edge) => edge.id() !== omitEdgeId)
       .map((edge) => ({
@@ -204,6 +208,7 @@
         target: edge.data("target"),
         kind: edge.data("kind"),
       }))
+      .concat(appendEdges || [])
       .sort((left, right) => {
         if (left.kind !== right.kind) {
           return left.kind.localeCompare(right.kind);
@@ -215,8 +220,8 @@
       });
   }
 
-  async function persistRelations(options, cy, omitEdgeId) {
-    const payload = { edges: collectRelations(cy, omitEdgeId) };
+  async function persistRelations(options, cy, relationOptions) {
+    const payload = { edges: collectRelations(cy, relationOptions && relationOptions.omitEdgeId, relationOptions && relationOptions.appendEdges) };
     if (typeof options.onSaveRelations === "function") {
       await options.onSaveRelations(payload);
       return;
@@ -247,17 +252,126 @@
 
     let cy;
     let selectedEdge;
+    let createEdgeMode = false;
+    let edgeSourceNode;
     const openPath = typeof options.onOpenPath === "function"
       ? options.onOpenPath
       : (path) => defaultOpenPath(options, path);
     const canSaveLayout = Boolean(options.saveLayoutUrl || typeof options.onSaveLayout === "function");
     const canSaveRelations = Boolean(options.saveRelationsUrl || typeof options.onSaveRelations === "function");
 
+    function currentRelationKind() {
+      return options.relationKindSelect && options.relationKindSelect.value
+        ? options.relationKindSelect.value
+        : "realization";
+    }
+
+    function clearEdgeSourceSelection() {
+      if (edgeSourceNode) {
+        edgeSourceNode.unselect();
+      }
+      edgeSourceNode = undefined;
+    }
+
+    function exitCreateEdgeMode() {
+      createEdgeMode = false;
+      clearEdgeSourceSelection();
+      if (options.addEdgeButton) {
+        options.addEdgeButton.textContent = "Add Edge";
+      }
+    }
+
+    function enterCreateEdgeMode() {
+      createEdgeMode = true;
+      selectedEdge = undefined;
+      updateRemoveEdgeButton();
+      if (options.addEdgeButton) {
+        options.addEdgeButton.textContent = "Cancel Add";
+      }
+      setMetaStatus(options, `select source node for ${currentRelationKind()}`);
+    }
+
+    function relationAlreadyExists(source, target, kind) {
+      if (!cy) {
+        return false;
+      }
+      return cy.edges().some((edge) => edge.data("source") === source && edge.data("target") === target && edge.data("kind") === kind);
+    }
+
+    async function addRelation(targetNode) {
+      if (!cy || !edgeSourceNode) {
+        return;
+      }
+      const nextEdge = {
+        source: edgeSourceNode.id(),
+        target: targetNode.id(),
+        kind: currentRelationKind(),
+      };
+      if (nextEdge.source === nextEdge.target) {
+        setMetaStatus(options, "edge source and target must differ");
+        return;
+      }
+      if (relationAlreadyExists(nextEdge.source, nextEdge.target, nextEdge.kind)) {
+        setMetaStatus(options, "edge already exists");
+        return;
+      }
+      const originalLabel = options.addEdgeButton ? options.addEdgeButton.textContent : "Add Edge";
+      let saveSucceeded = false;
+      if (options.addEdgeButton) {
+        options.addEdgeButton.disabled = true;
+        options.addEdgeButton.textContent = "Adding...";
+      }
+      try {
+        await persistRelations(options, cy, { appendEdges: [nextEdge] });
+        cy.add({ data: { id: createClientEdgeId(), source: nextEdge.source, target: nextEdge.target, kind: nextEdge.kind } });
+        updateMetaSummary(options, cy.nodes().length, cy.edges().length);
+        setMetaStatus(options, "edge added");
+        saveSucceeded = true;
+        exitCreateEdgeMode();
+      } catch (error) {
+        console.error(error);
+        setMetaStatus(options, "edge creation failed");
+        if (options.addEdgeButton) {
+          options.addEdgeButton.textContent = "Add Failed";
+        }
+        window.setTimeout(() => {
+          if (options.addEdgeButton) {
+            options.addEdgeButton.textContent = originalLabel;
+            options.addEdgeButton.disabled = !canSaveRelations;
+          }
+        }, 1200);
+        return;
+      }
+      if (options.addEdgeButton) {
+        options.addEdgeButton.textContent = saveSucceeded ? "Add Edge" : originalLabel;
+        options.addEdgeButton.disabled = !canSaveRelations;
+      }
+    }
+
     function updateRemoveEdgeButton() {
       if (!options.removeEdgeButton) {
         return;
       }
       options.removeEdgeButton.disabled = !canSaveRelations || !selectedEdge;
+    }
+
+    if (options.relationKindSelect) {
+      options.relationKindSelect.disabled = !canSaveRelations;
+    }
+
+    if (options.addEdgeButton) {
+      options.addEdgeButton.disabled = !canSaveRelations;
+      options.addEdgeButton.addEventListener("click", () => {
+        if (!canSaveRelations) {
+          return;
+        }
+        if (createEdgeMode) {
+          exitCreateEdgeMode();
+          setMetaStatus(options, "edge creation cancelled");
+          return;
+        }
+        enterCreateEdgeMode();
+      });
     }
 
     if (options.fitButton) {
@@ -304,7 +418,7 @@
         options.removeEdgeButton.disabled = true;
         options.removeEdgeButton.textContent = "Removing...";
         try {
-          await persistRelations(options, cy, selectedEdge.id());
+          await persistRelations(options, cy, { omitEdgeId: selectedEdge.id() });
           selectedEdge.remove();
           selectedEdge = undefined;
           updateMetaSummary(options, cy.nodes().length, cy.edges().length);
@@ -329,15 +443,37 @@
           updateMetaSummary(options, cy.nodes().length, cy.edges().length);
           cy.on("tap", (event) => {
             if (event.target === cy) {
+              if (createEdgeMode) {
+                clearEdgeSourceSelection();
+                setMetaStatus(options, `select source node for ${currentRelationKind()}`);
+              }
               selectedEdge = undefined;
               updateRemoveEdgeButton();
             }
           });
           cy.on("tap", "edge", (event) => {
+            if (createEdgeMode) {
+              return;
+            }
             selectedEdge = event.target;
             updateRemoveEdgeButton();
           });
           cy.on("tap", "node", (event) => {
+            if (createEdgeMode) {
+              const tappedNode = event.target;
+              if (!edgeSourceNode) {
+                edgeSourceNode = tappedNode;
+                edgeSourceNode.select();
+                setMetaStatus(options, `select target node for ${currentRelationKind()}`);
+                return;
+              }
+              if (edgeSourceNode.same(tappedNode)) {
+                setMetaStatus(options, "choose a different target node");
+                return;
+              }
+              void addRelation(tappedNode);
+              return;
+            }
             selectedEdge = undefined;
             updateRemoveEdgeButton();
             const path = event.target.data("path");

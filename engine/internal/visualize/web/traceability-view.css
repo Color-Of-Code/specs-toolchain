@@ -21,6 +21,7 @@ body.traceability-shell {
 }
 
 .toolbar button,
+.toolbar select,
 .toolbar .toolbar-link {
   background: var(--traceability-button-bg, #204a68);
   color: var(--traceability-button-fg, #f5fbff);
@@ -33,8 +34,13 @@ body.traceability-shell {
 }
 
 .toolbar button:hover,
+.toolbar select:hover,
 .toolbar .toolbar-link:hover {
   background: var(--traceability-button-hover, #2e648d);
+}
+
+.toolbar select {
+  appearance: none;
 }
 
 .meta {

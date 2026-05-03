@@ -43,6 +43,14 @@ var traceabilityPageTemplate = template.Must(template.New("traceability-page").P
 <div class="toolbar">
   <button id="refresh" type="button">Refresh</button>
   <button id="fit" type="button">Fit</button>
+  {{ if .SaveRelationsURL }}<select id="relation-kind" aria-label="Relation kind">
+    <option value="realization">Realization</option>
+    <option value="feature_implementation">Feature</option>
+    <option value="component_implementation">Component</option>
+    <option value="service_implementation">Service</option>
+    <option value="api_implementation">API</option>
+  </select>{{ end }}
+  {{ if .SaveRelationsURL }}<button id="add-edge" type="button">Add Edge</button>{{ end }}
   {{ if .SaveRelationsURL }}<button id="remove-edge" type="button">Remove Selected Edge</button>{{ end }}
   {{ if .SaveLayoutURL }}<button id="save-layout" type="button">Save Layout</button>{{ end }}
   <a class="toolbar-link" href="{{ .JSONURL }}">Graph JSON</a>
@@ -62,6 +70,8 @@ var traceabilityPageTemplate = template.Must(template.New("traceability-page").P
     artifactBaseUrl: {{ printf "%q" .ArtifactURL }},
     container: document.getElementById('graph'),
     fitButton: document.getElementById('fit'),
+    addEdgeButton: document.getElementById('add-edge'),
+    relationKindSelect: document.getElementById('relation-kind'),
     removeEdgeButton: document.getElementById('remove-edge'),
     saveButton: document.getElementById('save-layout'),
     metaElement: document.getElementById('meta'),
