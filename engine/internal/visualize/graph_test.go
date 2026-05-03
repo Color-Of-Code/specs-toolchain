@@ -2,10 +2,13 @@ package visualize
 
 import (
 	"bytes"
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	tracegraph "github.com/Color-Of-Code/specs-toolchain/engine/internal/graph"
 )
 
 func write(t *testing.T, path, body string) {
@@ -18,41 +21,55 @@ func write(t *testing.T, path, body string) {
 	}
 }
 
-func sampleModel(t *testing.T) string {
-	model := t.TempDir()
-	write(t, filepath.Join(model, "requirements", "core", "001-foo.md"), `# Foo Requirement
+func sampleGraph(t *testing.T) (string, string, *tracegraph.Graph) {
+	root := t.TempDir()
+	model := filepath.Join(root, "model")
+	product := filepath.Join(root, "product")
+	write(t, filepath.Join(model, "requirements", "core", "001-foo.md"), "# Foo Requirement\n")
+	write(t, filepath.Join(model, "features", "core", "foo.md"), "# Foo Feature\n")
+	write(t, filepath.Join(model, "components", "core", "comp.md"), "# Comp\n")
+	write(t, filepath.Join(product, "core", "001-login.md"), "# Login PR\n")
+	return model, product, &tracegraph.Graph{
+		Realizations: []tracegraph.RelationEntry{{
+			Source:  "product/core/001-login",
+			Targets: []string{"model/requirements/core/001-foo"},
+		}},
+		FeatureImplementations: []tracegraph.RelationEntry{{
+			Source:  "model/requirements/core/001-foo",
+			Targets: []string{"model/features/core/foo"},
+		}},
+		ComponentImplementations: []tracegraph.RelationEntry{{
+			Source:  "model/requirements/core/001-foo",
+			Targets: []string{"model/components/core/comp"},
+		}},
+	}
+}
 
-## Implemented By
-
-- [feat](../../features/core/foo.md)
-- [comp](../../components/core/comp.md)
-`)
-	write(t, filepath.Join(model, "features", "core", "foo.md"), `# Foo Feature
-
-## Requirements
-
-- [REQ-001](../../requirements/core/001-foo.md)
-`)
-	write(t, filepath.Join(model, "components", "core", "comp.md"), `# Comp
-
-## Requirements
-
-- [REQ-001](../../requirements/core/001-foo.md)
-`)
-	return model
+func sampleModelGraph(t *testing.T) (string, *tracegraph.Graph) {
+	model, _, traceability := sampleGraph(t)
+	return model, &tracegraph.Graph{
+		FeatureImplementations:   traceability.FeatureImplementations,
+		ComponentImplementations: traceability.ComponentImplementations,
+		Layout: []tracegraph.LayoutEntry{{
+			ID:     "model/features/core/foo",
+			X:      12.5,
+			Y:      8.75,
+			Locked: true,
+		}},
+	}
 }
 
 func TestBuild(t *testing.T) {
-	g, err := Build(sampleModel(t), "")
+	model, traceability := sampleModelGraph(t)
+	g, err := Build(model, "", traceability)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if len(g.Nodes) != 3 {
 		t.Errorf("want 3 nodes, got %d", len(g.Nodes))
 	}
-	// Edges include forward and reverse, deduped/sorted; expect at least 4.
-	if len(g.Edges) < 4 {
-		t.Errorf("want >=4 edges, got %d: %+v", len(g.Edges), g.Edges)
+	if len(g.Edges) != 2 {
+		t.Errorf("want 2 edges, got %d: %+v", len(g.Edges), g.Edges)
 	}
 
 	kinds := map[string]int{}
@@ -73,14 +90,15 @@ func TestBuild(t *testing.T) {
 	}
 }
 
-func TestBuild_MissingDir(t *testing.T) {
-	if _, err := Build(filepath.Join(t.TempDir(), "nope"), ""); err == nil {
-		t.Fatal("expected error for missing model dir")
+func TestBuild_NilGraph(t *testing.T) {
+	if _, err := Build(t.TempDir(), "", nil); err == nil {
+		t.Fatal("expected error for nil graph")
 	}
 }
 
 func TestWriteDOT(t *testing.T) {
-	g, err := Build(sampleModel(t), "")
+	model, traceability := sampleModelGraph(t)
+	g, err := Build(model, "", traceability)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -97,7 +115,8 @@ func TestWriteDOT(t *testing.T) {
 }
 
 func TestWriteMermaid(t *testing.T) {
-	g, err := Build(sampleModel(t), "")
+	model, traceability := sampleModelGraph(t)
+	g, err := Build(model, "", traceability)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -117,52 +136,58 @@ func TestWriteMermaid(t *testing.T) {
 	}
 }
 
-func TestModelKindFor(t *testing.T) {
-	cases := map[string]string{
-		"requirements/core/001-foo.md": "requirement",
-		"features/core/foo.md":         "feature",
-		"components/core/foo.md":       "component",
-		"apis/core/foo.md":             "api",
-		"services/foo.md":              "service",
-		"baselines/repo-baseline.md":   "",
-		"glossary.md":                  "",
+func TestWriteJSON(t *testing.T) {
+	model, traceability := sampleModelGraph(t)
+	g, err := Build(model, "", traceability)
+	if err != nil {
+		t.Fatal(err)
 	}
-	for in, want := range cases {
-		if got := modelKindFor(in); got != want {
-			t.Errorf("modelKindFor(%q)=%q want %q", in, got, want)
+	var out bytes.Buffer
+	if err := WriteJSON(&out, g); err != nil {
+		t.Fatal(err)
+	}
+	var payload struct {
+		Nodes []struct {
+			ID     string `json:"id"`
+			Path   string `json:"path"`
+			Label  string `json:"label"`
+			Kind   string `json:"kind"`
+			Layout *struct {
+				X      float64 `json:"x"`
+				Y      float64 `json:"y"`
+				Locked bool    `json:"locked"`
+			} `json:"layout"`
+		} `json:"nodes"`
+		Edges []struct {
+			Source string `json:"source"`
+			Target string `json:"target"`
+			Kind   string `json:"kind"`
+		} `json:"edges"`
+	}
+	if err := json.Unmarshal(out.Bytes(), &payload); err != nil {
+		t.Fatal(err)
+	}
+	if len(payload.Nodes) != 3 || len(payload.Edges) != 2 {
+		t.Fatalf("unexpected payload sizes: %+v", payload)
+	}
+	var sawFeatureLayout bool
+	for _, node := range payload.Nodes {
+		if node.ID != "model/features/core/foo" {
+			continue
 		}
+		if node.Layout == nil || node.Layout.X != 12.5 || node.Layout.Y != 8.75 || !node.Layout.Locked {
+			t.Fatalf("feature layout missing from JSON node: %+v", node)
+		}
+		sawFeatureLayout = true
+	}
+	if !sawFeatureLayout {
+		t.Fatalf("feature node missing from JSON payload: %+v", payload.Nodes)
 	}
 }
 
 func TestBuild_WithProductTree(t *testing.T) {
-	root := t.TempDir()
-	model := filepath.Join(root, "model")
-	product := filepath.Join(root, "product")
-
-	write(t, filepath.Join(product, "core", "001-login.md"), `# Login PR
-
-## Realised By
-
-- [REQ](../../model/requirements/core/001-login.md)
-`)
-	write(t, filepath.Join(model, "requirements", "core", "001-login.md"), `# Login req
-
-## Realises
-
-- [PR](../../../product/core/001-login.md)
-
-## Implemented By
-
-- [feat](../../features/core/login.md)
-`)
-	write(t, filepath.Join(model, "features", "core", "login.md"), `# Login Feature
-
-## Requirements
-
-- [REQ-001](../../requirements/core/001-login.md)
-`)
-
-	g, err := Build(model, product)
+	model, product, traceability := sampleGraph(t)
+	g, err := Build(model, product, traceability)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -174,14 +199,14 @@ func TestBuild_WithProductTree(t *testing.T) {
 	if kinds["product-requirement"] != 1 {
 		t.Errorf("want 1 product-requirement node, got %d", kinds["product-requirement"])
 	}
-	if kinds["requirement"] != 1 || kinds["feature"] != 1 {
+	if kinds["requirement"] != 1 || kinds["feature"] != 1 || kinds["component"] != 1 {
 		t.Errorf("want 1 req+1 feature, got kinds=%v", kinds)
 	}
 
 	// PR -> req edge present; req -> feat edge present.
 	var sawPRtoReq, sawReqToFeat bool
 	for _, e := range g.Edges {
-		if strings.HasPrefix(e.From, "n") && strings.Contains(e.From, "product") {
+		if strings.Contains(e.From, "product") && strings.Contains(e.To, "requirements") {
 			sawPRtoReq = true
 		}
 		if strings.Contains(e.From, "requirements") && strings.Contains(e.To, "features") {
@@ -191,5 +216,7 @@ func TestBuild_WithProductTree(t *testing.T) {
 	if !sawPRtoReq {
 		t.Errorf("expected a PR->req edge, got %+v", g.Edges)
 	}
-	_ = sawReqToFeat // existing tests already cover this; kept for readability.
+	if !sawReqToFeat {
+		t.Errorf("expected a req->feature edge, got %+v", g.Edges)
+	}
 }

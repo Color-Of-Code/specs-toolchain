@@ -3,8 +3,8 @@
 ## Summary
 
 Render the product-requirement → requirement → feature/component/api/service
-graph as a Graphviz DOT file or a Mermaid diagram suitable for embedding in
-markdown.
+graph as Graphviz DOT, Mermaid, or JSON derived from the canonical
+traceability graph.
 
 ## Owner
 
@@ -19,14 +19,16 @@ into components.
 
 ## Entry point
 
-`specs visualize traceability [--format dot|mermaid] [--out <path>]`
+`specs visualize traceability [--format dot|mermaid|json] [--out <path>]`
 
 Or VS Code palette: **Specs: Visualize traceability** (renders in a
 webview).
 
 ## Exit point
 
-A graph written to `--out` (or stdout) in the requested format. The
+A graph written to `--out` (or stdout) in the requested format. DOT and
+Mermaid are suitable for review artifacts; JSON is suitable for downstream
+tooling and UI consumers. The
 VS Code panel shows the rendered diagram interactively.
 
 ## Iteration

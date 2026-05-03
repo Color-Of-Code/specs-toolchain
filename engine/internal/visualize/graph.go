@@ -1,17 +1,17 @@
-// Package visualize builds traceability graphs from the model and product
-// trees.
+// Package visualize builds rendered traceability graphs from the canonical
+// traceability graph and the current model and product trees.
 //
 // The graph captures the traceability edge families used throughout the
 // toolchain:
 //
-//	product-requirement -> requirement                  (## Realised By)
-//	requirement -> feature/component/api/service        (## Implemented By)
-//	feature/component/... -> requirement                (## Requirements)
+//	product-requirement -> requirement
+//	requirement -> feature/component/api/service
 //
-// Output formats: DOT (graphviz) and Mermaid (`flowchart`).
+// Output formats: DOT (graphviz), Mermaid (`flowchart`), and JSON.
 package visualize
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -19,21 +19,31 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+
+	tracegraph "github.com/Color-Of-Code/specs-toolchain/engine/internal/graph"
 )
 
 // Edge is a directed link between two model files (workspace-relative).
 type Edge struct {
-	From string
-	To   string
+	From   string
+	To     string
+	Source string
+	Target string
+	Kind   string
 }
 
 // Node carries a stable id derived from its path plus a display label
 // (the file's H1, or the basename when no H1 is present).
 type Node struct {
-	ID    string // sanitised, unique per file
-	Path  string // workspace-relative; product-requirement nodes are prefixed with "product/"
-	Label string
-	Kind  string // product-requirement | requirement | feature | component | api | service
+	ID        string // sanitised, unique per file
+	NodeID    string
+	Path      string // workspace-relative markdown file path
+	Label     string
+	Kind      string // product-requirement | requirement | feature | component | api | service
+	HasLayout bool
+	X         float64
+	Y         float64
+	Locked    bool
 }
 
 // Graph is the resolved traceability graph for a model tree.
@@ -43,171 +53,78 @@ type Graph struct {
 }
 
 var (
-	linkRe          = regexp.MustCompile(`\]\(([^)]+)\)`)
-	sectionHeaderRe = regexp.MustCompile(`(?m)^##\s+(.+?)\s*$`)
-	h1Re            = regexp.MustCompile(`(?m)^#\s+(.+?)\s*$`)
+	h1Re = regexp.MustCompile(`(?m)^#\s+(.+?)\s*$`)
 )
 
-// Build walks modelDir and productDir and returns the graph. productDir may
-// be empty or non-existent; in that case product-requirement nodes are
-// simply absent from the result.
-func Build(modelDir, productDir string) (*Graph, error) {
-	if _, err := os.Stat(modelDir); err != nil {
-		return nil, fmt.Errorf("model dir %s: %w", modelDir, err)
+// Build projects the canonical traceability graph into the visualization DTO.
+func Build(modelDir, productDir string, g *tracegraph.Graph) (*Graph, error) {
+	if g == nil {
+		return nil, fmt.Errorf("graph is nil")
 	}
 
-	nodesByPath := map[string]*Node{}
-	addModelNode := func(absPath string) {
-		if _, ok := nodesByPath[absPath]; ok {
-			return
-		}
-		rel, err := filepath.Rel(modelDir, absPath)
+	result := &Graph{}
+	nodesByNodeID := make(map[string]*Node, len(g.NodeIDs()))
+	layoutByID := make(map[string]tracegraph.LayoutEntry, len(g.Layout))
+	for _, entry := range g.Layout {
+		layoutByID[entry.ID] = entry
+	}
+	for _, nodeID := range g.NodeIDs() {
+		path := tracegraph.MarkdownPath(nodeID)
+		absPath, err := markdownPathForNodeID(nodeID, modelDir, productDir)
 		if err != nil {
-			return
+			return nil, err
 		}
-		rel = filepath.ToSlash(rel)
-		kind := modelKindFor(rel)
-		if kind == "" {
-			return
+		node := &Node{
+			ID:     sanitiseID(nodeID),
+			NodeID: nodeID,
+			Path:   path,
+			Label:  readMarkdownTitle(absPath, path),
+			Kind:   tracegraph.KindForNodeID(nodeID),
 		}
-		nodesByPath[absPath] = &Node{
-			ID:    sanitiseID("model/" + rel),
-			Path:  rel,
-			Label: readH1(absPath, rel),
-			Kind:  kind,
+		if layout, ok := layoutByID[nodeID]; ok {
+			node.HasLayout = true
+			node.X = layout.X
+			node.Y = layout.Y
+			node.Locked = layout.Locked
 		}
+		result.Nodes = append(result.Nodes, node)
+		nodesByNodeID[nodeID] = node
 	}
-	addProductNode := func(absPath string) {
-		if productDir == "" {
-			return
-		}
-		if _, ok := nodesByPath[absPath]; ok {
-			return
-		}
-		rel, err := filepath.Rel(productDir, absPath)
-		if err != nil {
-			return
-		}
-		rel = filepath.ToSlash(rel)
-		display := "product/" + rel
-		nodesByPath[absPath] = &Node{
-			ID:    sanitiseID(display),
-			Path:  display,
-			Label: readH1(absPath, rel),
-			Kind:  "product-requirement",
-		}
-	}
+	sort.Slice(result.Nodes, func(i, j int) bool { return result.Nodes[i].Path < result.Nodes[j].Path })
 
-	var edges []Edge
-	// walkModel walks an area within modelDir for a given section header,
-	// ensuring nodes on both sides of each edge.
-	walkModel := func(area, section string, addTarget func(string)) {
-		root := filepath.Join(modelDir, area)
-		if _, err := os.Stat(root); err != nil {
-			return
-		}
-		_ = filepath.Walk(root, func(p string, info os.FileInfo, err error) error {
-			if err != nil || info == nil || info.IsDir() {
-				return nil
-			}
-			if !strings.HasSuffix(p, ".md") || filepath.Base(p) == "_index.md" {
-				return nil
-			}
-			data, err := os.ReadFile(p)
-			if err != nil {
-				return nil
-			}
-			body := extractSection(string(data), section)
-			if body == "" {
-				return nil
-			}
-			addModelNode(p)
-			for _, t := range linksIn(body) {
-				abs := resolveTarget(p, t)
-				if abs == "" {
-					continue
-				}
-				addTarget(abs)
-				if _, ok := nodesByPath[abs]; !ok {
-					continue
-				}
-				edges = append(edges, Edge{From: p, To: abs})
-			}
-			return nil
-		})
-	}
-	walkProduct := func(section string) {
-		if productDir == "" {
-			return
-		}
-		if _, err := os.Stat(productDir); err != nil {
-			return
-		}
-		_ = filepath.Walk(productDir, func(p string, info os.FileInfo, err error) error {
-			if err != nil || info == nil || info.IsDir() {
-				return nil
-			}
-			if !strings.HasSuffix(p, ".md") || filepath.Base(p) == "_index.md" {
-				return nil
-			}
-			data, err := os.ReadFile(p)
-			if err != nil {
-				return nil
-			}
-			body := extractSection(string(data), section)
-			if body == "" {
-				return nil
-			}
-			addProductNode(p)
-			for _, t := range linksIn(body) {
-				abs := resolveTarget(p, t)
-				if abs == "" {
-					continue
-				}
-				addModelNode(abs)
-				if _, ok := nodesByPath[abs]; !ok {
-					continue
-				}
-				edges = append(edges, Edge{From: p, To: abs})
-			}
-			return nil
-		})
-	}
-
-	walkProduct("Realised By")
-	walkModel("requirements", "Implemented By", addModelNode)
-	for _, area := range []string{"features", "components", "apis", "services"} {
-		walkModel(area, "Requirements", addModelNode)
-	}
-
-	g := &Graph{}
-	for _, n := range nodesByPath {
-		g.Nodes = append(g.Nodes, n)
-	}
-	sort.Slice(g.Nodes, func(i, j int) bool { return g.Nodes[i].Path < g.Nodes[j].Path })
-
-	// Re-key edges from absolute paths to node IDs (and dedupe).
 	seen := map[string]bool{}
-	for _, e := range edges {
-		from, fok := nodesByPath[e.From]
-		to, tok := nodesByPath[e.To]
-		if !fok || !tok {
-			continue
+	appendEdges := func(kind string, entries []tracegraph.RelationEntry) {
+		for _, entry := range entries {
+			from, ok := nodesByNodeID[entry.Source]
+			if !ok {
+				continue
+			}
+			for _, target := range entry.Targets {
+				to, ok := nodesByNodeID[target]
+				if !ok {
+					continue
+				}
+				key := from.ID + "->" + to.ID
+				if seen[key] {
+					continue
+				}
+				seen[key] = true
+				result.Edges = append(result.Edges, Edge{From: from.ID, To: to.ID, Source: from.NodeID, Target: to.NodeID, Kind: kind})
+			}
 		}
-		key := from.ID + "->" + to.ID
-		if seen[key] {
-			continue
-		}
-		seen[key] = true
-		g.Edges = append(g.Edges, Edge{From: from.ID, To: to.ID})
 	}
-	sort.Slice(g.Edges, func(i, j int) bool {
-		if g.Edges[i].From != g.Edges[j].From {
-			return g.Edges[i].From < g.Edges[j].From
+	appendEdges(string(tracegraph.PartKindRealization), g.Realizations)
+	appendEdges(string(tracegraph.PartKindFeatureImplementation), g.FeatureImplementations)
+	appendEdges(string(tracegraph.PartKindComponentImplementation), g.ComponentImplementations)
+	appendEdges(string(tracegraph.PartKindServiceImplementation), g.ServiceImplementations)
+	appendEdges(string(tracegraph.PartKindAPIImplementation), g.APIImplementations)
+	sort.Slice(result.Edges, func(i, j int) bool {
+		if result.Edges[i].From != result.Edges[j].From {
+			return result.Edges[i].From < result.Edges[j].From
 		}
-		return g.Edges[i].To < g.Edges[j].To
+		return result.Edges[i].To < result.Edges[j].To
 	})
-	return g, nil
+	return result, nil
 }
 
 // WriteDOT renders g in graphviz DOT format.
@@ -256,20 +173,49 @@ func WriteMermaid(out io.Writer, g *Graph) error {
 	return nil
 }
 
-func modelKindFor(rel string) string {
-	switch {
-	case strings.HasPrefix(rel, "requirements/"):
-		return "requirement"
-	case strings.HasPrefix(rel, "features/"):
-		return "feature"
-	case strings.HasPrefix(rel, "components/"):
-		return "component"
-	case strings.HasPrefix(rel, "apis/"):
-		return "api"
-	case strings.HasPrefix(rel, "services/"):
-		return "service"
+func WriteJSON(out io.Writer, g *Graph) error {
+	type layout struct {
+		X      float64 `json:"x"`
+		Y      float64 `json:"y"`
+		Locked bool    `json:"locked,omitempty"`
 	}
-	return ""
+	type node struct {
+		ID     string  `json:"id"`
+		Path   string  `json:"path"`
+		Label  string  `json:"label"`
+		Kind   string  `json:"kind"`
+		Layout *layout `json:"layout,omitempty"`
+	}
+	type edge struct {
+		Source string `json:"source"`
+		Target string `json:"target"`
+		Kind   string `json:"kind"`
+	}
+	payload := struct {
+		Nodes []node `json:"nodes"`
+		Edges []edge `json:"edges"`
+	}{
+		Nodes: make([]node, 0, len(g.Nodes)),
+		Edges: make([]edge, 0, len(g.Edges)),
+	}
+	for _, current := range g.Nodes {
+		jsonNode := node{
+			ID:    current.NodeID,
+			Path:  current.Path,
+			Label: current.Label,
+			Kind:  current.Kind,
+		}
+		if current.HasLayout {
+			jsonNode.Layout = &layout{X: current.X, Y: current.Y, Locked: current.Locked}
+		}
+		payload.Nodes = append(payload.Nodes, jsonNode)
+	}
+	for _, current := range g.Edges {
+		payload.Edges = append(payload.Edges, edge{Source: current.Source, Target: current.Target, Kind: current.Kind})
+	}
+	encoder := json.NewEncoder(out)
+	encoder.SetIndent("", "  ")
+	return encoder.Encode(payload)
 }
 
 func clusterLabel(kind string) string {
@@ -309,7 +255,6 @@ func colorFor(kind string) string {
 }
 
 func sanitiseID(rel string) string {
-	rel = strings.TrimSuffix(rel, ".md")
 	var b strings.Builder
 	b.WriteByte('n')
 	for _, r := range rel {
@@ -323,69 +268,30 @@ func sanitiseID(rel string) string {
 	return b.String()
 }
 
-// readH1 returns the first H1 from path, or a slug-ish fallback.
-func readH1(path, rel string) string {
+func readMarkdownTitle(path, fallback string) string {
 	data, err := os.ReadFile(path)
 	if err != nil {
-		return rel
+		return strings.TrimSuffix(filepath.Base(fallback), ".md")
 	}
 	if m := h1Re.FindStringSubmatch(string(data)); len(m) == 2 {
 		return strings.TrimSpace(m[1])
 	}
-	return strings.TrimSuffix(filepath.Base(rel), ".md")
+	return strings.TrimSuffix(filepath.Base(fallback), ".md")
 }
 
-func extractSection(body, name string) string {
-	matches := sectionHeaderRe.FindAllStringSubmatchIndex(body, -1)
-	for i, m := range matches {
-		title := strings.TrimSpace(body[m[2]:m[3]])
-		if !strings.EqualFold(title, name) {
-			continue
+func markdownPathForNodeID(nodeID, modelDir, productDir string) (string, error) {
+	switch {
+	case strings.HasPrefix(nodeID, "product/"):
+		if productDir == "" {
+			return "", nil
 		}
-		end := len(body)
-		if i+1 < len(matches) {
-			end = matches[i+1][0]
+		return filepath.Join(productDir, filepath.FromSlash(strings.TrimPrefix(tracegraph.MarkdownPath(nodeID), "product/"))), nil
+	case strings.HasPrefix(nodeID, "model/"):
+		if modelDir == "" {
+			return "", nil
 		}
-		return body[m[1]:end]
+		return filepath.Join(modelDir, filepath.FromSlash(strings.TrimPrefix(tracegraph.MarkdownPath(nodeID), "model/"))), nil
+	default:
+		return "", fmt.Errorf("unsupported node id %q", nodeID)
 	}
-	return ""
-}
-
-func linksIn(body string) []string {
-	var out []string
-	for _, m := range linkRe.FindAllStringSubmatch(body, -1) {
-		t := strings.TrimSpace(m[1])
-		if t == "" {
-			continue
-		}
-		switch {
-		case strings.HasPrefix(t, "http://"),
-			strings.HasPrefix(t, "https://"),
-			strings.HasPrefix(t, "mailto:"),
-			strings.HasPrefix(t, "#"):
-			continue
-		}
-		if i := strings.IndexAny(t, "#?"); i >= 0 {
-			t = t[:i]
-		}
-		if t != "" {
-			out = append(out, t)
-		}
-	}
-	return out
-}
-
-func resolveTarget(fromFile, target string) string {
-	if filepath.IsAbs(target) {
-		return ""
-	}
-	abs := filepath.Clean(filepath.Join(filepath.Dir(fromFile), target))
-	st, err := os.Stat(abs)
-	if err != nil || st.IsDir() {
-		return ""
-	}
-	if !strings.HasSuffix(abs, ".md") || filepath.Base(abs) == "_index.md" {
-		return ""
-	}
-	return abs
 }

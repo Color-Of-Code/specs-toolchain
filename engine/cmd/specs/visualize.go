@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/Color-Of-Code/specs-toolchain/engine/internal/config"
+	"github.com/Color-Of-Code/specs-toolchain/engine/internal/graph"
 	"github.com/Color-Of-Code/specs-toolchain/engine/internal/visualize"
 )
 
@@ -29,15 +30,15 @@ func cmdVisualize(args []string) error {
 
 // cmdVisualizeTraceability emits the requirement <-> implementer graph.
 //
-//	--format dot|mermaid    output format (default: dot)
+//	--format dot|mermaid|json    output format (default: dot)
 //	--out <path>            file to write (default: stdout)
 func cmdVisualizeTraceability(args []string) error {
 	fs := flag.NewFlagSet("visualize traceability", flag.ContinueOnError)
-	format := fs.String("format", "dot", "output format: dot | mermaid")
+	format := fs.String("format", "dot", "output format: dot | mermaid | json")
 	outPath := fs.String("out", "", "write to file (use - or empty for stdout)")
 	fs.StringVar(outPath, "o", "", "shorthand for --out")
 	fs.Usage = func() {
-		fmt.Fprintln(os.Stderr, "Usage: specs visualize traceability [--format dot|mermaid] [--out <path>|-]")
+		fmt.Fprintln(os.Stderr, "Usage: specs visualize traceability [--format dot|mermaid|json] [--out <path>|-]")
 		fs.PrintDefaults()
 	}
 	if err := fs.Parse(args); err != nil {
@@ -47,7 +48,11 @@ func cmdVisualizeTraceability(args []string) error {
 	if err != nil {
 		return err
 	}
-	g, err := visualize.Build(cfg.ModelDir, cfg.ProductDir)
+	traceability, err := graph.Load(cfg.GraphManifest)
+	if err != nil {
+		return exitWith(1, "load graph %s: %v", cfg.GraphManifest, err)
+	}
+	g, err := visualize.Build(cfg.ModelDir, cfg.ProductDir, traceability)
 	if err != nil {
 		return exitWith(1, "%v", err)
 	}
@@ -71,8 +76,12 @@ func cmdVisualizeTraceability(args []string) error {
 		if err := visualize.WriteMermaid(out, g); err != nil {
 			return err
 		}
+	case "json":
+		if err := visualize.WriteJSON(out, g); err != nil {
+			return err
+		}
 	default:
-		return exitWith(2, "unknown --format %q (want dot or mermaid)", *format)
+		return exitWith(2, "unknown --format %q (want dot, mermaid, or json)", *format)
 	}
 	if *outPath != "" && *outPath != "-" {
 		fmt.Fprintf(os.Stderr, "wrote %s (%d node(s), %d edge(s))\n", *outPath, len(g.Nodes), len(g.Edges))
