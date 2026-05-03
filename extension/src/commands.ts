@@ -43,6 +43,9 @@ export function registerCommands(context: vscode.ExtensionContext): void {
 
   // Baseline.
   reg("specs.baseline.update", () => baselineUpdate(context));
+
+  // Framework registry.
+  reg("specs.registerFrameworks", () => registerFrameworks(context));
 }
 
 // --- helpers ---
@@ -202,4 +205,53 @@ async function visualize(
   const uri = vscode.Uri.joinPath(folder.uri, outPath);
   const doc = await vscode.workspace.openTextDocument(uri);
   await vscode.window.showTextDocument(doc, { preview: true });
+}
+
+interface FrameworkEntry {
+  name: string;
+  url?: string;
+  ref?: string;
+  path?: string;
+}
+
+/**
+ * Reads specs.frameworks from settings and calls `specs framework add` for
+ * each entry, so the user-level registry stays in sync with their VS Code
+ * configuration without manual terminal commands.
+ */
+async function registerFrameworks(context: vscode.ExtensionContext): Promise<void> {
+  const cfg = vscode.workspace.getConfiguration("specs");
+  const entries = cfg.get<FrameworkEntry[]>("frameworks", []);
+
+  if (entries.length === 0) {
+    vscode.window.showInformationMessage(
+      "No frameworks configured. Add entries to 'specs.frameworks' in Settings.",
+    );
+    return;
+  }
+
+  const folder = findSpecsFolder() ?? vscode.workspace.workspaceFolders?.[0];
+  if (!folder) {
+    vscode.window.showWarningMessage("Specs: no workspace folder is open.");
+    return;
+  }
+  const cwd = findSpecsRoot(folder) ?? folder.uri.fsPath;
+
+  for (const entry of entries) {
+    if (!entry.name) {
+      continue;
+    }
+    const args = ["framework", "add", entry.name];
+    if (entry.url) {
+      args.push("--url", entry.url);
+      if (entry.ref) {
+        args.push("--ref", entry.ref);
+      }
+    } else if (entry.path) {
+      args.push("--path", entry.path);
+    } else {
+      continue; // neither url nor path — skip silently
+    }
+    runInTerminal(context, args, cwd);
+  }
 }
