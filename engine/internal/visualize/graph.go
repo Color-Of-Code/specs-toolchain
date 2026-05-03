@@ -57,6 +57,9 @@ var (
 )
 
 // Build projects the canonical traceability graph into the visualization DTO.
+// It includes ALL artifact files found under modelDir and productDir, not just
+// those already referenced by a graph relation, so unconnected artifacts are
+// visible and can be wired up interactively.
 func Build(modelDir, productDir string, g *tracegraph.Graph) (*Graph, error) {
 	if g == nil {
 		return nil, fmt.Errorf("graph is nil")
@@ -90,6 +93,46 @@ func Build(modelDir, productDir string, g *tracegraph.Graph) (*Graph, error) {
 		result.Nodes = append(result.Nodes, node)
 		nodesByNodeID[nodeID] = node
 	}
+
+	// Walk model and product trees to include artifacts not yet in any relation.
+	for _, root := range []struct {
+		dir    string
+		prefix string
+	}{
+		{modelDir, "model/"},
+		{productDir, "product/"},
+	} {
+		if root.dir == "" {
+			continue
+		}
+		_ = filepath.Walk(root.dir, func(p string, info os.FileInfo, err error) error {
+			if err != nil || info == nil || info.IsDir() {
+				return err
+			}
+			if !strings.HasSuffix(p, ".md") || filepath.Base(p) == "_index.md" {
+				return nil
+			}
+			rel, err := filepath.Rel(root.dir, p)
+			if err != nil {
+				return nil
+			}
+			nodeID := root.prefix + filepath.ToSlash(strings.TrimSuffix(rel, ".md"))
+			if _, exists := nodesByNodeID[nodeID]; exists {
+				return nil
+			}
+			node := &Node{
+				ID:     sanitiseID(nodeID),
+				NodeID: nodeID,
+				Path:   nodeID + ".md",
+				Label:  readMarkdownTitle(p, nodeID+".md"),
+				Kind:   tracegraph.KindForNodeID(nodeID),
+			}
+			result.Nodes = append(result.Nodes, node)
+			nodesByNodeID[nodeID] = node
+			return nil
+		})
+	}
+
 	sort.Slice(result.Nodes, func(i, j int) bool { return result.Nodes[i].Path < result.Nodes[j].Path })
 
 	seen := map[string]bool{}
