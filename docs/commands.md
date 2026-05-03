@@ -20,7 +20,7 @@ Every command below is reachable as `specs <command>` on the terminal. Most are 
 - `specs graph import-markdown [--manifest <path>] [--force] [--dry-run] [--json]` — import the current markdown relationship fields and baseline table into canonical graph YAML.
 - `specs graph generate-markdown [--manifest <path>] [--dry-run] [--json]` — project canonical graph relations back into markdown field tables.
 - `specs graph rebuild-cache [--manifest <path>] [--cache <path>] [--dry-run] [--json]` — rebuild the derived SQLite cache from canonical graph YAML.
-- `specs visualize traceability [--format dot|mermaid|json] [--out <path>] [--serve] [--listen <addr>]` — render the canonical requirement ↔ implementer graph or host the local Cytoscape UI.
+- `specs visualize traceability [--format dot|mermaid|json] [--out <path>] [--serve] [--listen <addr>]` — render the canonical requirement ↔ implementer graph or host the local Cytoscape UI, including saved node layout in browser mode.
 - `specs vscode init [--force]` — write `.vscode/tasks.json` with every Specs task.
 
 ## Framework management commands

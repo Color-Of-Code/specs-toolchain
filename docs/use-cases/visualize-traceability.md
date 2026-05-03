@@ -23,7 +23,8 @@ into components.
 
 Or VS Code palette: **Specs: Visualize traceability** (renders in a
 webview). For a browser-based view, run `specs visualize traceability --serve`
-and open the printed local URL.
+and open the printed local URL. The browser UI can persist dragged node
+positions back into canonical `layout.yaml`.
 
 ## Exit point
 
@@ -31,7 +32,8 @@ A graph written to `--out` (or stdout) in the requested format, or a local
 web server hosting the same Cytoscape-based graph UI. DOT and Mermaid are
 suitable for review artifacts; JSON is suitable for downstream tooling and UI
 consumers. The VS Code panel and the local server both read the canonical
-graph JSON.
+graph JSON. In browser mode, saved node positions become canonical graph
+layout entries.
 
 ## Iteration
 

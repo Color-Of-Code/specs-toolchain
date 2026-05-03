@@ -11,16 +11,17 @@ import (
 var webAssets embed.FS
 
 type TraceabilityPageData struct {
-	Title        string
-	Hint         string
-	GraphURL     string
-	DotURL       string
-	JSONURL      string
-	ArtifactURL  string
-	Stylesheet   string
-	CytoscapeJS  string
-	AppJS        string
-	EmptyMessage string
+	Title         string
+	Hint          string
+	GraphURL      string
+	SaveLayoutURL string
+	DotURL        string
+	JSONURL       string
+	ArtifactURL   string
+	Stylesheet    string
+	CytoscapeJS   string
+	AppJS         string
+	EmptyMessage  string
 }
 
 type ArtifactPageData struct {
@@ -41,6 +42,7 @@ var traceabilityPageTemplate = template.Must(template.New("traceability-page").P
 <div class="toolbar">
   <button id="refresh" type="button">Refresh</button>
   <button id="fit" type="button">Fit</button>
+  {{ if .SaveLayoutURL }}<button id="save-layout" type="button">Save Layout</button>{{ end }}
   <a class="toolbar-link" href="{{ .JSONURL }}">Graph JSON</a>
   <a class="toolbar-link" href="{{ .DotURL }}">Graph DOT</a>
   <div class="meta" id="meta"></div>
@@ -53,9 +55,11 @@ var traceabilityPageTemplate = template.Must(template.New("traceability-page").P
   document.getElementById('refresh').addEventListener('click', () => window.location.reload());
   TraceabilityUI.mount({
     graphUrl: {{ printf "%q" .GraphURL }},
+    saveLayoutUrl: {{ printf "%q" .SaveLayoutURL }},
     artifactBaseUrl: {{ printf "%q" .ArtifactURL }},
     container: document.getElementById('graph'),
     fitButton: document.getElementById('fit'),
+    saveButton: document.getElementById('save-layout'),
     metaElement: document.getElementById('meta'),
     emptyMessage: {{ printf "%q" .EmptyMessage }},
   });

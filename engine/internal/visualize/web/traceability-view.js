@@ -62,6 +62,10 @@
     ];
   }
 
+  function roundCoord(value) {
+    return Math.round(value * 100) / 100;
+  }
+
   function hasLayout(graph) {
     return (graph.nodes || []).length > 0 && (graph.nodes || []).every((node) => Boolean(node.layout));
   }
@@ -76,7 +80,9 @@
 
   function renderGraph(options, graph) {
     if (options.metaElement) {
-      options.metaElement.textContent = `${graph.nodes.length} nodes / ${graph.edges.length} edges`;
+      const summary = `${graph.nodes.length} nodes / ${graph.edges.length} edges`;
+      options.metaElement.dataset.summary = summary;
+      options.metaElement.textContent = summary;
     }
     if (!graph.nodes.length) {
       options.container.innerHTML = `<pre style="padding: 16px; color: inherit;">${options.emptyMessage || "No traceability data found."}</pre>`;
@@ -133,6 +139,46 @@
     });
   }
 
+  function setMetaStatus(options, message) {
+    if (!options.metaElement) {
+      return;
+    }
+    const summary = options.metaElement.dataset.summary || options.metaElement.textContent || "";
+    options.metaElement.textContent = summary ? `${summary} • ${message}` : message;
+  }
+
+  function collectLayout(cy) {
+    return cy.nodes().map((node) => {
+      const position = node.position();
+      return {
+        id: node.id(),
+        x: roundCoord(position.x),
+        y: roundCoord(position.y),
+        locked: Boolean(node.locked()),
+      };
+    }).sort((left, right) => left.id.localeCompare(right.id));
+  }
+
+  async function persistLayout(options, cy) {
+    const payload = { nodes: collectLayout(cy) };
+    if (typeof options.onSaveLayout === "function") {
+      await options.onSaveLayout(payload);
+      return;
+    }
+    if (!options.saveLayoutUrl) {
+      return;
+    }
+    const response = await fetch(options.saveLayoutUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    if (!response.ok) {
+      const message = await response.text();
+      throw new Error(message || `layout request failed: ${response.status}`);
+    }
+  }
+
   function mount(options) {
     const container = options.container;
     if (!container) {
@@ -147,11 +193,38 @@
     const openPath = typeof options.onOpenPath === "function"
       ? options.onOpenPath
       : (path) => defaultOpenPath(options, path);
+    const canSaveLayout = Boolean(options.saveLayoutUrl || typeof options.onSaveLayout === "function");
 
     if (options.fitButton) {
       options.fitButton.addEventListener("click", () => {
         if (cy) {
           cy.fit(undefined, 40);
+        }
+      });
+    }
+
+    if (options.saveButton) {
+      options.saveButton.disabled = !canSaveLayout;
+      options.saveButton.addEventListener("click", async () => {
+        if (!cy || !canSaveLayout) {
+          return;
+        }
+        const originalLabel = options.saveButton.textContent;
+        options.saveButton.disabled = true;
+        options.saveButton.textContent = "Saving...";
+        try {
+          await persistLayout(options, cy);
+          options.saveButton.textContent = "Saved";
+          setMetaStatus(options, "layout saved");
+        } catch (error) {
+          console.error(error);
+          options.saveButton.textContent = "Save Failed";
+          setMetaStatus(options, "layout save failed");
+        } finally {
+          window.setTimeout(() => {
+            options.saveButton.disabled = !canSaveLayout;
+            options.saveButton.textContent = originalLabel;
+          }, 1200);
         }
       });
     }
