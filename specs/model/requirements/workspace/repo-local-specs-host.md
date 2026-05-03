@@ -4,20 +4,19 @@
 | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Status         | Draft                                                                                                                                                                                                                                                                                                                                     |
 | Realises       | [Repo Local Specs Host](../../../product/toolchain/repo-local-specs-host.md)                                                                                                                                                                                                                                                              |
-| Implemented By | [Repo Local Host Layout](../../features/workspace/repo-local-host-layout.md), [Specs Engine](../../components/engine/specs-engine.md), [VSCode Extension](../../components/extension/vscode-extension.md), [Workspace Diagnostics](../../services/workspace/workspace-diagnostics.md), [Doctor Json](../../apis/workspace/doctor-json.md) |
+| Implemented By | [Repo Local Host Layout](../../features/workspace/repo-local-host-layout.md)                                                                                                                                                                                                                                                              |
 
 ## Requirement
 
-The repository shall resolve a repo-local specs host and repo-local framework
-consistently across engine commands, extension development scripts, and
-traceability tooling so local development uses the same paths in every entry
-point.
+The repository shall provide a coherent repo-local specs host layout that can
+be exercised from the repo root without introducing path collisions between the
+content tree, framework directory, build outputs, and diagnostics workflows.
 
 ## Rationale
 
-Without a canonical local host layout, the repository either collides with the
-engine build artifact at the root `specs` path or silently points diagnostics
-and scaffolding at the wrong framework content.
+Without a single host-level requirement, the detailed technical requirements for
+path resolution, engine integration, and diagnostics drift into isolated fixes
+instead of describing one maintainable local development workflow.
 
 ## Verification
 

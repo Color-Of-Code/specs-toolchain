@@ -1,10 +1,10 @@
 # Specs Engine
 
-| Field        | Value                                                                          |
-| ------------ | ------------------------------------------------------------------------------ |
-| Status       | Draft                                                                          |
-| Requirements | [Repo Local Specs Host](../../requirements/workspace/repo-local-specs-host.md) |
-| Baseline     | —                                                                              |
+| Field        | Value                                                                                                                                                                                                      |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Status       | Draft                                                                                                                                                                                                      |
+| Requirements | [Config Relative Framework Directory](../../requirements/workspace/config-relative-framework-directory.md), [Repo Local Engine Integration](../../requirements/workspace/repo-local-engine-integration.md) |
+| Baseline     | —                                                                                                                                                                                                          |
 
 ## Responsibilities
 

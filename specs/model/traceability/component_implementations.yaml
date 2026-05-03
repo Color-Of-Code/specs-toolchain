@@ -1,6 +1,9 @@
 kind: component_implementation
 entries:
-  - source: model/requirements/workspace/repo-local-specs-host
+  - source: model/requirements/workspace/config-relative-framework-directory
+    targets:
+      - model/components/engine/specs-engine
+  - source: model/requirements/workspace/repo-local-engine-integration
     targets:
       - model/components/engine/specs-engine
       - model/components/extension/vscode-extension

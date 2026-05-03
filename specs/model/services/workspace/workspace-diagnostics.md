@@ -1,9 +1,9 @@
 # Workspace Diagnostics
 
-| Field        | Value                                                                          |
-| ------------ | ------------------------------------------------------------------------------ |
-| Status       | Draft                                                                          |
-| Requirements | [Repo Local Specs Host](../../requirements/workspace/repo-local-specs-host.md) |
+| Field        | Value                                                                                              |
+| ------------ | -------------------------------------------------------------------------------------------------- |
+| Status       | Draft                                                                                              |
+| Requirements | [Workspace Diagnostics Reporting](../../requirements/workspace/workspace-diagnostics-reporting.md) |
 
 ## Responsibilities
 

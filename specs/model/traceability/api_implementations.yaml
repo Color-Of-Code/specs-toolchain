@@ -1,5 +1,5 @@
 kind: api_implementation
 entries:
-  - source: model/requirements/workspace/repo-local-specs-host
+  - source: model/requirements/workspace/doctor-json-contract
     targets:
       - model/apis/workspace/doctor-json

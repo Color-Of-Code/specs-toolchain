@@ -1,5 +1,17 @@
 kind: feature_implementation
 entries:
+  - source: model/requirements/workspace/config-relative-framework-directory
+    targets:
+      - model/features/workspace/repo-local-host-layout
+  - source: model/requirements/workspace/doctor-json-contract
+    targets:
+      - model/features/workspace/repo-local-host-layout
+  - source: model/requirements/workspace/repo-local-engine-integration
+    targets:
+      - model/features/workspace/repo-local-host-layout
   - source: model/requirements/workspace/repo-local-specs-host
+    targets:
+      - model/features/workspace/repo-local-host-layout
+  - source: model/requirements/workspace/workspace-diagnostics-reporting
     targets:
       - model/features/workspace/repo-local-host-layout
