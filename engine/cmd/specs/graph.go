@@ -286,6 +286,9 @@ func cmdGraphValidate(args []string) error {
 	if err != nil {
 		return exitWith(1, "validate %s: %v", path, err)
 	}
+	if err := validateGraphNodeFiles(g, cfg.SpecsRoot); err != nil {
+		return exitWith(1, "validate %s: %v", path, err)
+	}
 	if err := validateBaselineRepos(g, cfg.Repos); err != nil {
 		return exitWith(1, "validate %s: %v", path, err)
 	}
@@ -356,6 +359,23 @@ func validateBaselineRepos(g *graph.Graph, repos map[string]string) error {
 	for index, entry := range g.Baselines {
 		if _, ok := repos[entry.Repo]; !ok {
 			return fmt.Errorf("baseline entry %d repo %q is not configured in repos", index, entry.Repo)
+		}
+	}
+	return nil
+}
+
+func validateGraphNodeFiles(g *graph.Graph, specsRoot string) error {
+	for _, nodeID := range g.NodeIDs() {
+		path := filepath.Join(specsRoot, filepath.FromSlash(graph.MarkdownPath(nodeID)))
+		info, err := os.Stat(path)
+		if err != nil {
+			if os.IsNotExist(err) {
+				return fmt.Errorf("node %q points to missing markdown file %s", nodeID, path)
+			}
+			return fmt.Errorf("stat node %q markdown file %s: %w", nodeID, path, err)
+		}
+		if info.IsDir() {
+			return fmt.Errorf("node %q points to directory %s, want markdown file", nodeID, path)
 		}
 	}
 	return nil

@@ -32,5 +32,5 @@ VS Code panel shows the rendered diagram interactively.
 ## Iteration
 
 Regenerate after every CR drain or before review milestones. Pair
-with [`specs link check`](verify-traceability.md) to confirm the
-visual gaps correspond to real link asymmetries (or vice versa).
+with [`specs graph validate`](verify-traceability.md) to confirm the
+visual gaps correspond to a real traceability validation failure (or vice versa).

@@ -1,7 +1,8 @@
 // Package visualize builds traceability graphs from the model and product
 // trees.
 //
-// The graph captures the same edges that internal/linkcheck verifies:
+// The graph captures the traceability edge families used throughout the
+// toolchain:
 //
 //	product-requirement -> requirement                  (## Realised By)
 //	requirement -> feature/component/api/service        (## Implemented By)

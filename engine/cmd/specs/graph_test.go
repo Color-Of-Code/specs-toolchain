@@ -15,8 +15,16 @@ import (
 func TestCmdGraphValidateJSON(t *testing.T) {
 	dir := t.TempDir()
 	specsDir := filepath.Join(dir, "specs")
-	if err := os.MkdirAll(filepath.Join(specsDir, "model", "traceability"), 0o755); err != nil {
-		t.Fatal(err)
+	for _, path := range []string{
+		filepath.Join(specsDir, "model", "traceability"),
+		filepath.Join(specsDir, "product"),
+		filepath.Join(specsDir, "model", "requirements"),
+		filepath.Join(specsDir, "model", "features"),
+		filepath.Join(specsDir, "model", "components"),
+	} {
+		if err := os.MkdirAll(path, 0o755); err != nil {
+			t.Fatal(err)
+		}
 	}
 	if err := config.Save(filepath.Join(specsDir, config.FileName), &config.File{
 		Repos: map[string]string{"host-repo": "repos/host"},
@@ -55,6 +63,50 @@ func TestCmdGraphValidateJSON(t *testing.T) {
 		if !strings.Contains(out, want) {
 			t.Fatalf("output missing %q:\n%s", want, out)
 		}
+	}
+}
+
+func TestCmdGraphValidateRejectsMissingNodeFile(t *testing.T) {
+	dir := t.TempDir()
+	specsDir := filepath.Join(dir, "specs")
+	for _, path := range []string{
+		filepath.Join(specsDir, "model", "traceability"),
+		filepath.Join(specsDir, "product"),
+		filepath.Join(specsDir, "model", "requirements"),
+		filepath.Join(specsDir, "model", "features"),
+		filepath.Join(specsDir, "model", "components"),
+	} {
+		if err := os.MkdirAll(path, 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := config.Save(filepath.Join(specsDir, config.FileName), &config.File{
+		Repos: map[string]string{"host-repo": "repos/host"},
+	}); err != nil {
+		t.Fatal(err)
+	}
+	writeGraphFixture(t, specsDir)
+
+	cwd, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() {
+		if err := os.Chdir(cwd); err != nil {
+			t.Fatalf("restore cwd: %v", err)
+		}
+	}()
+	if err := os.Chdir(specsDir); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := os.Remove(filepath.Join(specsDir, "model", "features", "alpha-feature.md")); err != nil {
+		t.Fatal(err)
+	}
+
+	err = cmdGraphValidate(nil)
+	if err == nil || !strings.Contains(err.Error(), `model/features/alpha-feature`) {
+		t.Fatalf("cmdGraphValidate() error = %v, want missing node file error", err)
 	}
 }
 
@@ -176,8 +228,16 @@ func TestCmdGraphGenerateMarkdownUpdatesFiles(t *testing.T) {
 func TestCmdGraphRebuildCacheWritesSQLite(t *testing.T) {
 	dir := t.TempDir()
 	specsDir := filepath.Join(dir, "specs")
-	if err := os.MkdirAll(filepath.Join(specsDir, "model", "traceability"), 0o755); err != nil {
-		t.Fatal(err)
+	for _, path := range []string{
+		filepath.Join(specsDir, "model", "traceability"),
+		filepath.Join(specsDir, "product"),
+		filepath.Join(specsDir, "model", "requirements"),
+		filepath.Join(specsDir, "model", "features"),
+		filepath.Join(specsDir, "model", "components"),
+	} {
+		if err := os.MkdirAll(path, 0o755); err != nil {
+			t.Fatal(err)
+		}
 	}
 	if err := config.Save(filepath.Join(specsDir, config.FileName), &config.File{
 		Repos: map[string]string{"host-repo": "repos/host"},
@@ -226,6 +286,17 @@ func TestCmdGraphRebuildCacheWritesSQLite(t *testing.T) {
 func writeGraphFixture(t *testing.T, specsDir string) {
 	t.Helper()
 	traceabilityDir := filepath.Join(specsDir, "model", "traceability")
+	artifacts := map[string]string{
+		filepath.Join(specsDir, "product", "alpha.md"):                           "# Alpha\n",
+		filepath.Join(specsDir, "model", "requirements", "alpha-requirement.md"): "# Alpha Requirement\n",
+		filepath.Join(specsDir, "model", "features", "alpha-feature.md"):         "# Alpha Feature\n",
+		filepath.Join(specsDir, "model", "components", "alpha-component.md"):     "# Alpha Component\n",
+	}
+	for path, content := range artifacts {
+		if err := os.WriteFile(path, []byte(content), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
 	files := map[string]string{
 		"graph.yaml": strings.Join([]string{
 			"schema_version: 1",

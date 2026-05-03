@@ -51,10 +51,10 @@ removed), ready for the merge commit.
 5. **Drain** with `specs cr drain --id <NNN>` (use `--dry-run` first,
    then `--yes` to apply). The engine `git mv`s product requirements into
    `product/` and model artifacts into the matching `model/` subtree.
-6. **Verify** with [`specs link check`](verify-traceability.md) and
+6. **Verify** with [`specs graph validate`](verify-traceability.md) and
    [`specs lint --baselines`](maintain-baselines.md) before merging.
 
 ### Iteration
 
 Steps 2–4 repeat until the CR is approved. After drain, if the merge
-introduces conflicts, resolve them and re-run `lint` + `link check`.
+introduces conflicts, resolve them and re-run `lint` + `graph validate`.

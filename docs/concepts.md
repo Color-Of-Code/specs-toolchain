@@ -24,7 +24,7 @@ product-requirement ──► requirement ──► feature / component / servic
        (PR)               (MR)
 ```
 
-This separation is what makes impact analysis tractable: edits to a PR surface as drift on every MR that realises it, and conversely a change in MR scope is traceable back to the PR that motivated it. `specs link check` enforces both directions; `specs visualize traceability` renders the full chain.
+This separation is what makes impact analysis tractable: edits to a PR surface as drift on every MR that realises it, and conversely a change in MR scope is traceable back to the PR that motivated it. `specs graph validate` checks the canonical traceability graph before review; `specs visualize traceability` renders the full chain.
 
 See [glossary.md](glossary.md) for the core vocabulary, especially the
 distinction between a product requirement and a requirement.

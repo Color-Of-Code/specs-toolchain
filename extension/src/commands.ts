@@ -15,7 +15,6 @@ const TERMINAL_COMMANDS: ReadonlyArray<readonly [string, readonly string[]]> = [
   ["specs.doctor", ["doctor"]],
   ["specs.frameworkUpdate", ["framework", "update"]],
   ["specs.cr.status", ["cr", "status"]],
-  ["specs.linkCheck", ["link", "check"]],
 ];
 
 export function registerCommands(context: vscode.ExtensionContext): void {

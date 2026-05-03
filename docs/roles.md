@@ -8,7 +8,7 @@ One person typically wears several roles in the same repository.
 | -------------------- | --------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
 | Any user             | Get the engine working locally; curate the per-machine framework registry               | `specs doctor`, `specs framework add` / `list` / `remove`       |
 | Project owner        | Stand up a host repository, choose `managed` vs. `local` mode, and seed editor tasks    | `specs init`, `specs vscode init`, `specs framework update`     |
-| Reviewer             | Confirm a proposed change request is structurally sound and traceable before it lands   | `specs link check`, `specs visualize traceability`              |
+| Reviewer             | Confirm a proposed change request is structurally sound and traceable before it lands   | `specs graph validate`, `specs visualize traceability`          |
 | Framework maintainer | Create, evolve, and distribute framework content for downstream host repos to consume   | `specs framework seed`; publishes a framework repo and registry |
 
 ## Notes

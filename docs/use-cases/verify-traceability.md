@@ -1,14 +1,13 @@
-# Verify traceability links
+# Verify traceability graph
 
 ## Summary
 
-Check that every traceability edge in the spec corpus has a matching reverse
-edge:
+Check that the canonical traceability graph is internally valid and points at
+real artifacts:
 
-- A product requirement listed as `Realised By` a model requirement is
-  reciprocally listed in that model requirement's `Realises` section.
-- A model requirement listed as `Implemented By` a feature or component is
-  reciprocally listed in that feature/component's `Requirements` section.
+- Every canonical node id resolves to a markdown artifact in the repo.
+- Every relation family uses valid source and target kinds.
+- Every baseline entry points at a configured repo mapping.
 
 ## Owner
 
@@ -20,22 +19,21 @@ edge:
 
 ## Purpose
 
-Guarantee bidirectional traceability across the model. One-way links
-silently rot; this check turns them into a CI failure.
+Guarantee that the canonical traceability graph is well-formed before review
+or release automation consumes it.
 
 ## Entry point
 
-`specs link check`
-
-Or VS Code palette: **Specs: Check links**.
+`specs graph validate`
 
 ## Exit point
 
-Zero exit on full symmetry. Non-zero with a list of asymmetric links
-(missing back-reference, dangling target, wrong id) otherwise.
+Zero exit on a valid graph. Non-zero with the first validation error
+(missing artifact, invalid node id, invalid relation endpoint, unknown repo,
+and similar graph-integrity failures) otherwise.
 
 ## Iteration
 
-Fix the reported file(s), re-run `specs link check`. Pair with
+Fix the reported graph or artifact file(s), re-run `specs graph validate`. Pair with
 [`specs visualize traceability`](visualize-traceability.md) when
-diagnosing structural gaps rather than individual missing links.
+diagnosing structural gaps rather than a specific validation failure.

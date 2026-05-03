@@ -59,11 +59,9 @@ specs cr drain    ──►  git mv into canonical model paths
   `specs format --check` is a CI gate.
 - **Style compliance** — `specs lint --style` enforces the configured
   rules (defaults compiled in, overridable via `style.yaml`).
-- **Bidirectional traceability** — `specs link check` verifies that every
-  product requirement listed as `Realised By` is reciprocally listed as
-  `Realises` on the model requirement, and that every requirement listed as
-  `Implemented By` is reciprocally listed in its feature/component, and vice
-  versa.
+- **Traceability integrity** — `specs graph validate` verifies that the
+  canonical traceability graph is well-formed, points at real markdown
+  artifacts, and uses valid baseline repo mappings.
 - **Component baselines** — `specs lint --baselines` detects drift between
   recorded SHAs and the real upstream commits;
   `specs baseline update` rewrites the table.

@@ -61,11 +61,6 @@
         "category": "Specs"
       },
       {
-        "command": "specs.linkCheck",
-        "title": "Link check (cross-references)",
-        "category": "Specs"
-      },
-      {
         "command": "specs.frameworkUpdate",
         "title": "Framework: Update cache",
         "category": "Specs"

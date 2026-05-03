@@ -29,7 +29,6 @@ func init() {
 		{"cr", "change-request operations (new, status, drain)", cmdCR},
 		{"baseline", "verify or update component baselines (check, update)", cmdBaseline},
 		{"graph", "manage canonical traceability graph data (validate)", cmdGraph},
-		{"link", "verify cross-links between requirements and implementers (check)", cmdLink},
 		{"visualize", "render the traceability graph (DOT or Mermaid)", cmdVisualize},
 		{"vscode", "manage .vscode integration (init)", cmdVSCode},
 		{"framework", "manage framework templates and content layer (list, add, remove, seed, update)", cmdFramework},
