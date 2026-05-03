@@ -381,7 +381,7 @@ func nodeIDForMarkdownPath(path, modelDir, productDir string) (string, error) {
 	if productDir != "" {
 		if productAbs, err := filepath.Abs(productDir); err == nil {
 			if rel, ok := withinRoot(productAbs, abs); ok {
-				return NormalizeNodeID(filepath.ToSlash(filepath.Join("product", rel[:len(rel)-len(filepath.Ext(rel))])) )
+				return NormalizeNodeID(filepath.ToSlash(filepath.Join("product", rel[:len(rel)-len(filepath.Ext(rel))])))
 			}
 		}
 	}
