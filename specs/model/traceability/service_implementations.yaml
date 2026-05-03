@@ -1,5 +1,5 @@
 kind: service_implementation
 entries:
-  - source: model/requirements/workspace/workspace-diagnostics-reporting
-    targets:
-      - model/services/workspace/workspace-diagnostics
+    - source: model/requirements/workspace/workspace-diagnostics-reporting
+      targets:
+        - model/services/workspace/workspace-diagnostics

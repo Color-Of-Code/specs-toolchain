@@ -18,13 +18,14 @@ export function getOutput(): vscode.OutputChannel {
  *   1. specs.enginePath setting (absolute path or relative to workspace)
  *   2. specs.useGlobalBinary === true: 'specs' on PATH
  *   3. extension's bundled binary at <extensionPath>/bin/specs[.exe]
- *   4. fallback: 'specs' on PATH
+ *   4. workspace-local binary at <workspace>/bin/specs[.exe]
+ *   5. fallback: 'specs' on PATH
  */
 export function resolveBinary(context: vscode.ExtensionContext): string {
   const cfg = vscode.workspace.getConfiguration("specs");
   const explicit = cfg.get<string>("enginePath", "").trim();
   if (explicit) {
-    return explicit;
+    return resolveExplicitBinary(explicit);
   }
   const useGlobal = cfg.get<boolean>("useGlobalBinary", false);
   const exe = process.platform === "win32" ? "specs.exe" : "specs";
@@ -32,7 +33,36 @@ export function resolveBinary(context: vscode.ExtensionContext): string {
   if (!useGlobal && fs.existsSync(bundled)) {
     return bundled;
   }
+  if (!useGlobal) {
+    const local = findWorkspaceBinary(exe);
+    if (local) {
+      return local;
+    }
+  }
   return "specs"; // resolved via PATH
+}
+
+function resolveExplicitBinary(explicit: string): string {
+  if (path.isAbsolute(explicit)) {
+    return explicit;
+  }
+  const folder = findSpecsFolder() ?? vscode.workspace.workspaceFolders?.[0];
+  if (!folder) {
+    return explicit;
+  }
+  return path.resolve(folder.uri.fsPath, explicit);
+}
+
+function findWorkspaceBinary(exe: string): string | undefined {
+  const folder = findSpecsFolder() ?? vscode.workspace.workspaceFolders?.[0];
+  if (!folder) {
+    return undefined;
+  }
+  const candidate = path.join(folder.uri.fsPath, "bin", exe);
+  if (fs.existsSync(candidate)) {
+    return candidate;
+  }
+  return undefined;
 }
 
 export interface RunResult {
@@ -97,13 +127,52 @@ export function findSpecsFolder(): vscode.WorkspaceFolder | undefined {
   return folders[0];
 }
 
-/** Returns the directory that contains .specs.yaml (the specs root). */
+/** Returns the resolved specs root from .specs.yaml when present. */
 export function findSpecsRoot(folder: vscode.WorkspaceFolder): string | undefined {
-  const candidates = [folder.uri.fsPath, path.join(folder.uri.fsPath, "specs")];
-  for (const c of candidates) {
-    if (fs.existsSync(path.join(c, ".specs.yaml"))) {
-      return c;
+  const cfgPath = findSpecsConfigPath(folder.uri.fsPath);
+  if (!cfgPath) {
+    return undefined;
+  }
+  const configDir = path.dirname(cfgPath);
+  const configuredRoot = readConfigPathValue(cfgPath, "specs_root");
+  if (!configuredRoot) {
+    return configDir;
+  }
+  return path.resolve(configDir, configuredRoot);
+}
+
+function findSpecsConfigPath(workspaceRoot: string): string | undefined {
+  const candidates = [workspaceRoot, path.join(workspaceRoot, "specs")];
+  for (const candidate of candidates) {
+    const cfgPath = path.join(candidate, ".specs.yaml");
+    if (fs.existsSync(cfgPath)) {
+      return cfgPath;
     }
   }
   return undefined;
+}
+
+function readConfigPathValue(cfgPath: string, key: string): string | undefined {
+  let text: string;
+  try {
+    text = fs.readFileSync(cfgPath, "utf8");
+  } catch {
+    return undefined;
+  }
+  const pattern = new RegExp(`^${key}:\\s*(.+?)\\s*$`, "m");
+  const match = text.match(pattern);
+  if (!match) {
+    return undefined;
+  }
+  const raw = match[1].trim();
+  if (!raw || raw === "null") {
+    return undefined;
+  }
+  if (
+    (raw.startsWith('"') && raw.endsWith('"')) ||
+    (raw.startsWith("'") && raw.endsWith("'"))
+  ) {
+    return raw.slice(1, -1);
+  }
+  return raw;
 }

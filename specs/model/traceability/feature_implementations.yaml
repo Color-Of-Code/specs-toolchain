@@ -1,17 +1,17 @@
 kind: feature_implementation
 entries:
-  - source: model/requirements/workspace/config-relative-framework-directory
-    targets:
-      - model/features/workspace/config-relative-framework-resolution
-  - source: model/requirements/workspace/doctor-json-contract
-    targets:
-      - model/features/workspace/doctor-json-integration
-  - source: model/requirements/workspace/repo-local-engine-integration
-    targets:
-      - model/features/workspace/repo-local-engine-workflow
-  - source: model/requirements/workspace/repo-local-specs-host
-    targets:
-      - model/features/workspace/repo-local-host-layout
-  - source: model/requirements/workspace/workspace-diagnostics-reporting
-    targets:
-      - model/features/workspace/workspace-doctor-reporting
+    - source: model/requirements/workspace/config-relative-framework-directory
+      targets:
+        - model/features/workspace/config-relative-framework-resolution
+    - source: model/requirements/workspace/doctor-json-contract
+      targets:
+        - model/features/workspace/doctor-json-integration
+    - source: model/requirements/workspace/repo-local-engine-integration
+      targets:
+        - model/features/workspace/repo-local-engine-workflow
+    - source: model/requirements/workspace/repo-local-specs-host
+      targets:
+        - model/features/workspace/repo-local-host-layout
+    - source: model/requirements/workspace/workspace-diagnostics-reporting
+      targets:
+        - model/features/workspace/workspace-doctor-reporting

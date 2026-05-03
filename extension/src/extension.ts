@@ -11,8 +11,9 @@ export function activate(context: vscode.ExtensionContext): void {
   out.appendLine(`Specs extension activated (v${context.extension.packageJSON.version})`);
   registerCommands(context);
   registerCRTree(context);
-  registerModelTree(context, "specs.requirements", "requirements", "specs.requirements.refresh");
-  registerModelTree(context, "specs.features", "features", "specs.features.refresh");
+  registerModelTree(context, "specs.productRequirements", "product", "specs.productRequirements.refresh");
+  registerModelTree(context, "specs.requirements", "model/requirements", "specs.requirements.refresh");
+  registerModelTree(context, "specs.features", "model/features", "specs.features.refresh");
   registerStatusBar(context);
   registerVisualizePanel(context);
 }

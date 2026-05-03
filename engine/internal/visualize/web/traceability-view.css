@@ -142,6 +142,25 @@ body.traceability-shell {
   color: var(--traceability-muted, #94aab9);
 }
 
+.details-actions {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.details-open-button {
+  background: var(--traceability-button-bg, #204a68);
+  color: var(--traceability-button-fg, #f5fbff);
+  border: none;
+  padding: 6px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+  font: inherit;
+}
+
+.details-open-button:hover {
+  background: var(--traceability-button-hover, #2e648d);
+}
+
 @media (max-width: 960px) {
   .traceability-main {
     grid-template-columns: minmax(0, 1fr);

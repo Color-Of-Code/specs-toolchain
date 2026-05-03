@@ -61,6 +61,7 @@ interface PendingRequest {
 export function registerVisualizePanel(context: vscode.ExtensionContext): void {
   context.subscriptions.push(
     vscode.commands.registerCommand("specs.visualize.preview", () => openOrRefresh(context)),
+    vscode.commands.registerCommand("specs.visualize.previewIcon", () => openOrRefresh(context)),
     vscode.commands.registerCommand("specs.visualize.refresh", () => refresh(context)),
   );
 
@@ -319,10 +320,10 @@ ${fallbackBanner}
   <button id="export-dot">Export DOT</button>
   <div class="meta" id="meta">${graph.nodes.length} nodes / ${graph.edges.length} edges</div>
 </div>
-<p class="hint">Click a node to open its markdown artifact. The preview reads canonical graph JSON from the engine.</p>
+<p class="hint">Select a node or edge to inspect its details. Use the inspector to open markdown artifacts.</p>
 <div class="traceability-main">
   <div id="graph"></div>
-  <aside class="details" id="details"><article class="details-panel"><p class="details-eyebrow">Inspector</p><h2 class="details-title">No selection</h2><p class="details-note">Select an edge to inspect relation details. Node taps still open their markdown artifacts.</p></article></aside>
+  <aside class="details" id="details"><article class="details-panel"><p class="details-eyebrow">Inspector</p><h2 class="details-title">No selection</h2><p class="details-note">Select a node or edge to inspect its details.</p></article></aside>
 </div>
 ${fallbackInline ? "" : `<script nonce="${nonce}" src="${cytoscapeUri}"></script><script nonce="${nonce}" src="${appUri}"></script>`}
 <script nonce="${nonce}">

@@ -1,4 +1,4 @@
-// Filesystem-backed tree view for a model/ subdirectory (requirements, features, etc.).
+// Filesystem-backed tree view for a specs-root subdirectory.
 import * as path from "path";
 import * as fs from "fs";
 import * as vscode from "vscode";
@@ -27,9 +27,9 @@ export class ModelTreeProvider implements vscode.TreeDataProvider<Node> {
   readonly onDidChangeTreeData = this._onDidChange.event;
 
   /**
-   * @param subdir The subdirectory name under model/ to display (e.g. "requirements", "features").
+   * @param relativeDir The directory under specs root to display.
    */
-  constructor(private readonly subdir: string) {}
+  constructor(private readonly relativeDir: string) {}
 
   refresh(): void {
     this._onDidChange.fire();
@@ -57,7 +57,7 @@ export class ModelTreeProvider implements vscode.TreeDataProvider<Node> {
 
   getChildren(node?: Node): Node[] {
     if (!node) {
-      const root = this.resolveModelSubdir();
+      const root = this.resolveTreeRoot();
       if (!root || !fs.existsSync(root)) {
         return [];
       }
@@ -69,13 +69,13 @@ export class ModelTreeProvider implements vscode.TreeDataProvider<Node> {
     return [];
   }
 
-  private resolveModelSubdir(): string | undefined {
+  private resolveTreeRoot(): string | undefined {
     const folder = findSpecsFolder();
     if (!folder) {
       return undefined;
     }
     const specsRoot = findSpecsRoot(folder) ?? folder.uri.fsPath;
-    return path.join(specsRoot, "model", this.subdir);
+    return path.join(specsRoot, this.relativeDir);
   }
 
   private readDir(dir: string): Node[] {
@@ -101,20 +101,20 @@ export class ModelTreeProvider implements vscode.TreeDataProvider<Node> {
 export function registerModelTree(
   context: vscode.ExtensionContext,
   viewId: string,
-  subdir: string,
+  relativeDir: string,
   refreshCommand: string,
 ): ModelTreeProvider {
-  const provider = new ModelTreeProvider(subdir);
+  const provider = new ModelTreeProvider(relativeDir);
   context.subscriptions.push(
     vscode.window.registerTreeDataProvider(viewId, provider),
     vscode.commands.registerCommand(refreshCommand, () => provider.refresh()),
   );
-  // Auto-refresh when model/<subdir>/ changes.
+  // Auto-refresh when the backing tree directory changes.
   const folder = findSpecsFolder();
   if (folder) {
     const root = findSpecsRoot(folder) ?? folder.uri.fsPath;
     const watcher = vscode.workspace.createFileSystemWatcher(
-      new vscode.RelativePattern(root, `model/${subdir}/**`),
+      new vscode.RelativePattern(root, `${relativeDir}/**`),
     );
     watcher.onDidCreate(() => provider.refresh());
     watcher.onDidDelete(() => provider.refresh());

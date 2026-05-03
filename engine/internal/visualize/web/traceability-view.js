@@ -95,6 +95,13 @@
     return `<article class="details-panel"><p class="details-eyebrow">${escapeHTML(eyebrow)}</p><h2 class="details-title">${escapeHTML(title)}</h2>${renderedRows ? `<dl class="details-list">${renderedRows}</dl>` : ""}${noteMarkup}</article>`;
   }
 
+  function detailsActionButton(label, path) {
+    if (!path) {
+      return "";
+    }
+    return `<div class="details-actions"><button type="button" class="details-open-button" data-open-path="${escapeHTML(path)}">${escapeHTML(label)}</button></div>`;
+  }
+
   function setDetails(options, markup) {
     if (!options.detailsElement) {
       return;
@@ -387,13 +394,13 @@
         return undefined;
       }
       const position = node.position();
-      return detailsMarkup("Node", node.data("label") || node.id(), [
+      return `${detailsMarkup("Node", node.data("label") || node.id(), [
         { label: "Kind", value: displayKind(node.data("kind")) },
         { label: "ID", value: node.id() },
         { label: "Path", value: node.data("path") },
         { label: "Position", value: `${roundCoord(position.x)}, ${roundCoord(position.y)}` },
         { label: "Locked", value: node.locked() ? "yes" : "no" },
-      ], node.data("path") ? "Click the node to open its markdown artifact." : "");
+      ])}${detailsActionButton("Open artifact", node.data("path"))}`;
     }
 
     function resolveNode(nodeID) {
@@ -453,7 +460,7 @@
         setDetails(options, describeNode(selectedNode));
         return;
       }
-      setDetails(options, detailsMarkup("Inspector", "No selection", [], "Select an edge to inspect relation details. Node taps still open their markdown artifacts."));
+      setDetails(options, detailsMarkup("Inspector", "No selection", [], "Select a node or edge to inspect its details."));
     }
 
     function setCreateStatus(message) {
@@ -710,6 +717,20 @@
       });
     }
 
+    if (options.detailsElement) {
+      options.detailsElement.addEventListener("click", (event) => {
+        const target = event.target;
+        if (!(target instanceof HTMLElement)) {
+          return;
+        }
+        const path = target.dataset.openPath;
+        if (!path) {
+          return;
+        }
+        openPath(path);
+      });
+    }
+
     resolveGraph(options)
       .then((graph) => {
         cy = renderGraph(options, graph) || undefined;
@@ -768,10 +789,6 @@
             selectedNode = event.target;
             updateRemoveEdgeButton();
             updateDetailsPanel();
-            const path = event.target.data("path");
-            if (path) {
-              openPath(path);
-            }
           });
         }
       })

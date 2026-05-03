@@ -138,6 +138,12 @@
         "icon": "$(refresh)"
       },
       {
+        "command": "specs.productRequirements.refresh",
+        "title": "Refresh product requirements",
+        "category": "Specs",
+        "icon": "$(refresh)"
+      },
+      {
         "command": "specs.features.refresh",
         "title": "Refresh features",
         "category": "Specs",
@@ -145,8 +151,14 @@
       },
       {
         "command": "specs.visualize.preview",
-        "title": "Visualize: Open preview",
+        "title": "Open traceability editor",
         "category": "Specs"
+      },
+      {
+        "command": "specs.visualize.previewIcon",
+        "title": "Open traceability editor",
+        "category": "Specs",
+        "icon": "$(type-hierarchy-sub)"
       },
       {
         "command": "specs.visualize.refresh",
@@ -159,6 +171,11 @@
         {
           "id": "specs.changeRequests",
           "name": "Change Requests",
+          "contextualTitle": "Specs"
+        },
+        {
+          "id": "specs.productRequirements",
+          "name": "Product Requirements",
           "contextualTitle": "Specs"
         },
         {
@@ -195,9 +212,34 @@
           "group": "navigation"
         },
         {
+          "command": "specs.productRequirements.refresh",
+          "when": "view == specs.productRequirements",
+          "group": "navigation"
+        },
+        {
           "command": "specs.features.refresh",
           "when": "view == specs.features",
           "group": "navigation"
+        },
+        {
+          "command": "specs.visualize.previewIcon",
+          "when": "view == specs.changeRequests",
+          "group": "navigation@10"
+        },
+        {
+          "command": "specs.visualize.previewIcon",
+          "when": "view == specs.productRequirements",
+          "group": "navigation@10"
+        },
+        {
+          "command": "specs.visualize.previewIcon",
+          "when": "view == specs.requirements",
+          "group": "navigation@10"
+        },
+        {
+          "command": "specs.visualize.previewIcon",
+          "when": "view == specs.features",
+          "group": "navigation@10"
         }
       ],
       "view/item/context": [
