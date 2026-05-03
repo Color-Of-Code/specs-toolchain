@@ -1,0 +1,6 @@
+kind: component_implementation
+entries:
+  - source: model/requirements/workspace/repo-local-specs-host
+    targets:
+      - model/components/engine/specs-engine
+      - model/components/extension/vscode-extension

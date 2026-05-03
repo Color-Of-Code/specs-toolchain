@@ -1,0 +1,5 @@
+kind: service_implementation
+entries:
+  - source: model/requirements/workspace/repo-local-specs-host
+    targets:
+      - model/services/workspace/workspace-diagnostics

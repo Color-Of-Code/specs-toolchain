@@ -1,0 +1,5 @@
+kind: realization
+entries:
+  - source: product/toolchain/repo-local-specs-host
+    targets:
+      - model/requirements/workspace/repo-local-specs-host
