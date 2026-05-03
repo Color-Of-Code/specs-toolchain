@@ -103,6 +103,7 @@ func Load(start string) (*Resolved, error) {
 	r := &Resolved{}
 
 	var f File
+	configBase := abs
 	if cfgPath != "" {
 		data, err := os.ReadFile(cfgPath)
 		if err != nil {
@@ -113,6 +114,7 @@ func Load(start string) (*Resolved, error) {
 		}
 		r.ConfigPath = cfgPath
 		r.Source = &f
+		configBase = filepath.Dir(cfgPath)
 		r.SpecsRoot = filepath.Dir(cfgPath)
 		if f.SpecsRoot != "" {
 			r.SpecsRoot = absRelTo(filepath.Dir(cfgPath), f.SpecsRoot)
@@ -149,7 +151,7 @@ func Load(start string) (*Resolved, error) {
 		if dir == "" {
 			dir = "auto"
 		}
-		resolvedDir, mode := resolveFrameworkDir(dir, r.SpecsRoot, r.HostRoot)
+		resolvedDir, mode := resolveFrameworkDir(dir, configBase, r.SpecsRoot, r.HostRoot)
 		r.FrameworkDir = resolvedDir
 		r.FrameworkMode = mode
 	}
@@ -282,8 +284,9 @@ func isSubmodule(hostRoot, child string) bool {
 // and detects the content mode. Recognised values for raw:
 //   - "auto": try <specsRoot>/.specs-framework, then the same name under
 //     <hostRoot>.
-//   - absolute or relative path: anchored to specsRoot.
-func resolveFrameworkDir(raw, specsRoot, hostRoot string) (string, FrameworkMode) {
+//   - absolute or relative path: anchored to the directory containing
+//     .specs.yaml.
+func resolveFrameworkDir(raw, configBase, specsRoot, hostRoot string) (string, FrameworkMode) {
 	candidates := []string{}
 	if raw == "" || raw == "auto" {
 		candidates = append(candidates,
@@ -295,7 +298,7 @@ func resolveFrameworkDir(raw, specsRoot, hostRoot string) (string, FrameworkMode
 			)
 		}
 	} else {
-		candidates = append(candidates, absRelTo(specsRoot, raw))
+		candidates = append(candidates, absRelTo(configBase, raw))
 	}
 	for _, p := range candidates {
 		st, err := os.Stat(p)

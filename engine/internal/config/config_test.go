@@ -114,3 +114,44 @@ func TestLoad_WithSpecsYAML(t *testing.T) {
 		t.Errorf("GraphCache=%q want %q", got.GraphCache, want)
 	}
 }
+
+func TestLoad_FrameworkDirRelativeToConfigFile(t *testing.T) {
+	dir := t.TempDir()
+	specs := filepath.Join(dir, "specs")
+	framework := filepath.Join(dir, "framework")
+	for _, p := range []string{
+		filepath.Join(specs, "model"),
+		filepath.Join(specs, "change-requests"),
+		filepath.Join(framework, "templates"),
+	} {
+		if err := os.MkdirAll(p, 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := os.Mkdir(filepath.Join(dir, ".git"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := Save(filepath.Join(dir, FileName), &File{
+		SpecsRoot:    "./specs",
+		FrameworkDir: "./framework",
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	got, err := Load(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.SpecsRoot != specs {
+		t.Errorf("SpecsRoot=%q want %q", got.SpecsRoot, specs)
+	}
+	if got.FrameworkDir != framework {
+		t.Errorf("FrameworkDir=%q want %q", got.FrameworkDir, framework)
+	}
+	if got.FrameworkMode != FrameworkModeLocal {
+		t.Errorf("FrameworkMode=%q want %q", got.FrameworkMode, FrameworkModeLocal)
+	}
+	if got.SpecsMode != SpecsModeFolder {
+		t.Errorf("SpecsMode=%q want %q", got.SpecsMode, SpecsModeFolder)
+	}
+}
