@@ -337,6 +337,60 @@ func TestCmdGraphSaveLayoutWritesCanonicalLayout(t *testing.T) {
 	}
 }
 
+func TestCmdGraphSaveRelationsWritesCanonicalRelations(t *testing.T) {
+	dir := t.TempDir()
+	specsDir := filepath.Join(dir, "specs")
+	for _, path := range []string{
+		filepath.Join(specsDir, "model", "traceability"),
+		filepath.Join(specsDir, "product"),
+		filepath.Join(specsDir, "model", "requirements"),
+		filepath.Join(specsDir, "model", "features"),
+		filepath.Join(specsDir, "model", "components"),
+	} {
+		if err := os.MkdirAll(path, 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := config.Save(filepath.Join(specsDir, config.FileName), &config.File{}); err != nil {
+		t.Fatal(err)
+	}
+	writeGraphFixture(t, specsDir)
+	inputPath := filepath.Join(dir, "relations.json")
+	if err := os.WriteFile(inputPath, []byte(`{"edges":[{"source":"model/requirements/alpha-requirement","target":"model/features/alpha-feature","kind":"feature_implementation"}]}`), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	cwd, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() {
+		if err := os.Chdir(cwd); err != nil {
+			t.Fatalf("restore cwd: %v", err)
+		}
+	}()
+	if err := os.Chdir(specsDir); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := cmdGraphSaveRelations([]string{"--in", inputPath}); err != nil {
+		t.Fatalf("cmdGraphSaveRelations() error = %v", err)
+	}
+	reloaded, err := graph.Load(filepath.Join(specsDir, "model", "traceability", "graph.yaml"))
+	if err != nil {
+		t.Fatalf("graph.Load() error = %v", err)
+	}
+	if len(reloaded.Realizations) != 0 {
+		t.Fatalf("len(Realizations) = %d, want 0", len(reloaded.Realizations))
+	}
+	if len(reloaded.FeatureImplementations) != 1 {
+		t.Fatalf("len(FeatureImplementations) = %d, want 1", len(reloaded.FeatureImplementations))
+	}
+	if reloaded.FeatureImplementations[0].Source != "model/requirements/alpha-requirement" || len(reloaded.FeatureImplementations[0].Targets) != 1 || reloaded.FeatureImplementations[0].Targets[0] != "model/features/alpha-feature" {
+		t.Fatalf("unexpected feature implementation entry: %+v", reloaded.FeatureImplementations[0])
+	}
+}
+
 func writeGraphFixture(t *testing.T, specsDir string) {
 	t.Helper()
 	traceabilityDir := filepath.Join(specsDir, "model", "traceability")

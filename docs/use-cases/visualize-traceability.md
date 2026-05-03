@@ -25,7 +25,8 @@ Or VS Code palette: **Specs: Visualize traceability** (renders in a
 webview). For a browser-based view, run `specs visualize traceability --serve`
 and open the printed local URL. The browser UI can persist dragged node
 positions back into canonical `layout.yaml`. The VS Code preview exposes the
-same save-layout action.
+same save-layout action. Both UIs can also remove the currently selected
+traceability edge and persist the updated canonical relations.
 
 ## Exit point
 
@@ -35,7 +36,8 @@ suitable for review artifacts; JSON is suitable for downstream tooling and UI
 consumers. The VS Code panel and the local server both read the canonical
 graph JSON. In browser mode, saved node positions become canonical graph
 layout entries; the VS Code preview writes the same canonical layout through
-the engine.
+the engine. Selected-edge removal updates the canonical relation part files
+through the same engine-backed path.
 
 ## Iteration
 

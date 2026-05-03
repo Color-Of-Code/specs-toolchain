@@ -43,6 +43,21 @@ interface SaveLayoutPayload {
   nodes: SaveLayoutNode[];
 }
 
+interface SaveRelationsEdge {
+  source: string;
+  target: string;
+  kind: string;
+}
+
+interface SaveRelationsPayload {
+  edges: SaveRelationsEdge[];
+}
+
+interface PendingRequest {
+  resolve: () => void;
+  reject: (reason: Error) => void;
+}
+
 export function registerVisualizePanel(context: vscode.ExtensionContext): void {
   context.subscriptions.push(
     vscode.commands.registerCommand("specs.visualize.preview", () => openOrRefresh(context)),
@@ -100,7 +115,7 @@ async function openOrRefresh(context: vscode.ExtensionContext): Promise<void> {
   panel.onDidDispose(() => {
     currentPanel = undefined;
   });
-  panel.webview.onDidReceiveMessage(async (msg: { type: string; requestId?: string; payload?: string | SaveLayoutPayload }) => {
+  panel.webview.onDidReceiveMessage(async (msg: { type: string; requestId?: string; payload?: string | SaveLayoutPayload | SaveRelationsPayload }) => {
     if (msg.type === "export-dot") {
       await exportFile(context, "dot");
     } else if (msg.type === "export-json") {
@@ -110,17 +125,20 @@ async function openOrRefresh(context: vscode.ExtensionContext): Promise<void> {
     } else if (msg.type === "open-path" && msg.payload) {
       await openArtifact(context, msg.payload as string);
     } else if (msg.type === "save-layout" && msg.requestId && msg.payload) {
-      await saveLayout(context, panel, msg.requestId, msg.payload as SaveLayoutPayload);
+      await saveGraphPayload(context, panel, msg.requestId, msg.payload as SaveLayoutPayload, "save-layout");
+    } else if (msg.type === "save-relations" && msg.requestId && msg.payload) {
+      await saveGraphPayload(context, panel, msg.requestId, msg.payload as SaveRelationsPayload, "save-relations");
     }
   });
   await refresh(context);
 }
 
-async function saveLayout(
+async function saveGraphPayload(
   context: vscode.ExtensionContext,
   panel: vscode.WebviewPanel,
   requestId: string,
-  payload: SaveLayoutPayload,
+  payload: SaveLayoutPayload | SaveRelationsPayload,
+  subcommand: "save-layout" | "save-relations",
 ): Promise<void> {
   const folder = findSpecsFolder();
   if (!folder) {
@@ -132,14 +150,14 @@ async function saveLayout(
   const inputPath = path.join(tempDir, "layout.json");
   try {
     await fs.promises.writeFile(inputPath, JSON.stringify(payload), "utf8");
-    const res = await runAndCapture(context, ["graph", "save-layout", "--in", inputPath], cwd);
+    const res = await runAndCapture(context, ["graph", subcommand, "--in", inputPath], cwd);
     if (res.exitCode !== 0) {
-      const error = res.stderr || "graph save-layout failed";
+      const error = res.stderr || `graph ${subcommand} failed`;
       getOutput().appendLine(error);
-      await panel.webview.postMessage({ type: "save-layout-result", requestId, ok: false, error });
+      await panel.webview.postMessage({ type: `${subcommand}-result`, requestId, ok: false, error });
       return;
     }
-    await panel.webview.postMessage({ type: "save-layout-result", requestId, ok: true });
+    await panel.webview.postMessage({ type: `${subcommand}-result`, requestId, ok: true });
   } finally {
     await fs.promises.rm(tempDir, { recursive: true, force: true });
   }
@@ -287,6 +305,7 @@ ${fallbackBanner}
 <div class="toolbar">
   <button id="refresh">Refresh</button>
   <button id="fit">Fit</button>
+  <button id="remove-edge">Remove Selected Edge</button>
   <button id="save-layout">Save Layout</button>
   <button id="export-json">Export JSON</button>
   <button id="export-dot">Export DOT</button>
@@ -299,17 +318,17 @@ ${fallbackInline ? "" : `<script nonce="${nonce}" src="${cytoscapeUri}"></script
   const vscode = acquireVsCodeApi();
   const graph = ${safeGraph};
   let nextSaveRequestId = 0;
-  const pendingSaves = new Map();
+  const pendingRequests = new Map();
   window.addEventListener('message', (event) => {
     const message = event.data;
-    if (!message || message.type !== 'save-layout-result' || !message.requestId) {
+    if (!message || !message.requestId || (message.type !== 'save-layout-result' && message.type !== 'save-relations-result')) {
       return;
     }
-    const pending = pendingSaves.get(message.requestId);
+    const pending = pendingRequests.get(message.requestId);
     if (!pending) {
       return;
     }
-    pendingSaves.delete(message.requestId);
+    pendingRequests.delete(message.requestId);
     if (message.ok) {
       pending.resolve();
       return;
@@ -324,13 +343,19 @@ ${fallbackInline ? "" : `<script nonce="${nonce}" src="${cytoscapeUri}"></script
       graph,
       container: document.getElementById('graph'),
       fitButton: document.getElementById('fit'),
+      removeEdgeButton: document.getElementById('remove-edge'),
       saveButton: document.getElementById('save-layout'),
       metaElement: document.getElementById('meta'),
       onOpenPath: (path) => vscode.postMessage({ type: 'open-path', payload: path }),
       onSaveLayout: (payload) => new Promise((resolve, reject) => {
         const requestId = String(++nextSaveRequestId);
-        pendingSaves.set(requestId, { resolve, reject });
+        pendingRequests.set(requestId, { resolve, reject });
         vscode.postMessage({ type: 'save-layout', requestId, payload });
+      }),
+      onSaveRelations: (payload) => new Promise((resolve, reject) => {
+        const requestId = String(++nextSaveRequestId);
+        pendingRequests.set(requestId, { resolve, reject });
+        vscode.postMessage({ type: 'save-relations', requestId, payload });
       }),
       emptyMessage: 'No traceability data found.',
     });

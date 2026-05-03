@@ -135,8 +135,25 @@
             "arrow-scale": 1.15,
           },
         },
+        {
+          selector: "edge:selected",
+          style: {
+            width: 4,
+            "line-color": "#f5f1c7",
+            "target-arrow-color": "#f5f1c7",
+          },
+        },
       ],
     });
+  }
+
+  function updateMetaSummary(options, nodeCount, edgeCount) {
+    if (!options.metaElement) {
+      return;
+    }
+    const summary = `${nodeCount} nodes / ${edgeCount} edges`;
+    options.metaElement.dataset.summary = summary;
+    options.metaElement.textContent = summary;
   }
 
   function setMetaStatus(options, message) {
@@ -179,6 +196,45 @@
     }
   }
 
+  function collectRelations(cy, omitEdgeId) {
+    return cy.edges().toArray()
+      .filter((edge) => edge.id() !== omitEdgeId)
+      .map((edge) => ({
+        source: edge.data("source"),
+        target: edge.data("target"),
+        kind: edge.data("kind"),
+      }))
+      .sort((left, right) => {
+        if (left.kind !== right.kind) {
+          return left.kind.localeCompare(right.kind);
+        }
+        if (left.source !== right.source) {
+          return left.source.localeCompare(right.source);
+        }
+        return left.target.localeCompare(right.target);
+      });
+  }
+
+  async function persistRelations(options, cy, omitEdgeId) {
+    const payload = { edges: collectRelations(cy, omitEdgeId) };
+    if (typeof options.onSaveRelations === "function") {
+      await options.onSaveRelations(payload);
+      return;
+    }
+    if (!options.saveRelationsUrl) {
+      return;
+    }
+    const response = await fetch(options.saveRelationsUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    if (!response.ok) {
+      const message = await response.text();
+      throw new Error(message || `relations request failed: ${response.status}`);
+    }
+  }
+
   function mount(options) {
     const container = options.container;
     if (!container) {
@@ -190,10 +246,19 @@
     }
 
     let cy;
+    let selectedEdge;
     const openPath = typeof options.onOpenPath === "function"
       ? options.onOpenPath
       : (path) => defaultOpenPath(options, path);
     const canSaveLayout = Boolean(options.saveLayoutUrl || typeof options.onSaveLayout === "function");
+    const canSaveRelations = Boolean(options.saveRelationsUrl || typeof options.onSaveRelations === "function");
+
+    function updateRemoveEdgeButton() {
+      if (!options.removeEdgeButton) {
+        return;
+      }
+      options.removeEdgeButton.disabled = !canSaveRelations || !selectedEdge;
+    }
 
     if (options.fitButton) {
       options.fitButton.addEventListener("click", () => {
@@ -229,11 +294,52 @@
       });
     }
 
+    if (options.removeEdgeButton) {
+      updateRemoveEdgeButton();
+      options.removeEdgeButton.addEventListener("click", async () => {
+        if (!selectedEdge || !canSaveRelations || !cy) {
+          return;
+        }
+        const originalLabel = options.removeEdgeButton.textContent;
+        options.removeEdgeButton.disabled = true;
+        options.removeEdgeButton.textContent = "Removing...";
+        try {
+          await persistRelations(options, cy, selectedEdge.id());
+          selectedEdge.remove();
+          selectedEdge = undefined;
+          updateMetaSummary(options, cy.nodes().length, cy.edges().length);
+          setMetaStatus(options, "edge removed");
+        } catch (error) {
+          console.error(error);
+          options.removeEdgeButton.textContent = "Remove Failed";
+          setMetaStatus(options, "edge removal failed");
+        } finally {
+          window.setTimeout(() => {
+            options.removeEdgeButton.textContent = originalLabel;
+            updateRemoveEdgeButton();
+          }, 1200);
+        }
+      });
+    }
+
     resolveGraph(options)
       .then((graph) => {
         cy = renderGraph(options, graph) || undefined;
         if (cy) {
+          updateMetaSummary(options, cy.nodes().length, cy.edges().length);
+          cy.on("tap", (event) => {
+            if (event.target === cy) {
+              selectedEdge = undefined;
+              updateRemoveEdgeButton();
+            }
+          });
+          cy.on("tap", "edge", (event) => {
+            selectedEdge = event.target;
+            updateRemoveEdgeButton();
+          });
           cy.on("tap", "node", (event) => {
+            selectedEdge = undefined;
+            updateRemoveEdgeButton();
             const path = event.target.data("path");
             if (path) {
               openPath(path);
