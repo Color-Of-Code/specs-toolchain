@@ -35,9 +35,15 @@ type graphImportJSON struct {
 	DryRun                       bool   `json:"dry_run"`
 }
 
+type graphGenerateJSON struct {
+	ManifestPath string `json:"manifest_path"`
+	UpdatedFiles int    `json:"updated_files"`
+	DryRun       bool   `json:"dry_run"`
+}
+
 func cmdGraph(args []string) error {
 	if len(args) == 0 {
-		fmt.Fprintln(os.Stderr, "Usage: specs graph <validate|import-markdown>")
+		fmt.Fprintln(os.Stderr, "Usage: specs graph <validate|import-markdown|generate-markdown>")
 		return exitWith(2, "missing subcommand")
 	}
 	switch args[0] {
@@ -45,12 +51,61 @@ func cmdGraph(args []string) error {
 		return cmdGraphValidate(args[1:])
 	case "import-markdown":
 		return cmdGraphImportMarkdown(args[1:])
+	case "generate-markdown":
+		return cmdGraphGenerateMarkdown(args[1:])
 	case "-h", "--help", "help":
-		fmt.Fprintln(os.Stderr, "Usage: specs graph <validate|import-markdown> [flags]")
+		fmt.Fprintln(os.Stderr, "Usage: specs graph <validate|import-markdown|generate-markdown> [flags]")
 		return nil
 	default:
 		return exitWith(2, "unknown subcommand: specs graph %s", args[0])
 	}
+}
+
+func cmdGraphGenerateMarkdown(args []string) error {
+	fs := flag.NewFlagSet("graph generate-markdown", flag.ContinueOnError)
+	manifestPath := fs.String("manifest", "", "path to graph manifest to read (default: graph_manifest from .specs.yaml)")
+	dryRun := fs.Bool("dry-run", false, "report files that would change without writing")
+	jsonOut := fs.Bool("json", false, "emit machine-readable generation summary")
+	fs.Usage = func() {
+		fmt.Fprintln(os.Stderr, "Usage: specs graph generate-markdown [--manifest <path>] [--dry-run] [--json]")
+		fs.PrintDefaults()
+	}
+	if err := fs.Parse(args); err != nil {
+		return err
+	}
+	if len(fs.Args()) != 0 {
+		return exitWith(2, "unexpected arguments: %v", fs.Args())
+	}
+
+	cfg, err := config.Load("")
+	if err != nil {
+		return err
+	}
+	path, err := resolveGraphManifestPath(cfg, *manifestPath)
+	if err != nil {
+		return err
+	}
+	g, err := graph.Load(path)
+	if err != nil {
+		return exitWith(1, "load graph %s: %v", path, err)
+	}
+	result, err := graph.GenerateMarkdown(cfg.ModelDir, cfg.ProductDir, g, *dryRun)
+	if err != nil {
+		return exitWith(1, "generate markdown: %v", err)
+	}
+	summary := graphGenerateJSON{ManifestPath: path, UpdatedFiles: len(result.UpdatedFiles), DryRun: *dryRun}
+	if *jsonOut {
+		enc := json.NewEncoder(os.Stdout)
+		enc.SetIndent("", "  ")
+		return enc.Encode(summary)
+	}
+	verb := "updated"
+	if *dryRun {
+		verb = "would update"
+	}
+	fmt.Printf("%s markdown files: %d\n", verb, summary.UpdatedFiles)
+	fmt.Printf("graph manifest:          %s\n", summary.ManifestPath)
+	return nil
 }
 
 func cmdGraphImportMarkdown(args []string) error {

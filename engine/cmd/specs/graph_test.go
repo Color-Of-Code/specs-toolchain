@@ -121,6 +121,57 @@ func TestCmdGraphImportMarkdownWritesCanonicalGraph(t *testing.T) {
 	}
 }
 
+func TestCmdGraphGenerateMarkdownUpdatesFiles(t *testing.T) {
+	dir := t.TempDir()
+	specsDir := filepath.Join(dir, "specs")
+	for _, path := range []string{
+		filepath.Join(specsDir, "product"),
+		filepath.Join(specsDir, "model", "requirements"),
+		filepath.Join(specsDir, "model", "features"),
+		filepath.Join(specsDir, "model", "components"),
+	} {
+		if err := os.MkdirAll(path, 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := config.Save(filepath.Join(specsDir, config.FileName), &config.File{}); err != nil {
+		t.Fatal(err)
+	}
+	writeGraphGenerateFixture(t, specsDir)
+	graphData := &graph.Graph{
+		Realizations:             []graph.RelationEntry{{Source: "product/alpha", Targets: []string{"model/requirements/alpha-requirement"}}},
+		FeatureImplementations:   []graph.RelationEntry{{Source: "model/requirements/alpha-requirement", Targets: []string{"model/features/alpha-feature"}}},
+		ComponentImplementations: []graph.RelationEntry{{Source: "model/requirements/alpha-requirement", Targets: []string{"model/components/alpha-component"}}},
+	}
+	if err := graph.Write(filepath.Join(specsDir, "model", "traceability", "graph.yaml"), graphData); err != nil {
+		t.Fatal(err)
+	}
+
+	cwd, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() {
+		if err := os.Chdir(cwd); err != nil {
+			t.Fatalf("restore cwd: %v", err)
+		}
+	}()
+	if err := os.Chdir(specsDir); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := cmdGraphGenerateMarkdown(nil); err != nil {
+		t.Fatalf("cmdGraphGenerateMarkdown() error = %v", err)
+	}
+	requirementBody, err := os.ReadFile(filepath.Join(specsDir, "model", "requirements", "alpha-requirement.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(requirementBody), "| Realises | [Alpha](../../product/alpha.md) |") {
+		t.Fatalf("missing generated Realises row:\n%s", string(requirementBody))
+	}
+}
+
 func writeGraphFixture(t *testing.T, specsDir string) {
 	t.Helper()
 	traceabilityDir := filepath.Join(specsDir, "model", "traceability")
@@ -228,6 +279,50 @@ func writeGraphImportFixture(t *testing.T, specsDir string) {
 			"| Component | Repo | Path | SHA | Date |",
 			"| --------- | ---- | ---- | --- | ---- |",
 			"| [Alpha Component](../components/alpha-component.md) | `host-repo` | `/` | `0123456789abcdef0123456789abcdef01234567` | 2026-05-03 |",
+		}, "\n"),
+	}
+	for path, content := range files {
+		if err := os.WriteFile(path, []byte(content), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+}
+
+func writeGraphGenerateFixture(t *testing.T, specsDir string) {
+	t.Helper()
+	files := map[string]string{
+		filepath.Join(specsDir, "product", "alpha.md"): strings.Join([]string{
+			"# Alpha",
+			"",
+			"| Field | Value |",
+			"| ----- | ----- |",
+			"| Status | Draft |",
+			"| Realised By | — |",
+		}, "\n"),
+		filepath.Join(specsDir, "model", "requirements", "alpha-requirement.md"): strings.Join([]string{
+			"# Alpha Requirement",
+			"",
+			"| Field | Value |",
+			"| ----- | ----- |",
+			"| Status | Draft |",
+			"| Implemented By | — |",
+		}, "\n"),
+		filepath.Join(specsDir, "model", "features", "alpha-feature.md"): strings.Join([]string{
+			"# Alpha Feature",
+			"",
+			"| Field | Value |",
+			"| ----- | ----- |",
+			"| Status | Draft |",
+			"| Requirements | — |",
+		}, "\n"),
+		filepath.Join(specsDir, "model", "components", "alpha-component.md"): strings.Join([]string{
+			"# Alpha Component",
+			"",
+			"| Field | Value |",
+			"| ----- | ----- |",
+			"| Status | Draft |",
+			"| Requirements | — |",
+			"| Baseline | — |",
 		}, "\n"),
 	}
 	for path, content := range files {
