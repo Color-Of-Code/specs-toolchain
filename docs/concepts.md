@@ -26,6 +26,9 @@ product-requirement ──► requirement ──► feature / component / servic
 
 This separation is what makes impact analysis tractable: edits to a PR surface as drift on every MR that realises it, and conversely a change in MR scope is traceable back to the PR that motivated it. `specs link check` enforces both directions; `specs visualize traceability` renders the full chain.
 
+See [glossary.md](glossary.md) for the core vocabulary, especially the
+distinction between a product requirement and a requirement.
+
 ## Framework sources
 
 A **framework source** is the origin from which `.specs-framework` content is obtained. Every `specs init` invocation resolves a framework source to populate the framework layer. Three kinds exist:

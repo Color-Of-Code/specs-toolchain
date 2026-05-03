@@ -35,6 +35,9 @@ func Format(data []byte) []byte {
 		lines[i] = strings.TrimRight(line, " \t")
 	}
 
+	// Ensure fenced code blocks have a blank line before the opening fence.
+	lines = ensureBlankLinesBeforeFences(lines)
+
 	// Collapse consecutive blank lines (keep at most one blank line).
 	lines = collapseBlankLines(lines)
 
@@ -46,6 +49,30 @@ func Format(data []byte) []byte {
 	result = strings.TrimRight(result, "\n") + "\n"
 
 	return []byte(result)
+}
+
+func ensureBlankLinesBeforeFences(lines []string) []string {
+	out := make([]string, 0, len(lines))
+	inFence := false
+
+	for _, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		if isFenceLine(trimmed) {
+			if !inFence && len(out) > 0 && strings.TrimSpace(out[len(out)-1]) != "" {
+				out = append(out, "")
+			}
+			out = append(out, line)
+			inFence = !inFence
+			continue
+		}
+		out = append(out, line)
+	}
+
+	return out
+}
+
+func isFenceLine(trimmed string) bool {
+	return strings.HasPrefix(trimmed, "```") || strings.HasPrefix(trimmed, "~~~")
 }
 
 // collapseBlankLines ensures no more than two consecutive blank lines exist
@@ -104,7 +131,7 @@ func alignTables(lines []string) []string {
 		trimmed := strings.TrimSpace(line)
 
 		// Track fenced code blocks.
-		if strings.HasPrefix(trimmed, "```") || strings.HasPrefix(trimmed, "~~~") {
+		if isFenceLine(trimmed) {
 			fenced = !fenced
 			result = append(result, line)
 			i++

@@ -42,6 +42,7 @@ Full installation notes (extension settings, combining both, platform paths) liv
 | [Actors](docs/actors.md)               | The four authoring actors: stakeholder, author, analyst, architect.                           |
 | [Installation](docs/install.md)        | Extension and engine install paths, side-by-side usage.                                       |
 | [Concepts](docs/concepts.md)           | specs root vs. host repo vs. framework dir; `managed` vs. `local` mode for framework content. |
+| [Glossary](docs/glossary.md)           | Core vocabulary for artifact kinds, paths, and framework terms.                               |
 | [Commands](docs/commands.md)           | Reference for every `specs` subcommand (also reachable as **Specs: …** in VS Code).           |
 | [Configuration](docs/configuration.md) | `.specs.yaml` keys, defaults, and overrides.                                                  |
 | [Use cases](docs/use-cases/README.md)  | Task-oriented workflows grouped by authoring vs. setup.                                       |

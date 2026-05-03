@@ -172,6 +172,7 @@ func checkASTRules(path string, data []byte, cfg *StyleRules) []Violation {
 
 		case *ast.FencedCodeBlock:
 			line := lineOf(node, lines)
+			fenceLine := fencedCodeBlockLine(node, lines)
 
 			// Fenced code language.
 			if cfg.FencedCodeLanguage {
@@ -185,11 +186,11 @@ func checkASTRules(path string, data []byte, cfg *StyleRules) []Violation {
 			}
 
 			// Blank line before fence.
-			if cfg.BlankLinesAroundFences && line > 1 {
-				prev := string(lines[line-2])
+			if cfg.BlankLinesAroundFences && fenceLine > 1 {
+				prev := string(lines[fenceLine-2])
 				if strings.TrimSpace(prev) != "" {
 					violations = append(violations, Violation{
-						File: path, Line: line, Rule: "blank_lines_around_fences",
+						File: path, Line: fenceLine, Rule: "blank_lines_around_fences",
 						Message: "expected blank line before fenced code block",
 					})
 				}
@@ -242,6 +243,18 @@ func lineOf(node ast.Node, lines [][]byte) int {
 		return lineOf(node.FirstChild(), lines)
 	}
 	return 1
+}
+
+func fencedCodeBlockLine(node *ast.FencedCodeBlock, lines [][]byte) int {
+	line := lineOf(node, lines)
+	if line <= 1 {
+		return line
+	}
+	prev := strings.TrimSpace(string(lines[line-2]))
+	if strings.HasPrefix(prev, "```") || strings.HasPrefix(prev, "~~~") {
+		return line - 1
+	}
+	return line
 }
 
 // countLines returns the 1-based line number for a byte offset.

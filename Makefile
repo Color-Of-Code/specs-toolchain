@@ -1,10 +1,13 @@
-.PHONY: lint format format-check check test vet build build-engine build-extension package-extension deploy-dev
+.PHONY: lint format format-docs format-check check test vet build build-engine build-extension package-extension deploy-dev
 
 lint:
 	cd engine && go run ./cmd/specs lint --style
 
 format:
 	cd engine && go run ./cmd/specs format
+
+format-docs:
+	cd engine && go run ./cmd/specs format --at ../docs
 
 format-check:
 	cd engine && go run ./cmd/specs format --check

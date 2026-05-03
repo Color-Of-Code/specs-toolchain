@@ -100,6 +100,8 @@ specs cr drain    ──►  git mv into canonical model paths
 ## Reference
 
 - [Concepts](concepts.md) — paths, framework sources, modes.
+- [Glossary](glossary.md) — core vocabulary and the product requirement vs.
+  requirement distinction.
 - [Commands](commands.md) — every `specs` subcommand.
 - [Configuration](configuration.md) — `.specs.yaml` and registry schemas.
 - [Use cases](use-cases/README.md) — task-oriented workflows.
