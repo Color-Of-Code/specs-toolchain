@@ -11,6 +11,10 @@ This package is part of the [specs-toolchain](https://github.com/Color-Of-Code/s
 monorepo. Releases ship a per-platform `.vsix` attached to each
 [GitHub release](https://github.com/Color-Of-Code/specs-toolchain/releases).
 
+The traceability preview uses Cytoscape.js and the engine's canonical
+`specs visualize traceability --format json` output, so the VS Code panel and
+future standalone UI can share the same graph payload.
+
 ## Install
 
 1. Download `specs-<your-platform>.vsix` from the latest release.

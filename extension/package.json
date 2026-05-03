@@ -225,10 +225,9 @@
   },
   "scripts": {
     "vscode:prepublish": "pnpm run compile",
-    "compile": "tsc -p .",
+    "compile": "node ./scripts/prepare-media.mjs && tsc -p .",
     "watch": "tsc -p . --watch",
     "lint": "tsc -p . --noEmit",
-    "fetch-mermaid": "node -e \"require('https').get('https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js',r=>r.pipe(require('fs').createWriteStream('media/mermaid.min.js')))\"",
     "package": "vsce package --no-dependencies",
     "package:bundled": "node --experimental-strip-types ./scripts/build-extension.ts",
     "deploy-dev": "cd ../engine/cmd/specs && go build -o ../../../specs && cd ../../../extension && pnpm run compile && pnpm run symlink",
@@ -238,6 +237,7 @@
     "@types/node": "^20.11.0",
     "@types/vscode": "^1.85.0",
     "@vscode/vsce": "^3.2.0",
+    "cytoscape": "^3.33.2",
     "typescript": "^5.4.0"
   }
 }
