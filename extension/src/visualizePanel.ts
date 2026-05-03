@@ -1,5 +1,6 @@
 // Visualize webview rendering the canonical traceability graph with Cytoscape.
 import * as path from "path";
+import * as os from "os";
 import * as fs from "fs";
 import * as vscode from "vscode";
 import { runAndCapture, findSpecsFolder, findSpecsRoot, getOutput } from "./engine";
@@ -29,6 +30,17 @@ interface VisualizeEdge {
 interface VisualizeGraph {
   nodes: VisualizeNode[];
   edges: VisualizeEdge[];
+}
+
+interface SaveLayoutNode {
+  id: string;
+  x: number;
+  y: number;
+  locked?: boolean;
+}
+
+interface SaveLayoutPayload {
+  nodes: SaveLayoutNode[];
 }
 
 export function registerVisualizePanel(context: vscode.ExtensionContext): void {
@@ -88,7 +100,7 @@ async function openOrRefresh(context: vscode.ExtensionContext): Promise<void> {
   panel.onDidDispose(() => {
     currentPanel = undefined;
   });
-  panel.webview.onDidReceiveMessage(async (msg: { type: string; payload?: string }) => {
+  panel.webview.onDidReceiveMessage(async (msg: { type: string; requestId?: string; payload?: string | SaveLayoutPayload }) => {
     if (msg.type === "export-dot") {
       await exportFile(context, "dot");
     } else if (msg.type === "export-json") {
@@ -96,10 +108,41 @@ async function openOrRefresh(context: vscode.ExtensionContext): Promise<void> {
     } else if (msg.type === "refresh") {
       await refresh(context);
     } else if (msg.type === "open-path" && msg.payload) {
-      await openArtifact(context, msg.payload);
+      await openArtifact(context, msg.payload as string);
+    } else if (msg.type === "save-layout" && msg.requestId && msg.payload) {
+      await saveLayout(context, panel, msg.requestId, msg.payload as SaveLayoutPayload);
     }
   });
   await refresh(context);
+}
+
+async function saveLayout(
+  context: vscode.ExtensionContext,
+  panel: vscode.WebviewPanel,
+  requestId: string,
+  payload: SaveLayoutPayload,
+): Promise<void> {
+  const folder = findSpecsFolder();
+  if (!folder) {
+    await panel.webview.postMessage({ type: "save-layout-result", requestId, ok: false, error: "Specs: no workspace folder is open." });
+    return;
+  }
+  const cwd = findSpecsRoot(folder) ?? folder.uri.fsPath;
+  const tempDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), "specs-layout-"));
+  const inputPath = path.join(tempDir, "layout.json");
+  try {
+    await fs.promises.writeFile(inputPath, JSON.stringify(payload), "utf8");
+    const res = await runAndCapture(context, ["graph", "save-layout", "--in", inputPath], cwd);
+    if (res.exitCode !== 0) {
+      const error = res.stderr || "graph save-layout failed";
+      getOutput().appendLine(error);
+      await panel.webview.postMessage({ type: "save-layout-result", requestId, ok: false, error });
+      return;
+    }
+    await panel.webview.postMessage({ type: "save-layout-result", requestId, ok: true });
+  } finally {
+    await fs.promises.rm(tempDir, { recursive: true, force: true });
+  }
 }
 
 async function refresh(context: vscode.ExtensionContext): Promise<void> {
@@ -244,6 +287,7 @@ ${fallbackBanner}
 <div class="toolbar">
   <button id="refresh">Refresh</button>
   <button id="fit">Fit</button>
+  <button id="save-layout">Save Layout</button>
   <button id="export-json">Export JSON</button>
   <button id="export-dot">Export DOT</button>
   <div class="meta" id="meta">${graph.nodes.length} nodes / ${graph.edges.length} edges</div>
@@ -254,6 +298,24 @@ ${fallbackInline ? "" : `<script nonce="${nonce}" src="${cytoscapeUri}"></script
 <script nonce="${nonce}">
   const vscode = acquireVsCodeApi();
   const graph = ${safeGraph};
+  let nextSaveRequestId = 0;
+  const pendingSaves = new Map();
+  window.addEventListener('message', (event) => {
+    const message = event.data;
+    if (!message || message.type !== 'save-layout-result' || !message.requestId) {
+      return;
+    }
+    const pending = pendingSaves.get(message.requestId);
+    if (!pending) {
+      return;
+    }
+    pendingSaves.delete(message.requestId);
+    if (message.ok) {
+      pending.resolve();
+      return;
+    }
+    pending.reject(new Error(message.error || 'save layout failed'));
+  });
   document.getElementById('refresh').addEventListener('click', () => vscode.postMessage({ type: 'refresh' }));
   document.getElementById('export-json').addEventListener('click', () => vscode.postMessage({ type: 'export-json' }));
   document.getElementById('export-dot').addEventListener('click', () => vscode.postMessage({ type: 'export-dot' }));
@@ -262,8 +324,14 @@ ${fallbackInline ? "" : `<script nonce="${nonce}" src="${cytoscapeUri}"></script
       graph,
       container: document.getElementById('graph'),
       fitButton: document.getElementById('fit'),
+      saveButton: document.getElementById('save-layout'),
       metaElement: document.getElementById('meta'),
       onOpenPath: (path) => vscode.postMessage({ type: 'open-path', payload: path }),
+      onSaveLayout: (payload) => new Promise((resolve, reject) => {
+        const requestId = String(++nextSaveRequestId);
+        pendingSaves.set(requestId, { resolve, reject });
+        vscode.postMessage({ type: 'save-layout', requestId, payload });
+      }),
       emptyMessage: 'No traceability data found.',
     });
     void ui;

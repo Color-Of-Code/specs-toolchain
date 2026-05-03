@@ -10,6 +10,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/Color-Of-Code/specs-toolchain/engine/internal/config"
 	tracegraph "github.com/Color-Of-Code/specs-toolchain/engine/internal/graph"
 	"github.com/Color-Of-Code/specs-toolchain/engine/internal/visualize"
 )
@@ -123,7 +124,7 @@ func newTraceabilityUIHandler(start string) (http.Handler, error) {
 }
 
 func saveTraceabilityLayout(start string, nodes []layoutSaveNode) error {
-	cfg, graphView, err := loadTraceabilityVisualization(start)
+	cfg, err := config.Load(start)
 	if err != nil {
 		return err
 	}
@@ -131,22 +132,52 @@ func saveTraceabilityLayout(start string, nodes []layoutSaveNode) error {
 	if err != nil {
 		return exitWith(1, "load graph %s: %v", cfg.GraphManifest, err)
 	}
-	allowed := make(map[string]struct{}, len(graphView.Nodes))
-	for _, node := range graphView.Nodes {
-		allowed[node.NodeID] = struct{}{}
+	layouts, err := layoutEntriesFromSaveNodes(nodes, traceabilityAllowedNodeIDs(traceability))
+	if err != nil {
+		return err
 	}
+	traceability.Layout = layouts
+	if err := tracegraph.Write(cfg.GraphManifest, traceability); err != nil {
+		return fmt.Errorf("write graph %s: %w", cfg.GraphManifest, err)
+	}
+	return nil
+}
+
+func traceabilityAllowedNodeIDs(g *tracegraph.Graph) map[string]struct{} {
+	allowed := map[string]struct{}{}
+	for _, entries := range [][]tracegraph.RelationEntry{
+		g.Realizations,
+		g.FeatureImplementations,
+		g.ComponentImplementations,
+		g.ServiceImplementations,
+		g.APIImplementations,
+	} {
+		for _, entry := range entries {
+			allowed[entry.Source] = struct{}{}
+			for _, target := range entry.Targets {
+				allowed[target] = struct{}{}
+			}
+		}
+	}
+	for _, baseline := range g.Baselines {
+		allowed[baseline.Component] = struct{}{}
+	}
+	return allowed
+}
+
+func layoutEntriesFromSaveNodes(nodes []layoutSaveNode, allowed map[string]struct{}) ([]tracegraph.LayoutEntry, error) {
 	layouts := make([]tracegraph.LayoutEntry, 0, len(nodes))
 	seen := make(map[string]struct{}, len(nodes))
 	for index, current := range nodes {
 		normalizedID, err := tracegraph.NormalizeNodeID(current.ID)
 		if err != nil {
-			return fmt.Errorf("layout node %d id: %w", index, err)
+			return nil, fmt.Errorf("layout node %d id: %w", index, err)
 		}
 		if _, ok := allowed[normalizedID]; !ok {
-			return fmt.Errorf("layout node %d id %q is not in the traceability graph", index, normalizedID)
+			return nil, fmt.Errorf("layout node %d id %q is not in the traceability graph", index, normalizedID)
 		}
 		if _, exists := seen[normalizedID]; exists {
-			return fmt.Errorf("layout node %d duplicates id %q", index, normalizedID)
+			return nil, fmt.Errorf("layout node %d duplicates id %q", index, normalizedID)
 		}
 		seen[normalizedID] = struct{}{}
 		layouts = append(layouts, tracegraph.LayoutEntry{ID: normalizedID, X: current.X, Y: current.Y, Locked: current.Locked})
@@ -154,11 +185,7 @@ func saveTraceabilityLayout(start string, nodes []layoutSaveNode) error {
 	sort.Slice(layouts, func(i, j int) bool {
 		return layouts[i].ID < layouts[j].ID
 	})
-	traceability.Layout = layouts
-	if err := tracegraph.Write(cfg.GraphManifest, traceability); err != nil {
-		return fmt.Errorf("write graph %s: %w", cfg.GraphManifest, err)
-	}
-	return nil
+	return layouts, nil
 }
 
 func resolveArtifactPath(specsRoot, requested string) (string, string, error) {
