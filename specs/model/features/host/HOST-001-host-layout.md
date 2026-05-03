@@ -1,8 +1,9 @@
-# Repo Local Host Layout
+# Host Layout
 
-| Field        | Value                                                                          |
-| ------------ | ------------------------------------------------------------------------------ |
-| Status       | Draft                                                                          |
+| Field        | Value                                                                                 |
+| ------------ | ------------------------------------------------------------------------------------- |
+| ID           | HOST-001                                                                              |
+| Status       | Draft                                                                                 |
 | Requirements | [Repo Local Specs Host](../../requirements/workspace/WS-001-repo-local-specs-host.md) |
 
 ## Workflow

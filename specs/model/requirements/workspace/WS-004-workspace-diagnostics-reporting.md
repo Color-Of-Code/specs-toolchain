@@ -1,11 +1,11 @@
 # Workspace Diagnostics Reporting
 
-| Field          | Value                                                                                                                                                    |
-| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| ID             | WS-004                                                                                                                                                   |
-| Status         | Draft                                                                                                                                                    |
-| Realises       | [Repo Local Specs Host](../../../product/engine/ENG-009-repo-local-specs-host.md)                                                                        |
-| Implemented By | [Repo Local Host Layout](../../features/workspace/repo-local-host-layout.md), [Workspace Diagnostics](../../services/workspace/workspace-diagnostics.md) |
+| Field          | Value                                                                                                                                                      |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ID             | WS-004                                                                                                                                                     |
+| Status         | Draft                                                                                                                                                      |
+| Realises       | [Repo Local Specs Host](../../../product/engine/ENG-009-repo-local-specs-host.md)                                                                          |
+| Implemented By | [Human Diagnostics Output](../../features/doctor/DOC-001-human-diagnostics.md), [Workspace Diagnostics](../../services/workspace/workspace-diagnostics.md) |
 
 ## Requirement
 

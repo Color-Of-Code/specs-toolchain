@@ -1,8 +1,9 @@
-# Workspace Doctor Reporting
+# Human Diagnostics Output
 
-| Field        | Value                                                                                              |
-| ------------ | -------------------------------------------------------------------------------------------------- |
-| Status       | Draft                                                                                              |
+| Field        | Value                                                                                                     |
+| ------------ | --------------------------------------------------------------------------------------------------------- |
+| ID           | DOC-001                                                                                                   |
+| Status       | Draft                                                                                                     |
 | Requirements | [Workspace Diagnostics Reporting](../../requirements/workspace/WS-004-workspace-diagnostics-reporting.md) |
 
 ## Workflow

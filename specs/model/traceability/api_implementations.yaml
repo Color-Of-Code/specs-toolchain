@@ -1,5 +1,5 @@
 kind: api_implementation
 entries:
-      source: model/requirements/workspace/WS-005-doctor-json-contract
+    - source: model/requirements/workspace/WS-005-doctor-json-contract
       targets:
         - model/apis/workspace/doctor-json

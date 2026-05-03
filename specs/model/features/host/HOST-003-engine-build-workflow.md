@@ -1,8 +1,9 @@
-# Repo Local Engine Workflow
+# Engine Build Workflow
 
-| Field        | Value                                                                                          |
-| ------------ | ---------------------------------------------------------------------------------------------- |
-| Status       | Draft                                                                                          |
+| Field        | Value                                                                                                 |
+| ------------ | ----------------------------------------------------------------------------------------------------- |
+| ID           | HOST-003                                                                                              |
+| Status       | Draft                                                                                                 |
 | Requirements | [Repo Local Engine Integration](../../requirements/workspace/WS-003-repo-local-engine-integration.md) |
 
 ## Workflow

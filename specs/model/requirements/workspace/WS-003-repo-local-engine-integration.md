@@ -1,11 +1,11 @@
 # Repo Local Engine Integration
 
-| Field          | Value                                                                                                                                                                                                     |
-| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| ID             | WS-003                                                                                                                                                                                                    |
-| Status         | Draft                                                                                                                                                                                                     |
-| Realises       | [Repo Local Specs Host](../../../product/engine/ENG-009-repo-local-specs-host.md)                                                                                                                         |
-| Implemented By | [Repo Local Host Layout](../../features/workspace/repo-local-host-layout.md), [Specs Engine](../../components/engine/specs-engine.md), [Vscode Extension](../../components/extension/vscode-extension.md) |
+| Field          | Value                                                                                                                                                                                                                                                                   |
+| -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ID             | WS-003                                                                                                                                                                                                                                                                  |
+| Status         | Draft                                                                                                                                                                                                                                                                   |
+| Realises       | [Repo Local Specs Host](../../../product/engine/ENG-009-repo-local-specs-host.md)                                                                                                                                                                                       |
+| Implemented By | [Host Layout](../../features/host/HOST-001-host-layout.md), [Engine Build Workflow](../../features/host/HOST-003-engine-build-workflow.md), [Specs Engine](../../components/engine/specs-engine.md), [Vscode Extension](../../components/extension/vscode-extension.md) |
 
 ## Requirement
 

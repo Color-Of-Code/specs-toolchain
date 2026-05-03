@@ -1,8 +1,9 @@
-# Doctor Json Integration
+# JSON Diagnostics Integration
 
-| Field        | Value                                                                        |
-| ------------ | ---------------------------------------------------------------------------- |
-| Status       | Draft                                                                        |
+| Field        | Value                                                                               |
+| ------------ | ----------------------------------------------------------------------------------- |
+| ID           | DOC-002                                                                             |
+| Status       | Draft                                                                               |
 | Requirements | [Doctor Json Contract](../../requirements/workspace/WS-005-doctor-json-contract.md) |
 
 ## Workflow

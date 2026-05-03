@@ -1,8 +1,9 @@
 # Config Relative Framework Resolution
 
-| Field        | Value                                                                                                      |
-| ------------ | ---------------------------------------------------------------------------------------------------------- |
-| Status       | Draft                                                                                                      |
+| Field        | Value                                                                                                             |
+| ------------ | ----------------------------------------------------------------------------------------------------------------- |
+| ID           | HOST-002                                                                                                          |
+| Status       | Draft                                                                                                             |
 | Requirements | [Config Relative Framework Directory](../../requirements/workspace/WS-002-config-relative-framework-directory.md) |
 
 ## Workflow
