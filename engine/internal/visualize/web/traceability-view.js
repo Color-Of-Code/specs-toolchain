@@ -8,6 +8,34 @@
     service: "#c7739f",
   };
 
+  const relationSpecs = {
+    realization: {
+      label: "Realization",
+      sourceKind: "product-requirement",
+      targetKind: "requirement",
+    },
+    feature_implementation: {
+      label: "Feature",
+      sourceKind: "requirement",
+      targetKind: "feature",
+    },
+    component_implementation: {
+      label: "Component",
+      sourceKind: "requirement",
+      targetKind: "component",
+    },
+    service_implementation: {
+      label: "Service",
+      sourceKind: "requirement",
+      targetKind: "service",
+    },
+    api_implementation: {
+      label: "API",
+      sourceKind: "requirement",
+      targetKind: "api",
+    },
+  };
+
   function shapeForKind(kind) {
     switch (kind) {
       case "product-requirement":
@@ -29,6 +57,14 @@
 
   function lineStyleForKind(kind) {
     return kind === "realization" ? "solid" : "dashed";
+  }
+
+  function displayKind(kind) {
+    return String(kind || "node").replace(/[_-]/g, " ");
+  }
+
+  function relationSpec(kind) {
+    return relationSpecs[kind] || relationSpecs.realization;
   }
 
   function emptyGraph() {
@@ -145,6 +181,26 @@
             width: 4,
             "line-color": "#f5f1c7",
             "target-arrow-color": "#f5f1c7",
+          },
+        },
+        {
+          selector: ".traceability-create-inactive",
+          style: {
+            opacity: 0.28,
+          },
+        },
+        {
+          selector: ".traceability-create-source",
+          style: {
+            "border-width": 4,
+            "border-color": "#f8d66d",
+          },
+        },
+        {
+          selector: ".traceability-create-target",
+          style: {
+            "border-width": 4,
+            "border-color": "#91f0b5",
           },
         },
       ],
@@ -266,16 +322,64 @@
         : "realization";
     }
 
+    function currentRelationSpec() {
+      return relationSpec(currentRelationKind());
+    }
+
+    function setCreateStatus(message) {
+      setMetaStatus(options, message);
+    }
+
+    function clearCreateClasses() {
+      if (!cy) {
+        return;
+      }
+      cy.nodes().removeClass("traceability-create-inactive traceability-create-source traceability-create-target");
+    }
+
+    function updateCreateClasses() {
+      if (!cy) {
+        return;
+      }
+      clearCreateClasses();
+      if (!createEdgeMode) {
+        return;
+      }
+      const spec = currentRelationSpec();
+      const candidateKind = edgeSourceNode ? spec.targetKind : spec.sourceKind;
+      cy.nodes().forEach((node) => {
+        if (edgeSourceNode && edgeSourceNode.same(node)) {
+          node.addClass("traceability-create-source");
+          return;
+        }
+        if (node.data("kind") === candidateKind) {
+          node.addClass(edgeSourceNode ? "traceability-create-target" : "traceability-create-source");
+          return;
+        }
+        node.addClass("traceability-create-inactive");
+      });
+    }
+
+    function invalidCreateSelectionMessage(stage) {
+      const spec = currentRelationSpec();
+      if (stage === "source") {
+        return `choose a ${displayKind(spec.sourceKind)} source for ${spec.label.toLowerCase()}`;
+      }
+      return `choose a ${displayKind(spec.targetKind)} target for ${spec.label.toLowerCase()}`;
+    }
+
     function clearEdgeSourceSelection() {
       if (edgeSourceNode) {
         edgeSourceNode.unselect();
       }
       edgeSourceNode = undefined;
+      updateCreateClasses();
     }
 
     function exitCreateEdgeMode() {
       createEdgeMode = false;
       clearEdgeSourceSelection();
+      clearCreateClasses();
       if (options.addEdgeButton) {
         options.addEdgeButton.textContent = "Add Edge";
       }
@@ -288,7 +392,8 @@
       if (options.addEdgeButton) {
         options.addEdgeButton.textContent = "Cancel Add";
       }
-      setMetaStatus(options, `select source node for ${currentRelationKind()}`);
+      updateCreateClasses();
+      setCreateStatus(invalidCreateSelectionMessage("source").replace("choose a ", "select a "));
     }
 
     function relationAlreadyExists(source, target, kind) {
@@ -357,6 +462,14 @@
 
     if (options.relationKindSelect) {
       options.relationKindSelect.disabled = !canSaveRelations;
+      options.relationKindSelect.addEventListener("change", () => {
+        if (!createEdgeMode) {
+          return;
+        }
+        clearEdgeSourceSelection();
+        updateCreateClasses();
+        setCreateStatus(invalidCreateSelectionMessage("source").replace("choose a ", "select a "));
+      });
     }
 
     if (options.addEdgeButton) {
@@ -445,7 +558,7 @@
             if (event.target === cy) {
               if (createEdgeMode) {
                 clearEdgeSourceSelection();
-                setMetaStatus(options, `select source node for ${currentRelationKind()}`);
+                setCreateStatus(invalidCreateSelectionMessage("source").replace("choose a ", "select a "));
               }
               selectedEdge = undefined;
               updateRemoveEdgeButton();
@@ -461,14 +574,24 @@
           cy.on("tap", "node", (event) => {
             if (createEdgeMode) {
               const tappedNode = event.target;
+              const spec = currentRelationSpec();
               if (!edgeSourceNode) {
+                if (tappedNode.data("kind") !== spec.sourceKind) {
+                  setCreateStatus(invalidCreateSelectionMessage("source"));
+                  return;
+                }
                 edgeSourceNode = tappedNode;
                 edgeSourceNode.select();
-                setMetaStatus(options, `select target node for ${currentRelationKind()}`);
+                updateCreateClasses();
+                setCreateStatus(`select a ${displayKind(spec.targetKind)} target for ${spec.label.toLowerCase()}`);
                 return;
               }
               if (edgeSourceNode.same(tappedNode)) {
-                setMetaStatus(options, "choose a different target node");
+                setCreateStatus("choose a different target node");
+                return;
+              }
+              if (tappedNode.data("kind") !== spec.targetKind) {
+                setCreateStatus(invalidCreateSelectionMessage("target"));
                 return;
               }
               void addRelation(tappedNode);
