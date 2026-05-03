@@ -150,7 +150,7 @@
   function buildElements(graph) {
     return [
       ...(graph.nodes || []).map((node) => ({
-        data: { id: node.id, label: node.label, path: node.path, kind: node.kind },
+        data: { id: node.id, label: node.label, path: node.path, kind: node.kind, summary: node.summary || "" },
         position: node.layout ? { x: node.layout.x, y: node.layout.y } : undefined,
         locked: Boolean(node.layout && node.layout.locked),
       })),
@@ -389,18 +389,28 @@
       return relationSpec(currentRelationKind());
     }
 
+    function shortID(nodeID) {
+      // Extract the PREFIX-NNN identifier from the last path segment.
+      // e.g. "model/requirements/lint/LNT-001-style-rule-enforcement" -> "LNT-001"
+      // Falls back to the full segment when the pattern is not found.
+      const segment = String(nodeID || "").split("/").pop() || nodeID;
+      const m = segment.match(/^([A-Z]+-\d+)/);
+      return m ? m[1] : segment;
+    }
+
     function describeNode(node) {
       if (!node) {
         return undefined;
       }
       const position = node.position();
+      const summary = node.data("summary");
       return `${detailsMarkup("Node", node.data("label") || node.id(), [
         { label: "Kind", value: displayKind(node.data("kind")) },
-        { label: "ID", value: node.id() },
+        { label: "ID", value: shortID(node.id()) },
         { label: "Path", value: node.data("path") },
         { label: "Position", value: `${roundCoord(position.x)}, ${roundCoord(position.y)}` },
         { label: "Locked", value: node.locked() ? "yes" : "no" },
-      ])}${detailsActionButton("Open artifact", node.data("path"))}`;
+      ], summary || undefined)}${detailsActionButton("Open artifact", node.data("path"))}`;
     }
 
     function resolveNode(nodeID) {

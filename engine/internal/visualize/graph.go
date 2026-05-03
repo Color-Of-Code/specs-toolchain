@@ -39,6 +39,7 @@ type Node struct {
 	NodeID    string
 	Path      string // workspace-relative markdown file path
 	Label     string
+	Summary   string // body text of the first ## section after the title
 	Kind      string // product-requirement | requirement | feature | component | api | service
 	HasLayout bool
 	X         float64
@@ -53,7 +54,8 @@ type Graph struct {
 }
 
 var (
-	h1Re = regexp.MustCompile(`(?m)^#\s+(.+?)\s*$`)
+	h1Re      = regexp.MustCompile(`(?m)^#\s+(.+?)\s*$`)
+	sectionRe = regexp.MustCompile(`(?ms)^##\s+[^\n]+\n(.*?)(?:\n##\s|\z)`)
 )
 
 // Build projects the canonical traceability graph into the visualization DTO.
@@ -78,11 +80,12 @@ func Build(modelDir, productDir string, g *tracegraph.Graph) (*Graph, error) {
 			return nil, err
 		}
 		node := &Node{
-			ID:     sanitiseID(nodeID),
-			NodeID: nodeID,
-			Path:   path,
-			Label:  readMarkdownTitle(absPath, path),
-			Kind:   tracegraph.KindForNodeID(nodeID),
+			ID:      sanitiseID(nodeID),
+			NodeID:  nodeID,
+			Path:    path,
+			Label:   readMarkdownTitle(absPath, path),
+			Summary: readMarkdownSummary(absPath),
+			Kind:    tracegraph.KindForNodeID(nodeID),
 		}
 		if layout, ok := layoutByID[nodeID]; ok {
 			node.HasLayout = true
@@ -121,11 +124,12 @@ func Build(modelDir, productDir string, g *tracegraph.Graph) (*Graph, error) {
 				return nil
 			}
 			node := &Node{
-				ID:     sanitiseID(nodeID),
-				NodeID: nodeID,
-				Path:   nodeID + ".md",
-				Label:  readMarkdownTitle(p, nodeID+".md"),
-				Kind:   tracegraph.KindForNodeID(nodeID),
+				ID:      sanitiseID(nodeID),
+				NodeID:  nodeID,
+				Path:    nodeID + ".md",
+				Label:   readMarkdownTitle(p, nodeID+".md"),
+				Summary: readMarkdownSummary(p),
+				Kind:    tracegraph.KindForNodeID(nodeID),
 			}
 			result.Nodes = append(result.Nodes, node)
 			nodesByNodeID[nodeID] = node
@@ -223,11 +227,12 @@ func WriteJSON(out io.Writer, g *Graph) error {
 		Locked bool    `json:"locked,omitempty"`
 	}
 	type node struct {
-		ID     string  `json:"id"`
-		Path   string  `json:"path"`
-		Label  string  `json:"label"`
-		Kind   string  `json:"kind"`
-		Layout *layout `json:"layout,omitempty"`
+		ID      string  `json:"id"`
+		Path    string  `json:"path"`
+		Label   string  `json:"label"`
+		Kind    string  `json:"kind"`
+		Summary string  `json:"summary,omitempty"`
+		Layout  *layout `json:"layout,omitempty"`
 	}
 	type edge struct {
 		Source string `json:"source"`
@@ -243,10 +248,11 @@ func WriteJSON(out io.Writer, g *Graph) error {
 	}
 	for _, current := range g.Nodes {
 		jsonNode := node{
-			ID:    current.NodeID,
-			Path:  current.Path,
-			Label: current.Label,
-			Kind:  current.Kind,
+			ID:      current.NodeID,
+			Path:    current.Path,
+			Label:   current.Label,
+			Kind:    current.Kind,
+			Summary: current.Summary,
 		}
 		if current.HasLayout {
 			jsonNode.Layout = &layout{X: current.X, Y: current.Y, Locked: current.Locked}
@@ -320,6 +326,18 @@ func readMarkdownTitle(path, fallback string) string {
 		return strings.TrimSpace(m[1])
 	}
 	return strings.TrimSuffix(filepath.Base(fallback), ".md")
+}
+
+// readMarkdownSummary returns the trimmed body of the first ## section.
+func readMarkdownSummary(path string) string {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return ""
+	}
+	if m := sectionRe.FindStringSubmatch(string(data)); len(m) == 2 {
+		return strings.TrimSpace(m[1])
+	}
+	return ""
 }
 
 func markdownPathForNodeID(nodeID, modelDir, productDir string) (string, error) {

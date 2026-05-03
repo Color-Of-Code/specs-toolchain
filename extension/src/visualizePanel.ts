@@ -18,6 +18,7 @@ interface VisualizeNode {
   path: string;
   label: string;
   kind: string;
+  summary?: string;
   layout?: VisualizeLayout;
 }
 
