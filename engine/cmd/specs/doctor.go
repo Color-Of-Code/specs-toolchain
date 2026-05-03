@@ -31,6 +31,8 @@ type doctorJSON struct {
 	ModelDir          string            `json:"model_dir"`
 	ProductDir        string            `json:"product_dir"`
 	ChangeRequestsDir string            `json:"change_requests_dir"`
+	GraphManifest     string            `json:"graph_manifest"`
+	GraphCache        string            `json:"graph_cache"`
 	BaselinesFile     string            `json:"baselines_file"`
 	StyleConfig       string            `json:"style_config"`
 	MinSpecsVersion   string            `json:"min_specs_version,omitempty"`
@@ -96,6 +98,8 @@ func cmdDoctor(args []string) error {
 	fmt.Printf("model dir:        %s\n", cfg.ModelDir)
 	fmt.Printf("product dir:      %s\n", cfg.ProductDir)
 	fmt.Printf("change-requests:  %s\n", cfg.ChangeRequestsDir)
+	fmt.Printf("graph manifest:   %s%s\n", cfg.GraphManifest, existsSuffix(cfg.GraphManifest))
+	fmt.Printf("graph cache:      %s%s\n", cfg.GraphCache, existsSuffix(cfg.GraphCache))
 	fmt.Printf("baselines file:   %s%s\n", cfg.BaselinesFile, existsSuffix(cfg.BaselinesFile))
 	fmt.Printf("style config:     %s%s\n", cfg.StyleConfig, existsSuffix(cfg.StyleConfig))
 	if cfg.MinSpecsVersion != "" {
@@ -203,6 +207,8 @@ func emitDoctorJSON(cfg *config.Resolved) error {
 		ModelDir:          cfg.ModelDir,
 		ProductDir:        cfg.ProductDir,
 		ChangeRequestsDir: cfg.ChangeRequestsDir,
+		GraphManifest:     cfg.GraphManifest,
+		GraphCache:        cfg.GraphCache,
 		BaselinesFile:     cfg.BaselinesFile,
 		StyleConfig:       cfg.StyleConfig,
 		MinSpecsVersion:   cfg.MinSpecsVersion,
