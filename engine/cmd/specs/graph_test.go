@@ -72,6 +72,55 @@ func TestValidateBaselineReposRejectsUnknownRepo(t *testing.T) {
 	}
 }
 
+func TestCmdGraphImportMarkdownWritesCanonicalGraph(t *testing.T) {
+	dir := t.TempDir()
+	specsDir := filepath.Join(dir, "specs")
+	for _, path := range []string{
+		filepath.Join(specsDir, "product"),
+		filepath.Join(specsDir, "model", "requirements"),
+		filepath.Join(specsDir, "model", "features"),
+		filepath.Join(specsDir, "model", "components"),
+		filepath.Join(specsDir, "model", "baselines"),
+	} {
+		if err := os.MkdirAll(path, 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := config.Save(filepath.Join(specsDir, config.FileName), &config.File{
+		Repos: map[string]string{"host-repo": "repos/host"},
+	}); err != nil {
+		t.Fatal(err)
+	}
+	writeGraphImportFixture(t, specsDir)
+
+	cwd, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() {
+		if err := os.Chdir(cwd); err != nil {
+			t.Fatalf("restore cwd: %v", err)
+		}
+	}()
+	if err := os.Chdir(specsDir); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := cmdGraphImportMarkdown(nil); err != nil {
+		t.Fatalf("cmdGraphImportMarkdown() error = %v", err)
+	}
+	reloaded, err := graph.Load(filepath.Join(specsDir, "model", "traceability", "graph.yaml"))
+	if err != nil {
+		t.Fatalf("graph.Load() error = %v", err)
+	}
+	if len(reloaded.Realizations) != 1 || len(reloaded.FeatureImplementations) != 1 || len(reloaded.ComponentImplementations) != 1 {
+		t.Fatalf("unexpected imported graph sizes: %+v", reloaded)
+	}
+	if len(reloaded.Baselines) != 1 {
+		t.Fatalf("len(Baselines) = %d, want 1", len(reloaded.Baselines))
+	}
+}
+
 func writeGraphFixture(t *testing.T, specsDir string) {
 	t.Helper()
 	traceabilityDir := filepath.Join(specsDir, "model", "traceability")
@@ -137,6 +186,52 @@ func writeGraphFixture(t *testing.T, specsDir string) {
 	}
 	for name, content := range files {
 		if err := os.WriteFile(filepath.Join(traceabilityDir, name), []byte(content), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+}
+
+func writeGraphImportFixture(t *testing.T, specsDir string) {
+	t.Helper()
+	files := map[string]string{
+		filepath.Join(specsDir, "product", "alpha.md"): strings.Join([]string{
+			"# Alpha",
+			"",
+			"| Field | Value |",
+			"| ----- | ----- |",
+			"| Realised By | [Alpha Requirement](../model/requirements/alpha-requirement.md) |",
+		}, "\n"),
+		filepath.Join(specsDir, "model", "requirements", "alpha-requirement.md"): strings.Join([]string{
+			"# Alpha Requirement",
+			"",
+			"| Field | Value |",
+			"| ----- | ----- |",
+			"| Implemented By | [Alpha Feature](../features/alpha-feature.md), [Alpha Component](../components/alpha-component.md) |",
+		}, "\n"),
+		filepath.Join(specsDir, "model", "features", "alpha-feature.md"): strings.Join([]string{
+			"# Alpha Feature",
+			"",
+			"## Requirements",
+			"- [Alpha Requirement](../requirements/alpha-requirement.md)",
+		}, "\n"),
+		filepath.Join(specsDir, "model", "components", "alpha-component.md"): strings.Join([]string{
+			"# Alpha Component",
+			"",
+			"| Field | Value |",
+			"| ----- | ----- |",
+			"| Requirements | [Alpha Requirement](../requirements/alpha-requirement.md) |",
+		}, "\n"),
+		filepath.Join(specsDir, "model", "baselines", "repo-baseline.md"): strings.Join([]string{
+			"# Baselines",
+			"",
+			"## Components",
+			"| Component | Repo | Path | SHA | Date |",
+			"| --------- | ---- | ---- | --- | ---- |",
+			"| [Alpha Component](../components/alpha-component.md) | `host-repo` | `/` | `0123456789abcdef0123456789abcdef01234567` | 2026-05-03 |",
+		}, "\n"),
+	}
+	for path, content := range files {
+		if err := os.WriteFile(path, []byte(content), 0o644); err != nil {
 			t.Fatal(err)
 		}
 	}
