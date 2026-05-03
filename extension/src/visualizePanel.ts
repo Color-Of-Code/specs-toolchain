@@ -307,6 +307,7 @@ ${fallbackBanner}
 <div class="toolbar">
   <button id="refresh">Refresh</button>
   <button id="fit">Fit</button>
+  <input type="search" id="filter" placeholder="Filter nodes…" aria-label="Filter nodes">
   <select id="relation-kind" aria-label="Relation kind">
     <option value="realization">Realization</option>
     <option value="feature_implementation">Feature</option>
@@ -356,6 +357,7 @@ ${fallbackInline ? "" : `<script nonce="${nonce}" src="${cytoscapeUri}"></script
       graph,
       container: document.getElementById('graph'),
       fitButton: document.getElementById('fit'),
+      filterInput: document.getElementById('filter'),
       addEdgeButton: document.getElementById('add-edge'),
       relationKindSelect: document.getElementById('relation-kind'),
       removeEdgeButton: document.getElementById('remove-edge'),

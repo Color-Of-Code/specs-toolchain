@@ -43,6 +43,7 @@ var traceabilityPageTemplate = template.Must(template.New("traceability-page").P
 <div class="toolbar">
   <button id="refresh" type="button">Refresh</button>
   <button id="fit" type="button">Fit</button>
+  <input type="search" id="filter" placeholder="Filter nodes…" aria-label="Filter nodes">
   {{ if .SaveRelationsURL }}<select id="relation-kind" aria-label="Relation kind">
     <option value="realization">Realization</option>
     <option value="feature_implementation">Feature</option>
@@ -73,6 +74,7 @@ var traceabilityPageTemplate = template.Must(template.New("traceability-page").P
     artifactBaseUrl: {{ printf "%q" .ArtifactURL }},
     container: document.getElementById('graph'),
     fitButton: document.getElementById('fit'),
+    filterInput: document.getElementById('filter'),
     addEdgeButton: document.getElementById('add-edge'),
     relationKindSelect: document.getElementById('relation-kind'),
     removeEdgeButton: document.getElementById('remove-edge'),

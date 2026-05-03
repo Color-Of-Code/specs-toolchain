@@ -265,6 +265,12 @@
             "border-color": "#91f0b5",
           },
         },
+        {
+          selector: ".traceability-dimmed",
+          style: {
+            opacity: 0.15,
+          },
+        },
       ],
     });
   }
@@ -387,6 +393,26 @@
 
     function currentRelationSpec() {
       return relationSpec(currentRelationKind());
+    }
+
+    function applyFilter(filterText) {
+      if (!cy) {
+        return;
+      }
+      const text = filterText.trim().toLowerCase();
+      if (!text) {
+        cy.nodes().removeClass("traceability-dimmed");
+        return;
+      }
+      cy.nodes().forEach((node) => {
+        const label = String(node.data("label") || node.id()).toLowerCase();
+        const summary = String(node.data("summary") || "").toLowerCase();
+        if (label.includes(text) || summary.includes(text)) {
+          node.removeClass("traceability-dimmed");
+        } else {
+          node.addClass("traceability-dimmed");
+        }
+      });
     }
 
     function shortID(nodeID) {
@@ -658,6 +684,12 @@
       });
     }
 
+    if (options.filterInput) {
+      options.filterInput.addEventListener("input", () => {
+        applyFilter(options.filterInput.value);
+      });
+    }
+
     if (options.saveButton) {
       options.saveButton.disabled = !canSaveLayout;
       options.saveButton.addEventListener("click", async () => {
@@ -747,6 +779,9 @@
         if (cy) {
           updateMetaSummary(options, cy.nodes().length, cy.edges().length);
           updateDetailsPanel();
+          if (options.filterInput) {
+            applyFilter(options.filterInput.value);
+          }
           cy.on("tap", (event) => {
             if (event.target === cy) {
               if (createEdgeMode) {

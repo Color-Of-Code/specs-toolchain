@@ -20,6 +20,22 @@ body.traceability-shell {
   flex-wrap: wrap;
 }
 
+.toolbar input[type="search"] {
+  background: color-mix(in srgb, var(--traceability-bg, #0f1722) 85%, white);
+  color: var(--traceability-fg, #e6eef5);
+  border: 1px solid color-mix(in srgb, var(--traceability-border, #456078) 70%, transparent);
+  padding: 5px 12px;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 12px;
+  width: 180px;
+  outline: none;
+}
+
+.toolbar input[type="search"]:focus {
+  border-color: var(--traceability-link, #5aa9ff);
+}
+
 .toolbar button,
 .toolbar select,
 .toolbar .toolbar-link {
