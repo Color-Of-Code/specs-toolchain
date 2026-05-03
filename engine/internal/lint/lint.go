@@ -8,12 +8,13 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strings"
 
+	baselineutil "github.com/Color-Of-Code/specs-toolchain/engine/internal/baseline"
 	"github.com/Color-Of-Code/specs-toolchain/engine/internal/config"
+	"github.com/Color-Of-Code/specs-toolchain/engine/internal/graph"
 )
 
 // Result aggregates findings from a lint run.
@@ -251,114 +252,43 @@ func CheckMarkdownStyle(out io.Writer, specsRoot, configPath string, r *Result) 
 	}
 }
 
-// baselineRowRe matches a markdown table row in the Components section of the
-// baseline file. The columns are: | Component | Repo | Path | Commit | ... |.
-var baselineRowRe = regexp.MustCompile(`^\|\s*\[`)
-
-// CheckBaselines verifies that every component row in the baseline file
-// records the latest git commit SHA for the referenced (repo, path).
+// CheckBaselines verifies that every canonical baseline entry records the
+// latest git commit SHA for the referenced (repo, path).
 func CheckBaselines(out io.Writer, cfg *config.Resolved, r *Result) {
 	fmt.Fprintln(out, "== component baselines ==")
-	if cfg.BaselinesFile == "" {
-		r.warnf("no baseline file configured; skipping")
+	if cfg.GraphManifest == "" {
+		r.warnf("no graph manifest configured; skipping")
 		return
 	}
-	if _, err := os.Stat(cfg.BaselinesFile); err != nil {
-		r.warnf("no baseline file at %s; skipping", cfg.BaselinesFile)
+	if _, err := os.Stat(cfg.GraphManifest); err != nil {
+		r.warnf("no graph manifest at %s; skipping", cfg.GraphManifest)
+		return
+	}
+	g, err := graph.Load(cfg.GraphManifest)
+	if err != nil {
+		r.errf("load graph: %v", err)
 		return
 	}
 	if len(cfg.Repos) == 0 {
-		r.warnf("no repos: map in .specs.yaml; baseline rows will be skipped")
+		r.warnf("no repos: map in .specs.yaml; baseline entries will be skipped")
 	}
 
 	workspace := filepath.Dir(cfg.HostRoot)
 
-	f, err := os.Open(cfg.BaselinesFile)
-	if err != nil {
-		r.errf("open baseline file: %v", err)
-		return
-	}
-	defer f.Close()
-
 	checked := 0
-	scanner := bufio.NewScanner(f)
-	scanner.Buffer(make([]byte, 64*1024), 1024*1024)
-	inSection := false
-	for scanner.Scan() {
-		line := scanner.Text()
-		t := strings.TrimSpace(line)
-		if strings.HasPrefix(t, "## ") && strings.Contains(t, "Components") {
-			inSection = true
-			continue
-		}
-		if inSection && strings.HasPrefix(t, "## ") {
-			break
-		}
-		if !inSection || !baselineRowRe.MatchString(line) {
-			continue
-		}
-		cols := splitTableRow(line)
-		if len(cols) < 5 {
-			continue
-		}
-		// Columns (1-indexed to mirror awk -F'|'): 1=Component, 2=Repo, 3=Path, 4=Commit.
-		repo := stripBackticks(strings.TrimSpace(cols[2]))
-		pathInside := stripBackticks(strings.TrimSpace(cols[3]))
-		recorded := stripBackticks(strings.TrimSpace(cols[4]))
-		if pathInside == "" || strings.HasPrefix(pathInside, "_") || strings.HasPrefix(pathInside, "(") {
-			continue
-		}
-		repoPath, ok := cfg.Repos[repo]
-		if !ok {
-			r.warnf("unknown repo %q in baseline table; add it under repos: in .specs.yaml", repo)
-			continue
-		}
-		absRepo := filepath.Join(workspace, repoPath)
-		if !isGitRepo(absRepo) {
-			r.warnf("repo not checked out: %s (skipping %s)", repoPath, repo)
-			continue
-		}
-		args := []string{"-C", absRepo, "log", "-1", "--format=%H"}
-		if pathInside != "/" {
-			args = append(args, "--", pathInside)
-		}
-		cmdOut, err := exec.Command("git", args...).Output()
-		actual := strings.TrimSpace(string(cmdOut))
-		if err != nil || actual == "" {
-			r.warnf("no git history for %s:%s", repo, pathInside)
+	for _, entry := range g.Baselines {
+		actual, err := baselineutil.ResolveCommit(entry.Component, entry.Repo, entry.Path, cfg.Repos, workspace)
+		if err != nil {
+			r.warnf("%v", err)
 			continue
 		}
 		checked++
-		if actual != recorded {
+		if actual != entry.Commit {
 			r.errf("baseline stale: %s path=%q\n  recorded: %s\n  actual:   %s",
-				repo, pathInside, recorded, actual)
+				entry.Repo, entry.Path, entry.Commit, actual)
 		}
 	}
 	if !r.Failed() {
 		fmt.Fprintf(out, "ok (%d component(s) verified)\n", checked)
 	}
-}
-
-func splitTableRow(line string) []string {
-	// drop the leading and trailing pipe so split returns clean cells
-	t := strings.TrimSpace(line)
-	t = strings.TrimPrefix(t, "|")
-	t = strings.TrimSuffix(t, "|")
-	parts := strings.Split(t, "|")
-	out := make([]string, 0, len(parts)+1)
-	out = append(out, "") // 1-based column indexing to match awk -F'|'
-	out = append(out, parts...)
-	return out
-}
-
-func stripBackticks(s string) string {
-	return strings.Trim(s, "` ")
-}
-
-func isGitRepo(dir string) bool {
-	if st, err := os.Stat(filepath.Join(dir, ".git")); err == nil {
-		_ = st
-		return true
-	}
-	return false
 }

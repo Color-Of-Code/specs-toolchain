@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	baselineutil "github.com/Color-Of-Code/specs-toolchain/engine/internal/baseline"
 	"github.com/Color-Of-Code/specs-toolchain/engine/internal/config"
 	"github.com/Color-Of-Code/specs-toolchain/engine/internal/graph"
 )
@@ -74,7 +75,7 @@ func cmdBaselineUpdate(args []string) error {
 			skipped++
 			continue
 		}
-		actualCommit, err := resolveBaselineCommit(entry, cfg.Repos, workspace)
+		actualCommit, err := baselineutil.ResolveCommit(entry.Component, entry.Repo, entry.Path, cfg.Repos, workspace)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "warning: %v\n", err)
 			skipped++
@@ -113,30 +114,6 @@ func cmdBaselineUpdate(args []string) error {
 
 func matchesBaselineFilter(component, only string) bool {
 	return only == "" || strings.Contains(component, only)
-}
-
-func resolveBaselineCommit(entry graph.BaselineEntry, repos map[string]string, workspace string) (string, error) {
-	repoPath, ok := repos[entry.Repo]
-	if !ok {
-		return "", fmt.Errorf("unknown repo %q (add to repos: in .specs.yaml); component=%q", entry.Repo, entry.Component)
-	}
-	absRepo := filepath.Join(workspace, repoPath)
-	if _, err := os.Stat(filepath.Join(absRepo, ".git")); err != nil {
-		return "", fmt.Errorf("repo not checked out at %s: %v", absRepo, err)
-	}
-	gitArgs := []string{"-C", absRepo, "log", "-1", "--format=%H"}
-	if entry.Path != "/" {
-		gitArgs = append(gitArgs, "--", entry.Path)
-	}
-	out, err := exec.Command("git", gitArgs...).Output()
-	if err != nil {
-		return "", fmt.Errorf("git log failed for %s:%s: %v", entry.Repo, entry.Path, err)
-	}
-	sha := strings.TrimSpace(string(out))
-	if sha == "" {
-		return "", fmt.Errorf("no git history for %s:%s", entry.Repo, entry.Path)
-	}
-	return sha, nil
 }
 
 func formatBaselineChange(component, repo, repoPath, commit string) string {
