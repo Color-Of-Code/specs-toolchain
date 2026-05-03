@@ -2,6 +2,7 @@
 
 | Field       | Value                                                                      |
 | ----------- | -------------------------------------------------------------------------- |
+| ID          | EXT-006                                                                    |
 | Status      | Draft                                                                      |
 | Stakeholder | VS Code user, project lead                                                 |
 | Source      | [Install](../../../docs/install.md), [Commands](../../../docs/commands.md) |

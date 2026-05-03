@@ -3,7 +3,7 @@
 | Field        | Value                                                                                              |
 | ------------ | -------------------------------------------------------------------------------------------------- |
 | Status       | Draft                                                                                              |
-| Requirements | [Workspace Diagnostics Reporting](../../requirements/workspace/workspace-diagnostics-reporting.md) |
+| Requirements | [Workspace Diagnostics Reporting](../../requirements/workspace/WS-004-workspace-diagnostics-reporting.md) |
 
 ## Responsibilities
 

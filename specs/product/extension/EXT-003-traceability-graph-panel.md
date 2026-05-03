@@ -2,6 +2,7 @@
 
 | Field       | Value                                                                                   |
 | ----------- | --------------------------------------------------------------------------------------- |
+| ID          | EXT-003                                                                                 |
 | Status      | Draft                                                                                   |
 | Stakeholder | Product manager, architect                                                              |
 | Source      | [Overview](../../../docs/overview.md), [Extension README](../../../extension/README.md) |

@@ -1,9 +1,9 @@
 kind: realization
 entries:
-    - source: product/toolchain/repo-local-specs-host
+    - source: product/engine/ENG-009-repo-local-specs-host
       targets:
-        - model/requirements/workspace/config-relative-framework-directory
-        - model/requirements/workspace/doctor-json-contract
-        - model/requirements/workspace/repo-local-engine-integration
-        - model/requirements/workspace/repo-local-specs-host
-        - model/requirements/workspace/workspace-diagnostics-reporting
+        - model/requirements/workspace/WS-002-config-relative-framework-directory
+        - model/requirements/workspace/WS-005-doctor-json-contract
+        - model/requirements/workspace/WS-003-repo-local-engine-integration
+        - model/requirements/workspace/WS-001-repo-local-specs-host
+        - model/requirements/workspace/WS-004-workspace-diagnostics-reporting

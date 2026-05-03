@@ -2,8 +2,9 @@
 
 | Field          | Value                                                                                                                              |
 | -------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| ID             | WS-005                                                                                                                             |
 | Status         | Draft                                                                                                                              |
-| Realises       | [Repo Local Specs Host](../../../product/toolchain/repo-local-specs-host.md)                                                       |
+| Realises       | [Repo Local Specs Host](../../../product/engine/ENG-009-repo-local-specs-host.md)                                                  |
 | Implemented By | [Doctor Json Integration](../../features/workspace/doctor-json-integration.md), [Doctor Json](../../apis/workspace/doctor-json.md) |
 
 ## Requirement

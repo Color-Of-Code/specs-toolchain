@@ -2,8 +2,9 @@
 
 | Field          | Value                                                                                                                                                    |
 | -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ID             | WS-004                                                                                                                                                   |
 | Status         | Draft                                                                                                                                                    |
-| Realises       | [Repo Local Specs Host](../../../product/toolchain/repo-local-specs-host.md)                                                                             |
+| Realises       | [Repo Local Specs Host](../../../product/engine/ENG-009-repo-local-specs-host.md)                                                                        |
 | Implemented By | [Repo Local Host Layout](../../features/workspace/repo-local-host-layout.md), [Workspace Diagnostics](../../services/workspace/workspace-diagnostics.md) |
 
 ## Requirement

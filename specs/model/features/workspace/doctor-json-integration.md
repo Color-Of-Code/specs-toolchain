@@ -3,7 +3,7 @@
 | Field        | Value                                                                        |
 | ------------ | ---------------------------------------------------------------------------- |
 | Status       | Draft                                                                        |
-| Requirements | [Doctor Json Contract](../../requirements/workspace/doctor-json-contract.md) |
+| Requirements | [Doctor Json Contract](../../requirements/workspace/WS-005-doctor-json-contract.md) |
 
 ## Workflow
 

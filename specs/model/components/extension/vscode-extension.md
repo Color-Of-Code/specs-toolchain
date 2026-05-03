@@ -3,7 +3,7 @@
 | Field        | Value                                                                                          |
 | ------------ | ---------------------------------------------------------------------------------------------- |
 | Status       | Draft                                                                                          |
-| Requirements | [Repo Local Engine Integration](../../requirements/workspace/repo-local-engine-integration.md) |
+| Requirements | [Repo Local Engine Integration](../../requirements/workspace/WS-003-repo-local-engine-integration.md) |
 | Baseline     | —                                                                                              |
 
 ## Responsibilities

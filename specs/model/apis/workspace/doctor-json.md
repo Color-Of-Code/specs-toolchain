@@ -3,7 +3,7 @@
 | Field        | Value                                                                          |
 | ------------ | ------------------------------------------------------------------------------ |
 | Status       | Draft                                                                          |
-| Requirements | [Repo Local Specs Host](../../requirements/workspace/repo-local-specs-host.md) |
+| Requirements | [Repo Local Specs Host](../../requirements/workspace/WS-001-repo-local-specs-host.md) |
 
 ## Command or Contract
 

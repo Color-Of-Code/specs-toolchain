@@ -2,6 +2,7 @@
 
 | Field       | Value                                                                                   |
 | ----------- | --------------------------------------------------------------------------------------- |
+| ID          | EXT-002                                                                                 |
 | Status      | Draft                                                                                   |
 | Stakeholder | VS Code user, spec author                                                               |
 | Source      | [Commands](../../../docs/commands.md), [Extension README](../../../extension/README.md) |

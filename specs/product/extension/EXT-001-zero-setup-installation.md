@@ -2,6 +2,7 @@
 
 | Field       | Value                                                                                 |
 | ----------- | ------------------------------------------------------------------------------------- |
+| ID          | EXT-001                                                                               |
 | Status      | Draft                                                                                 |
 | Stakeholder | VS Code user, spec author                                                             |
 | Source      | [Install](../../../docs/install.md), [Extension README](../../../extension/README.md) |

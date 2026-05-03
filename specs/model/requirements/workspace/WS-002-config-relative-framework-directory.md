@@ -2,8 +2,9 @@
 
 | Field          | Value                                                                                                                                                             |
 | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ID             | WS-002                                                                                                                                                            |
 | Status         | Draft                                                                                                                                                             |
-| Realises       | [Repo Local Specs Host](../../../product/toolchain/repo-local-specs-host.md)                                                                                      |
+| Realises       | [Repo Local Specs Host](../../../product/engine/ENG-009-repo-local-specs-host.md)                                                                                 |
 | Implemented By | [Config Relative Framework Resolution](../../features/workspace/config-relative-framework-resolution.md), [Specs Engine](../../components/engine/specs-engine.md) |
 
 ## Requirement

@@ -2,6 +2,7 @@
 
 | Field       | Value                                                                    |
 | ----------- | ------------------------------------------------------------------------ |
+| ID          | EXT-005                                                                  |
 | Status      | Draft                                                                    |
 | Stakeholder | Spec author, stakeholder                                                 |
 | Source      | [Commands](../../../docs/commands.md), [Actors](../../../docs/actors.md) |

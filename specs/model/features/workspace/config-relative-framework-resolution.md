@@ -3,7 +3,7 @@
 | Field        | Value                                                                                                      |
 | ------------ | ---------------------------------------------------------------------------------------------------------- |
 | Status       | Draft                                                                                                      |
-| Requirements | [Config Relative Framework Directory](../../requirements/workspace/config-relative-framework-directory.md) |
+| Requirements | [Config Relative Framework Directory](../../requirements/workspace/WS-002-config-relative-framework-directory.md) |
 
 ## Workflow
 

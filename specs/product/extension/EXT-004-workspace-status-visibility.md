@@ -2,6 +2,7 @@
 
 | Field       | Value                                            |
 | ----------- | ------------------------------------------------ |
+| ID          | EXT-004                                          |
 | Status      | Draft                                            |
 | Stakeholder | Spec author                                      |
 | Source      | [Extension README](../../../extension/README.md) |
