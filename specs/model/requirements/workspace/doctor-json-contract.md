@@ -1,10 +1,10 @@
 # Doctor Json Contract
 
-| Field          | Value                                                                                                                            |
-| -------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| Status         | Draft                                                                                                                            |
-| Realises       | [Repo Local Specs Host](../../../product/toolchain/repo-local-specs-host.md)                                                     |
-| Implemented By | [Repo Local Host Layout](../../features/workspace/repo-local-host-layout.md), [Doctor Json](../../apis/workspace/doctor-json.md) |
+| Field          | Value                                                                                                                              |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| Status         | Draft                                                                                                                              |
+| Realises       | [Repo Local Specs Host](../../../product/toolchain/repo-local-specs-host.md)                                                       |
+| Implemented By | [Doctor Json Integration](../../features/workspace/doctor-json-integration.md), [Doctor Json](../../apis/workspace/doctor-json.md) |
 
 ## Requirement
 

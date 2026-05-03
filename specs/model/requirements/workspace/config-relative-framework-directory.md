@@ -1,10 +1,10 @@
 # Config Relative Framework Directory
 
-| Field          | Value                                                                                                                                 |
-| -------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| Status         | Draft                                                                                                                                 |
-| Realises       | [Repo Local Specs Host](../../../product/toolchain/repo-local-specs-host.md)                                                          |
-| Implemented By | [Repo Local Host Layout](../../features/workspace/repo-local-host-layout.md), [Specs Engine](../../components/engine/specs-engine.md) |
+| Field          | Value                                                                                                                                                             |
+| -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Status         | Draft                                                                                                                                                             |
+| Realises       | [Repo Local Specs Host](../../../product/toolchain/repo-local-specs-host.md)                                                                                      |
+| Implemented By | [Config Relative Framework Resolution](../../features/workspace/config-relative-framework-resolution.md), [Specs Engine](../../components/engine/specs-engine.md) |
 
 ## Requirement
 
