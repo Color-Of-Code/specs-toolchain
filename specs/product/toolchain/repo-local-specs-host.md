@@ -10,7 +10,7 @@
 ## Summary
 
 The specs-toolchain repository shall contain its own specs host under `specs/`
-and its own local framework under `templates/` so maintainers can develop and
+and its own local framework under `framework/` so maintainers can develop and
 verify host behavior without cloning or wiring a second repository.
 
 ## User Value
@@ -23,5 +23,5 @@ verify host behavior without cloning or wiring a second repository.
 ## Acceptance Signal
 
 `./bin/specs doctor` resolves `specs_root` to `./specs`, `framework_dir` to
-`./templates`, and scaffold commands create artifacts inside the repo-local
+`./framework`, and scaffold commands create artifacts inside the repo-local
 host tree.
