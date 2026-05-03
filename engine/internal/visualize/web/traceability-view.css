@@ -63,11 +63,96 @@ body.traceability-shell {
   color: var(--traceability-muted, #94aab9);
 }
 
+.traceability-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 320px);
+  gap: 12px;
+  align-items: stretch;
+}
+
 #graph {
-  height: calc(100vh - 140px);
+  height: calc(100vh - 180px);
   min-height: 420px;
   border-radius: 18px;
   border: 1px solid color-mix(in srgb, var(--traceability-border, #456078) 70%, transparent);
   background: color-mix(in srgb, var(--traceability-bg, #0f1722) 94%, white);
   box-shadow: 0 10px 30px color-mix(in srgb, var(--traceability-fg, #e6eef5) 10%, transparent);
+}
+
+.details {
+  min-height: 420px;
+  padding: 16px;
+  overflow: auto;
+  border-radius: 18px;
+  border: 1px solid color-mix(in srgb, var(--traceability-border, #456078) 70%, transparent);
+  background: color-mix(in srgb, var(--traceability-bg, #0f1722) 90%, white);
+  box-shadow: 0 10px 30px color-mix(in srgb, var(--traceability-fg, #e6eef5) 8%, transparent);
+}
+
+.details-panel {
+  display: grid;
+  gap: 12px;
+}
+
+.details-eyebrow {
+  margin: 0;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--traceability-muted, #94aab9);
+}
+
+.details-title {
+  margin: 0;
+  font-size: 22px;
+  line-height: 1.2;
+}
+
+.details-list {
+  margin: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.details-list div {
+  display: grid;
+  gap: 4px;
+  padding-top: 10px;
+  border-top: 1px solid color-mix(in srgb, var(--traceability-border, #456078) 60%, transparent);
+}
+
+.details-list dt {
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--traceability-muted, #94aab9);
+}
+
+.details-list dd {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  word-break: break-word;
+}
+
+.details-note {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--traceability-muted, #94aab9);
+}
+
+@media (max-width: 960px) {
+  .traceability-main {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  #graph {
+    height: 60vh;
+    min-height: 360px;
+  }
+
+  .details {
+    min-height: 0;
+  }
 }

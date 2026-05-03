@@ -13,7 +13,8 @@ monorepo. Releases ship a per-platform `.vsix` attached to each
 
 The traceability preview uses Cytoscape.js and the engine's canonical
 `specs visualize traceability --format json` output, so the VS Code panel and
-future standalone UI can share the same graph payload.
+future standalone UI can share the same graph payload and inline inspector for
+selected nodes and relations.
 
 ## Install
 

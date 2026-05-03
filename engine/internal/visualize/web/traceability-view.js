@@ -67,6 +67,41 @@
     return relationSpecs[kind] || relationSpecs.realization;
   }
 
+  function escapeHTML(value) {
+    return String(value == null ? "" : value).replace(/[&<>"']/g, (char) => {
+      switch (char) {
+        case "&":
+          return "&amp;";
+        case "<":
+          return "&lt;";
+        case ">":
+          return "&gt;";
+        case '"':
+          return "&quot;";
+        case "'":
+          return "&#39;";
+        default:
+          return char;
+      }
+    });
+  }
+
+  function detailsMarkup(eyebrow, title, rows, note) {
+    const renderedRows = (rows || [])
+      .filter((row) => row && row.value != null && row.value !== "")
+      .map((row) => `<div><dt>${escapeHTML(row.label)}</dt><dd>${escapeHTML(row.value)}</dd></div>`)
+      .join("");
+    const noteMarkup = note ? `<p class="details-note">${escapeHTML(note)}</p>` : "";
+    return `<article class="details-panel"><p class="details-eyebrow">${escapeHTML(eyebrow)}</p><h2 class="details-title">${escapeHTML(title)}</h2>${renderedRows ? `<dl class="details-list">${renderedRows}</dl>` : ""}${noteMarkup}</article>`;
+  }
+
+  function setDetails(options, markup) {
+    if (!options.detailsElement) {
+      return;
+    }
+    options.detailsElement.innerHTML = markup;
+  }
+
   function emptyGraph() {
     return { nodes: [], edges: [] };
   }
@@ -308,6 +343,7 @@
 
     let cy;
     let selectedEdge;
+    let selectedNode;
     let createEdgeMode = false;
     let edgeSourceNode;
     const openPath = typeof options.onOpenPath === "function"
@@ -324,6 +360,80 @@
 
     function currentRelationSpec() {
       return relationSpec(currentRelationKind());
+    }
+
+    function describeNode(node) {
+      if (!node) {
+        return undefined;
+      }
+      const position = node.position();
+      return detailsMarkup("Node", node.data("label") || node.id(), [
+        { label: "Kind", value: displayKind(node.data("kind")) },
+        { label: "ID", value: node.id() },
+        { label: "Path", value: node.data("path") },
+        { label: "Position", value: `${roundCoord(position.x)}, ${roundCoord(position.y)}` },
+        { label: "Locked", value: node.locked() ? "yes" : "no" },
+      ], node.data("path") ? "Click the node to open its markdown artifact." : "");
+    }
+
+    function resolveNode(nodeID) {
+      if (!cy) {
+        return undefined;
+      }
+      const matches = cy.$id(nodeID);
+      return matches.length ? matches[0] : undefined;
+    }
+
+    function describeEdge(edge) {
+      if (!edge) {
+        return undefined;
+      }
+      const kind = edge.data("kind");
+      const spec = relationSpec(kind);
+      const sourceNode = resolveNode(edge.data("source"));
+      const targetNode = resolveNode(edge.data("target"));
+      return detailsMarkup("Relation", spec.label, [
+        { label: "Kind", value: displayKind(kind) },
+        { label: "Source", value: sourceNode ? sourceNode.data("label") || sourceNode.id() : edge.data("source") },
+        { label: "Source ID", value: edge.data("source") },
+        { label: "Target", value: targetNode ? targetNode.data("label") || targetNode.id() : edge.data("target") },
+        { label: "Target ID", value: edge.data("target") },
+      ], canSaveRelations ? "Use Remove Selected Edge to delete this relation." : "");
+    }
+
+    function describeCreateMode() {
+      const spec = currentRelationSpec();
+      if (edgeSourceNode) {
+        return detailsMarkup("Add Edge", edgeSourceNode.data("label") || edgeSourceNode.id(), [
+          { label: "Relation", value: spec.label },
+          { label: "Source kind", value: displayKind(spec.sourceKind) },
+          { label: "Target kind", value: displayKind(spec.targetKind) },
+          { label: "Source ID", value: edgeSourceNode.id() },
+        ], `Select a ${displayKind(spec.targetKind)} target to create this relation.`);
+      }
+      return detailsMarkup("Add Edge", spec.label, [
+        { label: "Source kind", value: displayKind(spec.sourceKind) },
+        { label: "Target kind", value: displayKind(spec.targetKind) },
+      ], `Select a ${displayKind(spec.sourceKind)} source node to start.`);
+    }
+
+    function updateDetailsPanel() {
+      if (!options.detailsElement) {
+        return;
+      }
+      if (createEdgeMode) {
+        setDetails(options, describeCreateMode());
+        return;
+      }
+      if (selectedEdge) {
+        setDetails(options, describeEdge(selectedEdge));
+        return;
+      }
+      if (selectedNode) {
+        setDetails(options, describeNode(selectedNode));
+        return;
+      }
+      setDetails(options, detailsMarkup("Inspector", "No selection", [], "Select an edge to inspect relation details. Node taps still open their markdown artifacts."));
     }
 
     function setCreateStatus(message) {
@@ -383,17 +493,20 @@
       if (options.addEdgeButton) {
         options.addEdgeButton.textContent = "Add Edge";
       }
+      updateDetailsPanel();
     }
 
     function enterCreateEdgeMode() {
       createEdgeMode = true;
       selectedEdge = undefined;
+      selectedNode = undefined;
       updateRemoveEdgeButton();
       if (options.addEdgeButton) {
         options.addEdgeButton.textContent = "Cancel Add";
       }
       updateCreateClasses();
       setCreateStatus(invalidCreateSelectionMessage("source").replace("choose a ", "select a "));
+      updateDetailsPanel();
     }
 
     function relationAlreadyExists(source, target, kind) {
@@ -428,8 +541,11 @@
       }
       try {
         await persistRelations(options, cy, { appendEdges: [nextEdge] });
-        cy.add({ data: { id: createClientEdgeId(), source: nextEdge.source, target: nextEdge.target, kind: nextEdge.kind } });
+        const addedEdge = cy.add({ data: { id: createClientEdgeId(), source: nextEdge.source, target: nextEdge.target, kind: nextEdge.kind } });
+        selectedNode = undefined;
+        selectedEdge = addedEdge[0];
         updateMetaSummary(options, cy.nodes().length, cy.edges().length);
+        updateRemoveEdgeButton();
         setMetaStatus(options, "edge added");
         saveSucceeded = true;
         exitCreateEdgeMode();
@@ -469,6 +585,7 @@
         clearEdgeSourceSelection();
         updateCreateClasses();
         setCreateStatus(invalidCreateSelectionMessage("source").replace("choose a ", "select a "));
+        updateDetailsPanel();
       });
     }
 
@@ -534,8 +651,10 @@
           await persistRelations(options, cy, { omitEdgeId: selectedEdge.id() });
           selectedEdge.remove();
           selectedEdge = undefined;
+          selectedNode = undefined;
           updateMetaSummary(options, cy.nodes().length, cy.edges().length);
           setMetaStatus(options, "edge removed");
+          updateDetailsPanel();
         } catch (error) {
           console.error(error);
           options.removeEdgeButton.textContent = "Remove Failed";
@@ -554,6 +673,7 @@
         cy = renderGraph(options, graph) || undefined;
         if (cy) {
           updateMetaSummary(options, cy.nodes().length, cy.edges().length);
+          updateDetailsPanel();
           cy.on("tap", (event) => {
             if (event.target === cy) {
               if (createEdgeMode) {
@@ -561,7 +681,9 @@
                 setCreateStatus(invalidCreateSelectionMessage("source").replace("choose a ", "select a "));
               }
               selectedEdge = undefined;
+              selectedNode = undefined;
               updateRemoveEdgeButton();
+              updateDetailsPanel();
             }
           });
           cy.on("tap", "edge", (event) => {
@@ -569,7 +691,9 @@
               return;
             }
             selectedEdge = event.target;
+            selectedNode = undefined;
             updateRemoveEdgeButton();
+            updateDetailsPanel();
           });
           cy.on("tap", "node", (event) => {
             if (createEdgeMode) {
@@ -584,6 +708,7 @@
                 edgeSourceNode.select();
                 updateCreateClasses();
                 setCreateStatus(`select a ${displayKind(spec.targetKind)} target for ${spec.label.toLowerCase()}`);
+                updateDetailsPanel();
                 return;
               }
               if (edgeSourceNode.same(tappedNode)) {
@@ -598,7 +723,9 @@
               return;
             }
             selectedEdge = undefined;
+            selectedNode = event.target;
             updateRemoveEdgeButton();
+            updateDetailsPanel();
             const path = event.target.data("path");
             if (path) {
               openPath(path);

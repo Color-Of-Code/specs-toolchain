@@ -320,7 +320,10 @@ ${fallbackBanner}
   <div class="meta" id="meta">${graph.nodes.length} nodes / ${graph.edges.length} edges</div>
 </div>
 <p class="hint">Click a node to open its markdown artifact. The preview reads canonical graph JSON from the engine.</p>
-<div id="graph"></div>
+<div class="traceability-main">
+  <div id="graph"></div>
+  <aside class="details" id="details"><article class="details-panel"><p class="details-eyebrow">Inspector</p><h2 class="details-title">No selection</h2><p class="details-note">Select an edge to inspect relation details. Node taps still open their markdown artifacts.</p></article></aside>
+</div>
 ${fallbackInline ? "" : `<script nonce="${nonce}" src="${cytoscapeUri}"></script><script nonce="${nonce}" src="${appUri}"></script>`}
 <script nonce="${nonce}">
   const vscode = acquireVsCodeApi();
@@ -356,6 +359,7 @@ ${fallbackInline ? "" : `<script nonce="${nonce}" src="${cytoscapeUri}"></script
       removeEdgeButton: document.getElementById('remove-edge'),
       saveButton: document.getElementById('save-layout'),
       metaElement: document.getElementById('meta'),
+      detailsElement: document.getElementById('details'),
       onOpenPath: (path) => vscode.postMessage({ type: 'open-path', payload: path }),
       onSaveLayout: (payload) => new Promise((resolve, reject) => {
         const requestId = String(++nextSaveRequestId);

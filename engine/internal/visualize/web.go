@@ -58,7 +58,10 @@ var traceabilityPageTemplate = template.Must(template.New("traceability-page").P
   <div class="meta" id="meta"></div>
 </div>
 <p class="hint">{{ .Hint }}</p>
-<div id="graph"></div>
+<div class="traceability-main">
+  <div id="graph"></div>
+  <aside class="details" id="details"><article class="details-panel"><p class="details-eyebrow">Inspector</p><h2 class="details-title">No selection</h2><p class="details-note">Select an edge to inspect relation details. Node taps still open their markdown artifacts.</p></article></aside>
+</div>
 <script src="{{ .CytoscapeJS }}"></script>
 <script src="{{ .AppJS }}"></script>
 <script>
@@ -75,6 +78,7 @@ var traceabilityPageTemplate = template.Must(template.New("traceability-page").P
     removeEdgeButton: document.getElementById('remove-edge'),
     saveButton: document.getElementById('save-layout'),
     metaElement: document.getElementById('meta'),
+    detailsElement: document.getElementById('details'),
     emptyMessage: {{ printf "%q" .EmptyMessage }},
   });
 </script>
