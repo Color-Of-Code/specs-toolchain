@@ -33,7 +33,7 @@ Use `make` from the repo root for the common cases:
 
 ```bash
 make build              # engine + extension
-make build-engine       # engine binary -> ./specs
+make build-engine       # engine binary -> ./bin/specs
 make build-extension    # extension TypeScript
 make package-extension  # produce a .vsix
 make deploy-dev         # build + symlink extension into ~/.vscode/extensions

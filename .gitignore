@@ -2,6 +2,6 @@
 /extension/out/
 /extension/bin/
 /extension/*.vsix
-/specs
+/bin/specs
 /engine/specs
 /dist/

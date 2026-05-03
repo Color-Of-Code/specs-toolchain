@@ -230,7 +230,7 @@
     "lint": "tsc -p . --noEmit",
     "package": "vsce package --no-dependencies",
     "package:bundled": "node --experimental-strip-types ./scripts/build-extension.ts",
-    "deploy-dev": "cd ../engine/cmd/specs && go build -o ../../../specs && cd ../../../extension && pnpm run compile && pnpm run symlink",
+    "deploy-dev": "mkdir -p ../bin && cd ../engine/cmd/specs && go build -o ../../../bin/specs && cd ../../../extension && pnpm run compile && pnpm run symlink",
     "symlink": "node ./scripts/create-symlink.mjs"
   },
   "devDependencies": {

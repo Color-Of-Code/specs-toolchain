@@ -23,7 +23,8 @@ check: format-check lint vet test
 build: build-engine build-extension
 
 build-engine:
-	cd engine/cmd/specs && go build -o ../../../specs
+	mkdir -p bin
+	cd engine/cmd/specs && go build -o ../../../bin/specs
 
 build-extension:
 	cd extension && pnpm run compile

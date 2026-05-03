@@ -11,7 +11,7 @@ A small top-level [`Makefile`](../Makefile) ties them together for the common ca
 
 ```bash
 make build              # build engine + extension
-make build-engine       # engine binary only -> ./specs
+make build-engine       # engine binary only -> ./bin/specs
 make build-extension    # compile extension TypeScript
 make package-extension  # produce a .vsix
 make deploy-dev         # build + symlink extension into ~/.vscode/extensions
@@ -33,7 +33,7 @@ go install ./cmd/specs    # installs into $(go env GOBIN)
 Or run without installing:
 
 ```bash
-make build-engine         # produces ./specs at the repo root
+make build-engine         # produces ./bin/specs at the repo root
 ```
 
 ## VS Code extension
@@ -95,7 +95,7 @@ To incrementally test the extension without reinstalling on every iteration, use
    ```
 
    This will:
-   - Build the `specs` engine binary into `./specs` and (via the script) `extension/bin/`.
+   - Build the `specs` engine binary into `./bin/specs` and (via the script) `extension/bin/`.
    - Compile the TypeScript extension source.
    - Symlink the `extension` folder into `~/.vscode/extensions/Color-Of-Code.specs`.
 
