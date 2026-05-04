@@ -197,7 +197,8 @@ func gitOutputTest(t *testing.T, dir string, args ...string) string {
 
 func runGitTest(t *testing.T, dir string, args ...string) {
 	t.Helper()
-	cmd := exec.Command("git", append([]string{"-C", dir}, args...)...)
+	gitArgs := append([]string{"-C", dir, "-c", "commit.gpgsign=false"}, args...)
+	cmd := exec.Command("git", gitArgs...)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("git %s: %v\n%s", strings.Join(args, " "), err, string(output))

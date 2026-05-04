@@ -30,7 +30,10 @@ func TestLinksInFile_FiltersURLsAndAnchors(t *testing.T) {
 	if err := os.WriteFile(p, []byte(body), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	got := linksInFile(p)
+	got, err := linksInFile(p)
+	if err != nil {
+		t.Fatalf("linksInFile: %v", err)
+	}
 	want := []string{"./neighbour.md", "../up.md#frag"}
 	if len(got) != len(want) {
 		t.Fatalf("got %v, want %v", got, want)
@@ -155,7 +158,8 @@ func lintGitOutput(t *testing.T, dir string, args ...string) string {
 
 func runLintGit(t *testing.T, dir string, args ...string) {
 	t.Helper()
-	cmd := exec.Command("git", append([]string{"-C", dir}, args...)...)
+	gitArgs := append([]string{"-C", dir, "-c", "commit.gpgsign=false"}, args...)
+	cmd := exec.Command("git", gitArgs...)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("git %s: %v\n%s", strings.Join(args, " "), err, string(output))

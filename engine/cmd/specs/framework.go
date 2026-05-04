@@ -123,20 +123,21 @@ func updateManagedFramework(cfg *config.Resolved, to string) error {
 	if ref == "" {
 		ref = cfg.FrameworkRef
 	}
-	path, _, err := fetchManaged(cfg.FrameworkURL, ref, false)
+	path, resolvedRef, err := fetchManaged(cfg.FrameworkURL, ref, false)
 	if err != nil {
 		return err
 	}
 	fmt.Printf("managed framework cached at %s\n", path)
 
-	// Rewrite framework_ref in .specs.yaml only when the caller pinned a new ref.
-	if to != "" && to != cfg.FrameworkRef && cfg.ConfigPath != "" && cfg.Source != nil {
+	// Always persist the resolved ref so the config stays authoritative even
+	// when --to was not given (e.g. defaults to "main").
+	if cfg.ConfigPath != "" && cfg.Source != nil && resolvedRef != cfg.FrameworkRef {
 		newFile := *cfg.Source
-		newFile.FrameworkRef = to
+		newFile.FrameworkRef = resolvedRef
 		if err := config.Save(cfg.ConfigPath, &newFile); err != nil {
 			return exitWith(1, "write %s: %v", cfg.ConfigPath, err)
 		}
-		fmt.Printf("updated %s: framework_ref=%s\n", cfg.ConfigPath, to)
+		fmt.Printf("updated %s: framework_ref=%s\n", cfg.ConfigPath, resolvedRef)
 	}
 	return nil
 }

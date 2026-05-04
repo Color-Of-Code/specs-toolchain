@@ -262,11 +262,6 @@
           "default": "",
           "description": "Explicit path to the specs engine binary. Overrides workspace-local, bundled, and PATH lookup."
         },
-        "specs.defaultFramework": {
-          "type": "string",
-          "default": "default",
-          "markdownDescription": "Name of the framework entry to use when running `specs init`. Must match a name in `specs.frameworks` or an entry already registered in the user-level registry (`~/.config/specs/frameworks.yaml`)."
-        },
         "specs.frameworks": {
           "type": "array",
           "default": [],

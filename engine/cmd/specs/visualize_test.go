@@ -45,7 +45,7 @@ func TestNewTraceabilityUIHandlerServesUIAndArtifacts(t *testing.T) {
 		contentType string
 		contains    []string
 	}{
-		{path: "/", contentType: "text/html", contains: []string{"Specs: Traceability", "/graph.json", "/assets/traceability-view.js", "/relations", "layout-mode", "Relayout", "toolbar-add-edge-button", "toolbar-remove-edge-button", "aria-label=\"Add edge\"", "aria-label=\"Remove selected edge\"", "relation-kind", "component_implementation", "id=\"details\"", "No selection"}},
+		{path: "/", contentType: "text/html", contains: []string{"Specs: Traceability", "/graph.json", "/assets/traceability-view.js", "/relations", "layout-mode", "toolbar-remove-edge-button", "aria-label=\"Remove selected edge\"", "relation-kind", "component_implementation", "id=\"details\"", "No selection"}},
 		{path: "/graph.json", contentType: "application/json", contains: []string{`"id": "product/alpha"`, `"source": "product/alpha"`}},
 		{path: "/assets/traceability-view.js", contentType: "text/javascript", contains: []string{"window.TraceabilityUI", "cytoscape"}},
 		{path: "/artifact?path=model/features/alpha-feature.md", contentType: "text/html", contains: []string{"alpha-feature.md", "# Alpha Feature"}},

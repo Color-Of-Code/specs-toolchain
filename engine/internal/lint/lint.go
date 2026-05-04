@@ -101,7 +101,7 @@ func CheckMarkdownLinks(out io.Writer, specsRoot string, r *Result) {
 	count := 0
 	err := filepath.Walk(specsRoot, func(path string, info os.FileInfo, walkErr error) error {
 		if walkErr != nil {
-			return nil
+			return fmt.Errorf("%s: %w", path, walkErr)
 		}
 		rel, _ := filepath.Rel(specsRoot, path)
 		if rel == "." {
@@ -128,7 +128,11 @@ func CheckMarkdownLinks(out io.Writer, specsRoot string, r *Result) {
 		if filepath.Base(path) == "_template.md" {
 			return nil
 		}
-		broken := linksInFile(path)
+		broken, openErr := linksInFile(path)
+		if openErr != nil {
+			r.errf("%s: %v", rel, openErr)
+			return nil
+		}
 		baseDir := filepath.Dir(path)
 		for _, target := range broken {
 			clean := stripFragment(target)
@@ -155,10 +159,10 @@ func CheckMarkdownLinks(out io.Writer, specsRoot string, r *Result) {
 // linksInFile returns the targets of every relative inline markdown link
 // in path, skipping fenced code blocks. URL-only and anchor-only targets
 // are filtered out.
-func linksInFile(path string) []string {
+func linksInFile(path string) ([]string, error) {
 	f, err := os.Open(path)
 	if err != nil {
-		return nil
+		return nil, err
 	}
 	defer f.Close()
 
@@ -191,7 +195,7 @@ func linksInFile(path string) []string {
 			targets = append(targets, t)
 		}
 	}
-	return targets
+	return targets, nil
 }
 
 func stripFragment(s string) string {
@@ -215,7 +219,7 @@ func CheckMarkdownStyle(out io.Writer, specsRoot, configPath string, r *Result) 
 	count := 0
 	walkErr := filepath.Walk(specsRoot, func(path string, info os.FileInfo, walkErr error) error {
 		if walkErr != nil {
-			return nil
+			return fmt.Errorf("%s: %w", path, walkErr)
 		}
 		rel, _ := filepath.Rel(specsRoot, path)
 		if rel == "." {

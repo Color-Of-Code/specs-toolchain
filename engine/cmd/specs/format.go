@@ -53,7 +53,7 @@ func cmdFormat(args []string) error {
 		}
 		err = filepath.Walk(abs, func(path string, info os.FileInfo, walkErr error) error {
 			if walkErr != nil {
-				return nil
+				return fmt.Errorf("%s: %w", path, walkErr)
 			}
 			rel, _ := filepath.Rel(abs, path)
 			if isExcludedPath(rel) {
@@ -73,11 +73,12 @@ func cmdFormat(args []string) error {
 	}
 
 	unformatted := 0
+	var ioErrors []string
 	for _, f := range files {
 		if *check {
 			data, err := os.ReadFile(f)
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "error: %s: %v\n", f, err)
+				ioErrors = append(ioErrors, fmt.Sprintf("%s: %v", f, err))
 				continue
 			}
 			formatted := lint.Format(data)
@@ -88,7 +89,7 @@ func cmdFormat(args []string) error {
 		} else {
 			changed, err := lint.FormatFileInPlace(f)
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "error: %s: %v\n", f, err)
+				ioErrors = append(ioErrors, fmt.Sprintf("%s: %v", f, err))
 				continue
 			}
 			if changed {
@@ -97,6 +98,12 @@ func cmdFormat(args []string) error {
 		}
 	}
 
+	if len(ioErrors) > 0 {
+		for _, e := range ioErrors {
+			fmt.Fprintln(os.Stderr, "error:", e)
+		}
+		return exitWith(1, "%d file(s) could not be read/written", len(ioErrors))
+	}
 	if *check && unformatted > 0 {
 		return exitWith(1, "%d file(s) need formatting", unformatted)
 	}
