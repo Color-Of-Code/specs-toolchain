@@ -218,6 +218,8 @@
         return "organic";
       case "grid":
         return "grid";
+      case "clustered":
+        return "clustered";
       default:
         return String(name || "layout");
     }
@@ -244,6 +246,19 @@
           padding: 40,
           avoidOverlap: true,
           sort: compareNodeOrder,
+        };
+      case "clustered":
+        return {
+          name: "concentric",
+          fit: true,
+          padding: 40,
+          animate: false,
+          minNodeSpacing: 30,
+          concentric: (ele) => {
+            const rank = kindRank(ele.data("kind"));
+            return rank === Number.MAX_SAFE_INTEGER ? 0 : Object.keys(kindOrder).length - rank;
+          },
+          levelWidth: () => 1,
         };
       case "layered":
       default:
@@ -788,8 +803,8 @@
       });
     }
 
-    if (options.relayoutButton) {
-      options.relayoutButton.addEventListener("click", () => {
+    if (options.layoutSelect) {
+      options.layoutSelect.addEventListener("change", () => {
         const layoutName = activeLayoutName(options);
         runLayout(layoutName, `${layoutLabel(layoutName)} layout applied`);
       });

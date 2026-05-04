@@ -300,8 +300,8 @@ ${fallbackBanner}
     <option value="layered">Layered</option>
     <option value="organic">Organic</option>
     <option value="grid">Grid</option>
+    <option value="clustered">Clustered</option>
   </select>
-  <button id="relayout">Relayout</button>
   <input type="search" id="filter" placeholder="Filter nodes…" aria-label="Filter nodes">
   <select id="relation-kind" aria-label="Relation kind">
     <option value="realization">Realization</option>
@@ -352,7 +352,6 @@ ${fallbackInline ? "" : `<script nonce="${nonce}" src="${cytoscapeUri}"></script
       zoomInButton: document.getElementById('zoom-in'),
       zoomOutButton: document.getElementById('zoom-out'),
       layoutSelect: document.getElementById('layout-mode'),
-      relayoutButton: document.getElementById('relayout'),
       filterInput: document.getElementById('filter'),
       addEdgeButton: document.getElementById('add-edge'),
       relationKindSelect: document.getElementById('relation-kind'),
