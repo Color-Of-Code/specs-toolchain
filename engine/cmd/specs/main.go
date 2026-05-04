@@ -25,7 +25,7 @@ func init() {
 		{"init", "create or configure a host (writes .specs.yaml, fetches framework)", cmdInit},
 		{"lint", "run lint checks (--all|--links|--style|--baselines)", cmdLint},
 		{"format", "format markdown files (tables, whitespace, line endings)", cmdFormat},
-		{"scaffold", "instantiate a template (requirement|feature|component|api|service)", cmdScaffold},
+		{"scaffold", "instantiate a template (requirement|use-case|component)", cmdScaffold},
 		{"cr", "change-request operations (new, status, drain)", cmdCR},
 		{"baseline", "verify or update component baselines (check, update)", cmdBaseline},
 		{"graph", "manage canonical traceability graph data (validate)", cmdGraph},

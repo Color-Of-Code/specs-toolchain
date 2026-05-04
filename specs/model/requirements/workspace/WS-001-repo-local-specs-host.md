@@ -5,7 +5,7 @@
 | ID             | WS-001                                                                                                                                                                                                                                                                                                                                    |
 | Status         | Draft                                                                                                                                                                                                                                                                                                                                     |
 | Realises       | [Repo Local Specs Host](../../../product/engine/ENG-009-repo-local-specs-host.md)                                                                                                                                                                                                                                                         |
-| Implemented By | [Repo Local Host Layout](../../features/host/HOST-001-host-layout.md)                                                                                                                                                                                                                                                                     |
+| Implemented By | [Repo Local Host Layout](../../use-cases/host/HOST-001-host-layout.md)                                                                                                                                                                                                                                                                    |
 
 ## Requirement
 

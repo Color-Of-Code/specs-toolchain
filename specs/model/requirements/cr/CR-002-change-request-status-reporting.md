@@ -5,7 +5,7 @@
 | ID             | CR-002                                                                                    |
 | Status         | Draft                                                                                     |
 | Realises       | [Change Request Workflow](../../../product/engine/ENG-005-change-request-workflow.md)     |
-| Implemented By | [Change Request Status](../../features/cr/CR-002-cr-status.md)                            |
+| Implemented By | [Change Request Status](../../use-cases/cr/CR-002-cr-status.md)                           |
 
 ## Requirement
 

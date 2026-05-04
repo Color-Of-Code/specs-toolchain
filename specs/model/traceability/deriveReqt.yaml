@@ -1,4 +1,4 @@
-kind: realization
+kind: deriveReqt
 entries:
     - source: product/engine/ENG-001-consistent-markdown-formatting
       targets:

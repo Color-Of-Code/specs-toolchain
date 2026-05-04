@@ -14,7 +14,7 @@ func TestImportMarkdownAndWriteRoundTrip(t *testing.T) {
 	baselineFile := filepath.Join(modelDir, "baselines", "repo-baseline.md")
 	for _, dir := range []string{
 		filepath.Join(modelDir, "requirements"),
-		filepath.Join(modelDir, "features"),
+		filepath.Join(modelDir, "use-cases"),
 		filepath.Join(modelDir, "components"),
 		filepath.Join(modelDir, "baselines"),
 		productDir,
@@ -36,9 +36,9 @@ func TestImportMarkdownAndWriteRoundTrip(t *testing.T) {
 		"| Field | Value |",
 		"| ----- | ----- |",
 		"| Realises | [Alpha](../../product/alpha.md) |",
-		"| Implemented By | [Alpha Feature](../features/alpha-feature.md), [Alpha Component](../components/alpha-component.md) |",
+		"| Implemented By | [Alpha Feature](../use-cases/alpha-feature.md), [Alpha Component](../components/alpha-component.md) |",
 	}, "\n"))
-	writeImportFile(t, filepath.Join(modelDir, "features", "alpha-feature.md"), strings.Join([]string{
+	writeImportFile(t, filepath.Join(modelDir, "use-cases", "alpha-feature.md"), strings.Join([]string{
 		"# Alpha Feature",
 		"",
 		"## Requirements",
@@ -64,14 +64,14 @@ func TestImportMarkdownAndWriteRoundTrip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ImportMarkdown() error = %v", err)
 	}
-	if got := len(g.Realizations); got != 1 {
-		t.Fatalf("len(Realizations) = %d, want 1", got)
+	if got := len(g.DeriveReqt); got != 1 {
+		t.Fatalf("len(DeriveReqt) = %d, want 1", got)
 	}
-	if got := len(g.FeatureImplementations); got != 1 {
-		t.Fatalf("len(FeatureImplementations) = %d, want 1", got)
+	if got := len(g.Satisfactions); got != 1 {
+		t.Fatalf("len(Satisfactions) = %d, want 1", got)
 	}
-	if got := len(g.ComponentImplementations); got != 1 {
-		t.Fatalf("len(ComponentImplementations) = %d, want 1", got)
+	if got := len(g.Refinements); got != 1 {
+		t.Fatalf("len(Refinements) = %d, want 1", got)
 	}
 	if got := len(g.Baselines); got != 1 {
 		t.Fatalf("len(Baselines) = %d, want 1", got)

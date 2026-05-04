@@ -26,19 +26,19 @@ func sampleGraph(t *testing.T) (string, string, *tracegraph.Graph) {
 	model := filepath.Join(root, "model")
 	product := filepath.Join(root, "product")
 	write(t, filepath.Join(model, "requirements", "core", "001-foo.md"), "# Foo Requirement\n")
-	write(t, filepath.Join(model, "features", "core", "foo.md"), "# Foo Feature\n")
+	write(t, filepath.Join(model, "use-cases", "core", "foo.md"), "# Foo Feature\n")
 	write(t, filepath.Join(model, "components", "core", "comp.md"), "# Comp\n")
 	write(t, filepath.Join(product, "core", "001-login.md"), "# Login PR\n")
 	return model, product, &tracegraph.Graph{
-		Realizations: []tracegraph.RelationEntry{{
+		DeriveReqt: []tracegraph.RelationEntry{{
 			Source:  "product/core/001-login",
 			Targets: []string{"model/requirements/core/001-foo"},
 		}},
-		FeatureImplementations: []tracegraph.RelationEntry{{
+		Refinements: []tracegraph.RelationEntry{{
 			Source:  "model/requirements/core/001-foo",
-			Targets: []string{"model/features/core/foo"},
+			Targets: []string{"model/use-cases/core/foo"},
 		}},
-		ComponentImplementations: []tracegraph.RelationEntry{{
+		Satisfactions: []tracegraph.RelationEntry{{
 			Source:  "model/requirements/core/001-foo",
 			Targets: []string{"model/components/core/comp"},
 		}},
@@ -48,10 +48,10 @@ func sampleGraph(t *testing.T) (string, string, *tracegraph.Graph) {
 func sampleModelGraph(t *testing.T) (string, *tracegraph.Graph) {
 	model, _, traceability := sampleGraph(t)
 	return model, &tracegraph.Graph{
-		FeatureImplementations:   traceability.FeatureImplementations,
-		ComponentImplementations: traceability.ComponentImplementations,
+		Refinements:   traceability.Refinements,
+		Satisfactions: traceability.Satisfactions,
 		Layout: []tracegraph.LayoutEntry{{
-			ID:     "model/features/core/foo",
+			ID:     "model/use-cases/core/foo",
 			X:      12.5,
 			Y:      8.75,
 			Locked: true,
@@ -76,7 +76,7 @@ func TestBuild(t *testing.T) {
 	for _, n := range g.Nodes {
 		kinds[n.Kind]++
 	}
-	for _, want := range []string{"requirement", "feature", "component"} {
+	for _, want := range []string{"requirement", "use-case", "component"} {
 		if kinds[want] != 1 {
 			t.Errorf("expected one %s node, got %d", want, kinds[want])
 		}
@@ -154,16 +154,16 @@ func TestWriteJSON(t *testing.T) {
 	}
 	var sawFeatureLayout bool
 	for _, node := range payload.Nodes {
-		if node.ID != "model/features/core/foo" {
+		if node.ID != "model/use-cases/core/foo" {
 			continue
 		}
 		if node.Layout == nil || node.Layout.X != 12.5 || node.Layout.Y != 8.75 || !node.Layout.Locked {
-			t.Fatalf("feature layout missing from JSON node: %+v", node)
+			t.Fatalf("use-case layout missing from JSON node: %+v", node)
 		}
 		sawFeatureLayout = true
 	}
 	if !sawFeatureLayout {
-		t.Fatalf("feature node missing from JSON payload: %+v", payload.Nodes)
+		t.Fatalf("use-case node missing from JSON payload: %+v", payload.Nodes)
 	}
 }
 
@@ -181,24 +181,24 @@ func TestBuild_WithProductTree(t *testing.T) {
 	if kinds["product-requirement"] != 1 {
 		t.Errorf("want 1 product-requirement node, got %d", kinds["product-requirement"])
 	}
-	if kinds["requirement"] != 1 || kinds["feature"] != 1 || kinds["component"] != 1 {
-		t.Errorf("want 1 req+1 feature, got kinds=%v", kinds)
+	if kinds["requirement"] != 1 || kinds["use-case"] != 1 || kinds["component"] != 1 {
+		t.Errorf("want 1 req+1 use-case+1 component, got kinds=%v", kinds)
 	}
 
-	// PR -> req edge present; req -> feat edge present.
+	// PR -> req edge present; req -> use-case edge present.
 	var sawPRtoReq, sawReqToFeat bool
 	for _, e := range g.Edges {
-		if strings.Contains(e.From, "product") && strings.Contains(e.To, "requirements") {
+		if strings.Contains(e.Source, "requirements") && strings.Contains(e.Target, "product") {
 			sawPRtoReq = true
 		}
-		if strings.Contains(e.From, "requirements") && strings.Contains(e.To, "features") {
+		if strings.Contains(e.Source, "use-cases") && strings.Contains(e.Target, "requirements") {
 			sawReqToFeat = true
 		}
 	}
 	if !sawPRtoReq {
-		t.Errorf("expected a PR->req edge, got %+v", g.Edges)
+		t.Errorf("expected a req->PR edge, got %+v", g.Edges)
 	}
 	if !sawReqToFeat {
-		t.Errorf("expected a req->feature edge, got %+v", g.Edges)
+		t.Errorf("expected a use-case->req edge, got %+v", g.Edges)
 	}
 }

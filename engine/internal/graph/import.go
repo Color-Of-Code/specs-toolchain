@@ -24,8 +24,8 @@ func ImportMarkdown(modelDir, productDir, baselinesFile string) (*Graph, error) 
 
 	graphData := &Graph{}
 	realizations := map[string]map[string]struct{}{}
-	featureImplementations := map[string]map[string]struct{}{}
-	componentImplementations := map[string]map[string]struct{}{}
+	satisfactions := map[string]map[string]struct{}{}
+	refinements := map[string]map[string]struct{}{}
 
 	addEdge := func(edges map[string]map[string]struct{}, source, target string) {
 		if edges[source] == nil {
@@ -80,10 +80,10 @@ func ImportMarkdown(modelDir, productDir, baselinesFile string) (*Graph, error) 
 			}
 			for _, target := range implementedByTargets {
 				switch KindForNodeID(target) {
-				case "feature":
-					addEdge(featureImplementations, source, target)
+				case "use-case":
+					addEdge(refinements, source, target)
 				case "component":
-					addEdge(componentImplementations, source, target)
+					addEdge(satisfactions, source, target)
 				default:
 					return fmt.Errorf("implemented-by target %q from %s is not a supported implementer kind", target, path)
 				}
@@ -98,8 +98,8 @@ func ImportMarkdown(modelDir, productDir, baselinesFile string) (*Graph, error) 
 		root  string
 		edges map[string]map[string]struct{}
 	}{
-		{root: filepath.Join(modelDir, "features"), edges: featureImplementations},
-		{root: filepath.Join(modelDir, "components"), edges: componentImplementations},
+		{root: filepath.Join(modelDir, "use-cases"), edges: refinements},
+		{root: filepath.Join(modelDir, "components"), edges: satisfactions},
 	} {
 		if _, err := os.Stat(area.root); err != nil {
 			continue
@@ -130,9 +130,9 @@ func ImportMarkdown(modelDir, productDir, baselinesFile string) (*Graph, error) 
 		graphData.Baselines = entries
 	}
 
-	graphData.Realizations = relationEntriesFromMap(realizations)
-	graphData.FeatureImplementations = relationEntriesFromMap(featureImplementations)
-	graphData.ComponentImplementations = relationEntriesFromMap(componentImplementations)
+	graphData.DeriveReqt = relationEntriesFromMap(realizations)
+	graphData.Refinements = relationEntriesFromMap(refinements)
+	graphData.Satisfactions = relationEntriesFromMap(satisfactions)
 	graphData.Manifest = manifestForGraph(graphData)
 	if err := graphData.validate(); err != nil {
 		return nil, err
@@ -156,17 +156,17 @@ func Write(manifestPath string, g *Graph) error {
 	manifest := manifestForGraph(g)
 	toWrite := map[string]any{
 		"graph.yaml": manifest,
-		"realizations.yaml": relationPart{
-			Kind:    PartKindRealization,
-			Entries: g.Realizations,
+		"deriveReqt.yaml": relationPart{
+			Kind:    PartKindDeriveReqt,
+			Entries: g.DeriveReqt,
 		},
-		"feature_implementations.yaml": relationPart{
-			Kind:    PartKindFeatureImplementation,
-			Entries: g.FeatureImplementations,
+		"refinements.yaml": relationPart{
+			Kind:    PartKindRefine,
+			Entries: g.Refinements,
 		},
-		"component_implementations.yaml": relationPart{
-			Kind:    PartKindComponentImplementation,
-			Entries: g.ComponentImplementations,
+		"satisfactions.yaml": relationPart{
+			Kind:    PartKindSatisfy,
+			Entries: g.Satisfactions,
 		},
 	}
 	if len(g.Baselines) > 0 {

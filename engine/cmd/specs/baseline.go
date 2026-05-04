@@ -168,7 +168,7 @@ func cmdCRDrain(args []string) error {
 	areas := []drainArea{
 		{"product-requirements", cfg.ProductDir},
 		{"requirements", filepath.Join(cfg.ModelDir, "requirements")},
-		{"features", filepath.Join(cfg.ModelDir, "features")},
+		{"use-cases", filepath.Join(cfg.ModelDir, "use-cases")},
 		{"components", filepath.Join(cfg.ModelDir, "components")},
 		{"architecture", filepath.Join(cfg.ModelDir, "architecture")},
 	}

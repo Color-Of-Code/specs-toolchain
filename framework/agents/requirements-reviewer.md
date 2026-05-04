@@ -21,7 +21,7 @@ When asked to review a requirement:
 1. Check that the requirement has a clear, unambiguous description.
 2. Verify it is testable — a concrete pass/fail criterion must be derivable.
 3. Confirm the "Realises" field links to a product requirement.
-4. Confirm the "Implemented By" field links to at least one feature.
+4. Confirm the "Implemented By" field links to at least one use case.
 5. Flag any implementation-specific language (API names, library names, internal type names) that belongs in a design document rather than a requirement.
 6. Suggest improvements concisely, referencing the specific field or sentence that needs work.
 

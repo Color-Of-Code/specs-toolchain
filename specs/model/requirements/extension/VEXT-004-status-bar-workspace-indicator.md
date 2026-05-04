@@ -5,7 +5,7 @@
 | ID             | VEXT-004                                                                                         |
 | Status         | Draft                                                                                            |
 | Realises       | [Workspace Status Visibility](../../../product/extension/EXT-004-workspace-status-visibility.md) |
-| Implemented By | [Status Bar Indicator](../../features/extension/VEXT-004-status-bar-indicator.md)                |
+| Implemented By | [Status Bar Indicator](../../use-cases/extension/VEXT-004-status-bar-indicator.md)               |
 
 ## Requirement
 

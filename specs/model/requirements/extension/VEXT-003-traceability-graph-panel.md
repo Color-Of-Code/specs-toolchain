@@ -5,7 +5,7 @@
 | ID             | VEXT-003                                                                                   |
 | Status         | Draft                                                                                      |
 | Realises       | [Traceability Graph Panel](../../../product/extension/EXT-003-traceability-graph-panel.md) |
-| Implemented By | [Traceability Graph Panel](../../features/extension/VEXT-003-traceability-panel.md)        |
+| Implemented By | [Traceability Graph Panel](../../use-cases/extension/VEXT-003-traceability-panel.md)       |
 
 ## Requirement
 

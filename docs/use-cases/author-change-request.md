@@ -3,7 +3,7 @@
 ## Summary
 
 Create a numbered change request (CR), draft product requirements,
-requirements, features, and components inside it, then drain the finalised
+requirements, use cases, and components inside it, then drain the finalised
 files into their canonical homes under `product/` and `model/`.
 
 ## Owner
@@ -11,7 +11,7 @@ files into their canonical homes under `product/` and `model/`.
 The authoring chain itself — see [../actors.md](../actors.md):
 
 - **Stakeholder** *(actor)* opens the CR and drafts the **product requirements** that describe the demand.
-- **Author** *(actor)* re-formulates those into model **requirements**; **Analyst** *(actor)* writes the features; **Architect** *(actor)* the components / services / APIs — all inside the same CR.
+- **Author** *(actor)* re-formulates those into model **requirements**; **Analyst** *(actor)* writes the use cases; **Architect** *(actor)* the components — all inside the same CR.
 
 ## Purpose
 
@@ -40,8 +40,8 @@ removed), ready for the merge commit.
 1. **Create** the CR shell with `specs cr new`. This instantiates the
    `change-request` template tree under `change-requests/NNN-slug/`.
 2. **Author** content. Use [`specs scaffold`](scaffold-model-artifact.md)
-   with `--cr <NNN>` to add product requirements, requirements, features,
-   components, APIs, or services *inside* the CR folder.
+   with `--cr <NNN>` to add product requirements, requirements, use cases,
+   components *inside* the CR folder.
 3. **Iterate** locally:
     - Run [`specs format`](lint-and-format.md) to keep markdown tidy.
     - Run [`specs lint`](lint-and-format.md) for style and

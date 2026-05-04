@@ -1,11 +1,11 @@
 # Bundled Engine Resolution Priority
 
-| Field          | Value                                                                                       |
-| -------------- | ------------------------------------------------------------------------------------------- |
-| ID             | VEXT-001                                                                                    |
-| Status         | Draft                                                                                       |
-| Realises       | [Zero-Setup Installation](../../../product/extension/EXT-001-zero-setup-installation.md)    |
-| Implemented By | [Bundled Engine Resolution](../../features/extension/VEXT-001-bundled-engine-resolution.md) |
+| Field          | Value                                                                                        |
+| -------------- | -------------------------------------------------------------------------------------------- |
+| ID             | VEXT-001                                                                                     |
+| Status         | Draft                                                                                        |
+| Realises       | [Zero-Setup Installation](../../../product/extension/EXT-001-zero-setup-installation.md)     |
+| Implemented By | [Bundled Engine Resolution](../../use-cases/extension/VEXT-001-bundled-engine-resolution.md) |
 
 ## Requirement
 

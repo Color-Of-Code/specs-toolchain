@@ -5,7 +5,7 @@
 | ID             | BSL-001                                                                                       |
 | Status         | Draft                                                                                         |
 | Realises       | [Component Baseline Tracking](../../../product/engine/ENG-006-component-baseline-tracking.md) |
-| Implemented By | [Baseline Drift Detection](../../features/baseline/BSL-001-baseline-drift-detection.md)       |
+| Implemented By | [Baseline Drift Detection](../../use-cases/baseline/BSL-001-baseline-drift-detection.md)      |
 
 ## Requirement
 

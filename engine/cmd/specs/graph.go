@@ -14,23 +14,23 @@ import (
 )
 
 type graphValidateJSON struct {
-	ManifestPath                 string `json:"manifest_path"`
-	NodeCount                    int    `json:"node_count"`
-	RealizationEdgeCount         int    `json:"realization_edge_count"`
-	FeatureImplementationEdges   int    `json:"feature_implementation_edge_count"`
-	ComponentImplementationEdges int    `json:"component_implementation_edge_count"`
-	BaselineCount                int    `json:"baseline_count"`
-	LayoutNodeCount              int    `json:"layout_node_count"`
-	RepoCount                    int    `json:"repo_count"`
+	ManifestPath    string `json:"manifest_path"`
+	NodeCount       int    `json:"node_count"`
+	DeriveReqtEdges int    `json:"derive_reqt_edge_count"`
+	SatisfyEdges    int    `json:"satisfy_edge_count"`
+	RefineEdges     int    `json:"refine_edge_count"`
+	BaselineCount   int    `json:"baseline_count"`
+	LayoutNodeCount int    `json:"layout_node_count"`
+	RepoCount       int    `json:"repo_count"`
 }
 
 type graphImportJSON struct {
-	ManifestPath                 string `json:"manifest_path"`
-	RealizationEdgeCount         int    `json:"realization_edge_count"`
-	FeatureImplementationEdges   int    `json:"feature_implementation_edge_count"`
-	ComponentImplementationEdges int    `json:"component_implementation_edge_count"`
-	BaselineCount                int    `json:"baseline_count"`
-	DryRun                       bool   `json:"dry_run"`
+	ManifestPath    string `json:"manifest_path"`
+	DeriveReqtEdges int    `json:"derive_reqt_edge_count"`
+	SatisfyEdges    int    `json:"satisfy_edge_count"`
+	RefineEdges     int    `json:"refine_edge_count"`
+	BaselineCount   int    `json:"baseline_count"`
+	DryRun          bool   `json:"dry_run"`
 }
 
 type graphGenerateJSON struct {
@@ -122,13 +122,13 @@ func cmdGraphSaveRelations(args []string) error {
 	if err != nil {
 		return exitWith(1, "save relations: %v", err)
 	}
-	traceability.Realizations = relations.realizations
-	traceability.FeatureImplementations = relations.featureImplementations
-	traceability.ComponentImplementations = relations.componentImplementations
+	traceability.DeriveReqt = relations.deriveReqt
+	traceability.Refinements = relations.refinements
+	traceability.Satisfactions = relations.satisfactions
 	if err := graph.Write(path, traceability); err != nil {
 		return exitWith(1, "write graph: %v", err)
 	}
-	summary := graphSaveRelationsJSON{ManifestPath: path, EdgeCount: relationEdgeCount(traceability.Realizations) + relationEdgeCount(traceability.FeatureImplementations) + relationEdgeCount(traceability.ComponentImplementations)}
+	summary := graphSaveRelationsJSON{ManifestPath: path, EdgeCount: relationEdgeCount(traceability.DeriveReqt) + relationEdgeCount(traceability.Satisfactions) + relationEdgeCount(traceability.Refinements)}
 	if *jsonOut {
 		enc := json.NewEncoder(os.Stdout)
 		enc.SetIndent("", "  ")
@@ -286,12 +286,12 @@ func cmdGraphImportMarkdown(args []string) error {
 		return exitWith(1, "import markdown: %v", err)
 	}
 	summary := graphImportJSON{
-		ManifestPath:                 path,
-		RealizationEdgeCount:         relationEdgeCount(g.Realizations),
-		FeatureImplementationEdges:   relationEdgeCount(g.FeatureImplementations),
-		ComponentImplementationEdges: relationEdgeCount(g.ComponentImplementations),
-		BaselineCount:                len(g.Baselines),
-		DryRun:                       *dryRun,
+		ManifestPath:    path,
+		DeriveReqtEdges: relationEdgeCount(g.DeriveReqt),
+		SatisfyEdges:    relationEdgeCount(g.Satisfactions),
+		RefineEdges:     relationEdgeCount(g.Refinements),
+		BaselineCount:   len(g.Baselines),
+		DryRun:          *dryRun,
 	}
 	if *jsonOut {
 		enc := json.NewEncoder(os.Stdout)
@@ -305,9 +305,9 @@ func cmdGraphImportMarkdown(args []string) error {
 			verb = "would write"
 		}
 		fmt.Printf("%s graph manifest: %s\n", verb, summary.ManifestPath)
-		fmt.Printf("realizations:     %d edge(s)\n", summary.RealizationEdgeCount)
-		fmt.Printf("features:         %d edge(s)\n", summary.FeatureImplementationEdges)
-		fmt.Printf("components:       %d edge(s)\n", summary.ComponentImplementationEdges)
+		fmt.Printf("derive_reqt:      %d edge(s)\n", summary.DeriveReqtEdges)
+		fmt.Printf("satisfactions:    %d edge(s)\n", summary.SatisfyEdges)
+		fmt.Printf("refinements:      %d edge(s)\n", summary.RefineEdges)
 
 		fmt.Printf("baselines:        %d\n", summary.BaselineCount)
 	}
@@ -356,14 +356,14 @@ func cmdGraphValidate(args []string) error {
 	}
 
 	summary := graphValidateJSON{
-		ManifestPath:                 path,
-		NodeCount:                    len(g.NodeIDs()),
-		RealizationEdgeCount:         relationEdgeCount(g.Realizations),
-		FeatureImplementationEdges:   relationEdgeCount(g.FeatureImplementations),
-		ComponentImplementationEdges: relationEdgeCount(g.ComponentImplementations),
-		BaselineCount:                len(g.Baselines),
-		LayoutNodeCount:              len(g.Layout),
-		RepoCount:                    len(cfg.Repos),
+		ManifestPath:    path,
+		NodeCount:       len(g.NodeIDs()),
+		DeriveReqtEdges: relationEdgeCount(g.DeriveReqt),
+		SatisfyEdges:    relationEdgeCount(g.Satisfactions),
+		RefineEdges:     relationEdgeCount(g.Refinements),
+		BaselineCount:   len(g.Baselines),
+		LayoutNodeCount: len(g.Layout),
+		RepoCount:       len(cfg.Repos),
 	}
 
 	if *jsonOut {
@@ -374,9 +374,9 @@ func cmdGraphValidate(args []string) error {
 
 	fmt.Printf("graph valid:      %s\n", summary.ManifestPath)
 	fmt.Printf("nodes:            %d\n", summary.NodeCount)
-	fmt.Printf("realizations:     %d edge(s)\n", summary.RealizationEdgeCount)
-	fmt.Printf("features:         %d edge(s)\n", summary.FeatureImplementationEdges)
-	fmt.Printf("components:       %d edge(s)\n", summary.ComponentImplementationEdges)
+	fmt.Printf("derive_reqt:      %d edge(s)\n", summary.DeriveReqtEdges)
+	fmt.Printf("satisfactions:    %d edge(s)\n", summary.SatisfyEdges)
+	fmt.Printf("refinements:      %d edge(s)\n", summary.RefineEdges)
 	fmt.Printf("baselines:        %d\n", summary.BaselineCount)
 	fmt.Printf("layout nodes:     %d\n", summary.LayoutNodeCount)
 	fmt.Printf("repos checked:    %d\n", summary.RepoCount)

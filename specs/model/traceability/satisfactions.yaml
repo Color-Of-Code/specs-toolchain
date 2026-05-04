@@ -1,4 +1,4 @@
-kind: component_implementation
+kind: satisfy
 entries:
     - source: model/requirements/workspace/WS-002-config-relative-framework-directory
       targets:

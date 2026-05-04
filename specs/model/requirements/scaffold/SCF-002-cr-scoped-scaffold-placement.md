@@ -5,7 +5,7 @@
 | ID             | SCF-002                                                                                                       |
 | Status         | Draft                                                                                                         |
 | Realises       | [Artifact Scaffolding From Templates](../../../product/engine/ENG-004-artifact-scaffolding-from-templates.md) |
-| Implemented By | [CR-Scoped Placement](../../features/scaffold/SCF-002-cr-scoped-placement.md)                                 |
+| Implemented By | [CR-Scoped Placement](../../use-cases/scaffold/SCF-002-cr-scoped-placement.md)                                |
 
 ## Requirement
 

@@ -5,7 +5,7 @@
 // toolchain:
 //
 //	product-requirement -> requirement
-//	requirement -> feature/component/api/service
+//	requirement -> use-case/component
 //
 // Output formats: Mermaid (`flowchart`) and JSON.
 package visualize
@@ -151,18 +151,20 @@ func Build(modelDir, productDir string, g *tracegraph.Graph) (*Graph, error) {
 				if !ok {
 					continue
 				}
-				key := from.ID + "->" + to.ID
+				key := to.ID + "->" + from.ID
 				if seen[key] {
 					continue
 				}
 				seen[key] = true
-				result.Edges = append(result.Edges, Edge{From: from.ID, To: to.ID, Source: from.NodeID, Target: to.NodeID, Kind: kind})
+				// SysML convention: arrow goes from dependent to supplier.
+				// Storage has source=supplier, target=dependent, so we reverse.
+				result.Edges = append(result.Edges, Edge{From: to.ID, To: from.ID, Source: to.NodeID, Target: from.NodeID, Kind: kind})
 			}
 		}
 	}
-	appendEdges(string(tracegraph.PartKindRealization), g.Realizations)
-	appendEdges(string(tracegraph.PartKindFeatureImplementation), g.FeatureImplementations)
-	appendEdges(string(tracegraph.PartKindComponentImplementation), g.ComponentImplementations)
+	appendEdges(string(tracegraph.PartKindDeriveReqt), g.DeriveReqt)
+	appendEdges(string(tracegraph.PartKindRefine), g.Refinements)
+	appendEdges(string(tracegraph.PartKindSatisfy), g.Satisfactions)
 	sort.Slice(result.Edges, func(i, j int) bool {
 		if result.Edges[i].From != result.Edges[j].From {
 			return result.Edges[i].From < result.Edges[j].From

@@ -10,7 +10,7 @@ interface CRRecord {
   dir: string;
   has_index: boolean;
   requirements: number;
-  features: number;
+  use_cases: number;
   components: number;
   architecture: number;
 }
@@ -114,7 +114,7 @@ export class CRTreeProvider implements vscode.TreeDataProvider<Node> {
   private loadCRChildren(cr: CRRecord): Node[] {
     const children: Node[] = [];
     children.push(new StatNode(cr, cr.has_index ? "_index.md ✓" : "_index.md missing"));
-    for (const sub of ["requirements", "features", "components", "architecture"]) {
+    for (const sub of ["requirements", "use-cases", "components", "architecture"]) {
       const dir = path.join(cr.dir, sub);
       if (!fs.existsSync(dir)) {
         continue;
@@ -133,7 +133,7 @@ export class CRTreeProvider implements vscode.TreeDataProvider<Node> {
 }
 
 function countsLabel(cr: CRRecord): string {
-  return `R:${cr.requirements} F:${cr.features} C:${cr.components} A:${cr.architecture}`;
+  return `R:${cr.requirements} UC:${cr.use_cases} C:${cr.components} A:${cr.architecture}`;
 }
 
 function* walkMarkdown(dir: string, crDir: string): Generator<{ full: string; rel: string }> {

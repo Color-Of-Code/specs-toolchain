@@ -9,7 +9,7 @@ chain and is described as *operational roles* in [roles.md](roles.md).
 
 ```text
 Stakeholder ──► Author ──► Analyst ──► Architect
- product       requirements   features    components / services / APIs
+ product       requirements   use cases   components
  requirement
 ```
 
@@ -43,18 +43,18 @@ of each MR.
 
 ## Analyst
 
-Derives **features** from approved requirements. The analyst groups related
-requirements into features and ensures every requirement is implemented by
-at least one feature.
+Derives **use cases** from approved requirements. The analyst writes scenario
+descriptions that satisfy requirements and ensures every requirement is satisfied
+by at least one use case.
 
-- Scaffolds a feature: `specs scaffold feature --cr <NNN> <path>`.
-- Lists implementing features under each requirement and the requirements
-  under each feature.
+- Scaffolds a use case: `specs scaffold use-case --cr <NNN> <path>`.
+- Lists satisfying use cases under each requirement and the requirements
+  under each use case.
 - Runs `specs graph validate` to confirm the canonical traceability graph is valid.
 
 ## Architect
 
-Decomposes features into **components**. The architect
+Decomposes use cases into **components**. The architect
 also keeps component baselines aligned with their upstream repositories.
 
 - Scaffolds artifacts: `specs scaffold component --cr <NNN> <path>`.
@@ -68,9 +68,9 @@ also keeps component baselines aligned with their upstream repositories.
 2. **Author** re-formulates those PRs as model requirements (MRs) inside
    the same CR, populating `## Realises` and `## Realised By` to keep the
    PR ↔ MR traceability symmetric.
-3. **Analyst** adds features that implement those MRs.
-4. **Architect** adds components implementing the
-   features.
+3. **Analyst** adds use cases that satisfy those MRs.
+4. **Architect** adds components refining the
+   use cases.
 5. Anyone runs `specs format`, `specs lint`, and `specs graph validate` to
    validate the CR.
 6. The CR is drained (`specs cr drain --id <NNN>`) and merged: PR files

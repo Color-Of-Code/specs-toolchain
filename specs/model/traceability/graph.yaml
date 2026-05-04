@@ -1,17 +1,17 @@
 schema_version: 1
 node_id_format: repo_relative_markdown_path_without_extension
 parts:
-    - name: realizations
-      file: realizations.yaml
-      kind: realization
+    - name: derive_reqt
+      file: deriveReqt.yaml
+      kind: deriveReqt
       required: true
-    - name: feature_implementations
-      file: feature_implementations.yaml
-      kind: feature_implementation
+    - name: refinements
+      file: refinements.yaml
+      kind: refine
       required: true
-    - name: component_implementations
-      file: component_implementations.yaml
-      kind: component_implementation
+    - name: satisfactions
+      file: satisfactions.yaml
+      kind: satisfy
       required: true
 generation:
     markdown_relationship_fields: true

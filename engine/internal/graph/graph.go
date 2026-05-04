@@ -17,11 +17,11 @@ const NodeIDFormatRepoRelativeMarkdownPathWithoutExtension = "repo_relative_mark
 type PartKind string
 
 const (
-	PartKindRealization             PartKind = "realization"
-	PartKindFeatureImplementation   PartKind = "feature_implementation"
-	PartKindComponentImplementation PartKind = "component_implementation"
-	PartKindBaseline                PartKind = "baseline"
-	PartKindLayout                  PartKind = "layout"
+	PartKindDeriveReqt PartKind = "deriveReqt"
+	PartKindSatisfy    PartKind = "satisfy"
+	PartKindRefine     PartKind = "refine"
+	PartKindBaseline   PartKind = "baseline"
+	PartKindLayout     PartKind = "layout"
 )
 
 type Manifest struct {
@@ -64,14 +64,14 @@ type LayoutEntry struct {
 }
 
 type Graph struct {
-	ManifestPath             string
-	RootDir                  string
-	Manifest                 Manifest
-	Realizations             []RelationEntry
-	FeatureImplementations   []RelationEntry
-	ComponentImplementations []RelationEntry
-	Baselines                []BaselineEntry
-	Layout                   []LayoutEntry
+	ManifestPath  string
+	RootDir       string
+	Manifest      Manifest
+	DeriveReqt    []RelationEntry
+	Refinements   []RelationEntry
+	Satisfactions []RelationEntry
+	Baselines     []BaselineEntry
+	Layout        []LayoutEntry
 }
 
 type relationPart struct {
@@ -97,9 +97,9 @@ type partSpec struct {
 }
 
 var manifestPartSpecs = []partSpec{
-	{Name: "realizations", File: "realizations.yaml", Kind: PartKindRealization, Required: true},
-	{Name: "feature_implementations", File: "feature_implementations.yaml", Kind: PartKindFeatureImplementation, Required: true},
-	{Name: "component_implementations", File: "component_implementations.yaml", Kind: PartKindComponentImplementation, Required: true},
+	{Name: "derive_reqt", File: "deriveReqt.yaml", Kind: PartKindDeriveReqt, Required: true},
+	{Name: "refinements", File: "refinements.yaml", Kind: PartKindRefine, Required: true},
+	{Name: "satisfactions", File: "satisfactions.yaml", Kind: PartKindSatisfy, Required: true},
 	{Name: "baselines", File: "baselines.yaml", Kind: PartKindBaseline, Required: false},
 	{Name: "layout", File: "layout.yaml", Kind: PartKindLayout, Required: false},
 }
@@ -173,8 +173,8 @@ func KindForNodeID(id string) string {
 		return "product-requirement"
 	case strings.HasPrefix(id, "model/requirements/"):
 		return "requirement"
-	case strings.HasPrefix(id, "model/features/"):
-		return "feature"
+	case strings.HasPrefix(id, "model/use-cases/"):
+		return "use-case"
 	case strings.HasPrefix(id, "model/components/"):
 		return "component"
 	default:
@@ -189,9 +189,9 @@ func MarkdownPath(nodeID string) string {
 func (g *Graph) NodeIDs() []string {
 	seen := map[string]struct{}{}
 	for _, entries := range [][]RelationEntry{
-		g.Realizations,
-		g.FeatureImplementations,
-		g.ComponentImplementations,
+		g.DeriveReqt,
+		g.Refinements,
+		g.Satisfactions,
 	} {
 		for _, entry := range entries {
 			seen[entry.Source] = struct{}{}
@@ -286,24 +286,24 @@ func (g *Graph) loadPart(part ManifestPart) error {
 	}
 
 	switch part.Kind {
-	case PartKindRealization:
+	case PartKindDeriveReqt:
 		entries, err := loadRelationEntries(data, part.Kind)
 		if err != nil {
 			return fmt.Errorf("load %s: %w", part.File, err)
 		}
-		g.Realizations = entries
-	case PartKindFeatureImplementation:
+		g.DeriveReqt = entries
+	case PartKindRefine:
 		entries, err := loadRelationEntries(data, part.Kind)
 		if err != nil {
 			return fmt.Errorf("load %s: %w", part.File, err)
 		}
-		g.FeatureImplementations = entries
-	case PartKindComponentImplementation:
+		g.Refinements = entries
+	case PartKindSatisfy:
 		entries, err := loadRelationEntries(data, part.Kind)
 		if err != nil {
 			return fmt.Errorf("load %s: %w", part.File, err)
 		}
-		g.ComponentImplementations = entries
+		g.Satisfactions = entries
 	case PartKindBaseline:
 		entries, err := loadBaselineEntries(data)
 		if err != nil {
@@ -356,13 +356,13 @@ func loadLayoutEntries(data []byte) ([]LayoutEntry, error) {
 }
 
 func (g *Graph) validate() error {
-	if err := validateRelationEntries(g.Realizations, PartKindRealization, "product-requirement", "requirement"); err != nil {
+	if err := validateRelationEntries(g.DeriveReqt, PartKindDeriveReqt, "product-requirement", "requirement"); err != nil {
 		return err
 	}
-	if err := validateRelationEntries(g.FeatureImplementations, PartKindFeatureImplementation, "requirement", "feature"); err != nil {
+	if err := validateRelationEntries(g.Refinements, PartKindRefine, "requirement", "use-case"); err != nil {
 		return err
 	}
-	if err := validateRelationEntries(g.ComponentImplementations, PartKindComponentImplementation, "requirement", "component"); err != nil {
+	if err := validateRelationEntries(g.Satisfactions, PartKindSatisfy, "requirement", "component"); err != nil {
 		return err
 	}
 	if err := validateBaselines(g.Baselines); err != nil {

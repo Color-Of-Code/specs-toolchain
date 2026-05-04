@@ -111,7 +111,7 @@ const vscodeTasksJSON = `{
       "id": "specsKind",
       "description": "Template kind",
       "type": "pickString",
-      "options": ["requirement", "feature", "component"],
+      "options": ["requirement", "use-case", "component"],
       "default": "requirement"
     },
     {

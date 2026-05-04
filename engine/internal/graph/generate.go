@@ -26,13 +26,13 @@ func GenerateMarkdown(modelDir, productDir string, g *Graph, dryRun bool) (*Gene
 		return nil, err
 	}
 
-	realisesByRequirement := invertRelationEntries(g.Realizations)
+	realisesByRequirement := invertRelationEntries(g.DeriveReqt)
 	implementedByByRequirement := mergeRelationEntries(
-		g.FeatureImplementations,
-		g.ComponentImplementations,
+		g.Refinements,
+		g.Satisfactions,
 	)
-	requirementsByFeature := invertRelationEntries(g.FeatureImplementations)
-	requirementsByComponent := invertRelationEntries(g.ComponentImplementations)
+	requirementsByUseCase := invertRelationEntries(g.Refinements)
+	requirementsByComponent := invertRelationEntries(g.Satisfactions)
 	baselinesByComponent := map[string]BaselineEntry{}
 	for _, entry := range g.Baselines {
 		baselinesByComponent[entry.Component] = entry
@@ -52,7 +52,7 @@ func GenerateMarkdown(modelDir, productDir string, g *Graph, dryRun bool) (*Gene
 				}
 				updated, err := applyTableFieldUpdates(string(body), []fieldUpdate{{
 					Name:  "Realised By",
-					Value: renderNodeLinks(path, g.Realizations, nodeID, modelDir, productDir, labels),
+					Value: renderNodeLinks(path, g.DeriveReqt, nodeID, modelDir, productDir, labels),
 				}})
 				if err != nil {
 					return fmt.Errorf("update %s: %w", path, err)
@@ -93,7 +93,7 @@ func GenerateMarkdown(modelDir, productDir string, g *Graph, dryRun bool) (*Gene
 		requirements map[string][]string
 		includeBase  bool
 	}{
-		{root: filepath.Join(modelDir, "features"), requirements: requirementsByFeature},
+		{root: filepath.Join(modelDir, "use-cases"), requirements: requirementsByUseCase},
 		{root: filepath.Join(modelDir, "components"), requirements: requirementsByComponent, includeBase: true},
 	} {
 		if _, err := os.Stat(area.root); err != nil {

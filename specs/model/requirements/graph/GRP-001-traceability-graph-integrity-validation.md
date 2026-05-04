@@ -5,7 +5,7 @@
 | ID             | GRP-001                                                                                             |
 | Status         | Draft                                                                                               |
 | Realises       | [Traceability Graph Validation](../../../product/engine/ENG-003-traceability-graph-validation.md)   |
-| Implemented By | [Graph Validation](../../features/graph/GRP-001-graph-validation.md)                                |
+| Implemented By | [Graph Validation](../../use-cases/graph/GRP-001-graph-validation.md)                               |
 
 ## Requirement
 

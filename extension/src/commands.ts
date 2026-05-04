@@ -3,7 +3,7 @@ import * as vscode from "vscode";
 import { runInTerminal, runAndCapture, findSpecsFolder, findSpecsRoot, getOutput } from "./engine";
 import { runInitWizard } from "./initWizard";
 
-type ScaffoldKind = "requirement" | "feature" | "component" | "api" | "service";
+type ScaffoldKind = "requirement" | "use-case" | "component";
 
 // Palette commands that just shell out to the engine. Custom-handler commands
 // (wizards, scaffolders, visualize) are registered separately below.
@@ -32,7 +32,7 @@ export function registerCommands(context: vscode.ExtensionContext): void {
 	reg("specs.visualize.mermaid", () => visualize(context));
 
   // Scaffold a new model file.
-  for (const kind of ["requirement", "feature", "component", "api", "service"] as const) {
+  for (const kind of ["requirement", "use-case", "component"] as const) {
     reg(`specs.scaffold.${kind}`, () => scaffold(context, kind));
   }
 
@@ -70,11 +70,11 @@ async function scaffold(context: vscode.ExtensionContext, kind: ScaffoldKind): P
   const placeholder =
     kind === "requirement"
       ? "e.g. core/012-some-requirement"
-      : kind === "feature" || kind === "component"
+      : kind === "use-case" || kind === "component"
       ? "e.g. core/some-slug"
       : "e.g. some-slug";
   const relPath = await vscode.window.showInputBox({
-    prompt: `Relative path under model/${kind}s/ (without .md)`,
+    prompt: `Relative path under model/${kind === "use-case" ? "use-cases" : kind + "s"}/ (without .md)`,
     placeHolder: placeholder,
     ignoreFocusOut: true,
     validateInput: (v) => (v.trim() ? null : "path is required"),

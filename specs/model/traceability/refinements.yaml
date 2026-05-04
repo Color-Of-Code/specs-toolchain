@@ -1,83 +1,83 @@
-kind: feature_implementation
+kind: refine
 entries:
     - source: model/requirements/baseline/BSL-001-component-baseline-drift-detection
       targets:
-        - model/features/baseline/BSL-001-baseline-drift-detection
+        - model/use-cases/baseline/BSL-001-baseline-drift-detection
     - source: model/requirements/baseline/BSL-002-component-baseline-refresh
       targets:
-        - model/features/baseline/BSL-002-baseline-refresh
+        - model/use-cases/baseline/BSL-002-baseline-refresh
     - source: model/requirements/cr/CR-001-change-request-creation
       targets:
-        - model/features/cr/CR-001-cr-creation
+        - model/use-cases/cr/CR-001-cr-creation
     - source: model/requirements/cr/CR-002-change-request-status-reporting
       targets:
-        - model/features/cr/CR-002-cr-status
+        - model/use-cases/cr/CR-002-cr-status
     - source: model/requirements/cr/CR-003-change-request-drain
       targets:
-        - model/features/cr/CR-003-cr-drain
+        - model/use-cases/cr/CR-003-cr-drain
     - source: model/requirements/extension/VEXT-001-bundled-engine-resolution-priority
       targets:
-        - model/features/extension/VEXT-001-bundled-engine-resolution
+        - model/use-cases/extension/VEXT-001-bundled-engine-resolution
     - source: model/requirements/extension/VEXT-002-palette-command-dispatch
       targets:
-        - model/features/extension/VEXT-002-palette-command-dispatch
+        - model/use-cases/extension/VEXT-002-palette-command-dispatch
     - source: model/requirements/extension/VEXT-003-traceability-graph-panel
       targets:
-        - model/features/extension/VEXT-003-traceability-panel
+        - model/use-cases/extension/VEXT-003-traceability-panel
     - source: model/requirements/extension/VEXT-004-status-bar-workspace-indicator
       targets:
-        - model/features/extension/VEXT-004-status-bar-indicator
+        - model/use-cases/extension/VEXT-004-status-bar-indicator
     - source: model/requirements/extension/VEXT-005-guided-scaffold-wizard
       targets:
-        - model/features/extension/VEXT-005-scaffold-wizard
+        - model/use-cases/extension/VEXT-005-scaffold-wizard
     - source: model/requirements/extension/VEXT-006-guided-host-init-wizard
       targets:
-        - model/features/extension/VEXT-006-init-wizard
+        - model/use-cases/extension/VEXT-006-init-wizard
     - source: model/requirements/format/FMT-001-format-in-place
       targets:
-        - model/features/format/FMT-001-in-place-rewriting
+        - model/use-cases/format/FMT-001-in-place-rewriting
     - source: model/requirements/format/FMT-002-format-check-mode
       targets:
-        - model/features/format/FMT-002-ci-gate
+        - model/use-cases/format/FMT-002-ci-gate
     - source: model/requirements/graph/GRP-001-traceability-graph-integrity-validation
       targets:
-        - model/features/graph/GRP-001-graph-validation
+        - model/use-cases/graph/GRP-001-graph-validation
     - source: model/requirements/graph/GRP-002-graph-markdown-roundtrip-sync
       targets:
-        - model/features/graph/GRP-002-graph-markdown-roundtrip
+        - model/use-cases/graph/GRP-002-graph-markdown-roundtrip
     - source: model/requirements/lint/LNT-001-style-rule-enforcement
       targets:
-        - model/features/lint/LNT-001-style-rule-checking
+        - model/use-cases/lint/LNT-001-style-rule-checking
     - source: model/requirements/lint/LNT-002-link-target-checking
       targets:
-        - model/features/lint/LNT-002-cross-reference-validation
+        - model/use-cases/lint/LNT-002-cross-reference-validation
     - source: model/requirements/lint/LNT-003-lint-check-flags
       targets:
-        - model/features/lint/LNT-003-flag-composition
+        - model/use-cases/lint/LNT-003-flag-composition
     - source: model/requirements/scaffold/SCF-001-template-based-artifact-instantiation
       targets:
-        - model/features/scaffold/SCF-001-template-instantiation
+        - model/use-cases/scaffold/SCF-001-template-instantiation
     - source: model/requirements/scaffold/SCF-002-cr-scoped-scaffold-placement
       targets:
-        - model/features/scaffold/SCF-002-cr-scoped-placement
+        - model/use-cases/scaffold/SCF-002-cr-scoped-placement
     - source: model/requirements/visualize/VIS-001-traceability-graph-export
       targets:
-        - model/features/visualize/VIS-001-graph-export
+        - model/use-cases/visualize/VIS-001-graph-export
     - source: model/requirements/visualize/VIS-002-interactive-graph-server
       targets:
-        - model/features/visualize/VIS-002-interactive-graph-server
+        - model/use-cases/visualize/VIS-002-interactive-graph-server
     - source: model/requirements/workspace/WS-001-repo-local-specs-host
       targets:
-        - model/features/host/HOST-001-host-layout
+        - model/use-cases/host/HOST-001-host-layout
     - source: model/requirements/workspace/WS-002-config-relative-framework-directory
       targets:
-        - model/features/host/HOST-002-config-relative-framework
+        - model/use-cases/host/HOST-002-config-relative-framework
     - source: model/requirements/workspace/WS-003-repo-local-engine-integration
       targets:
-        - model/features/host/HOST-003-engine-build-workflow
+        - model/use-cases/host/HOST-003-engine-build-workflow
     - source: model/requirements/workspace/WS-004-workspace-diagnostics-reporting
       targets:
-        - model/features/doctor/DOC-001-human-diagnostics
+        - model/use-cases/doctor/DOC-001-human-diagnostics
     - source: model/requirements/workspace/WS-005-doctor-json-contract
       targets:
-        - model/features/doctor/DOC-002-json-diagnostics-integration
+        - model/use-cases/doctor/DOC-002-json-diagnostics-integration

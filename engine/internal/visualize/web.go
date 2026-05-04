@@ -52,11 +52,9 @@ var traceabilityPageTemplate = template.Must(template.New("traceability-page").P
   <input type="search" id="filter" placeholder="Filter nodes…" aria-label="Filter nodes">
   {{ if .SaveRelationsURL }}<select id="relation-kind" aria-label="Relation kind">
     <option value="automatic">Automatic</option>
-    <option value="realization">Realization</option>
-    <option value="feature_implementation">Feature</option>
-    <option value="component_implementation">Component</option>
-    <option value="service_implementation">Service</option>
-    <option value="api_implementation">API</option>
+    <option value="deriveReqt">Derive Req.</option>
+    <option value="satisfy">Satisfy</option>
+    <option value="refine">Refine</option>
   </select>{{ end }}
   {{ if .SaveRelationsURL }}<button id="remove-edge" type="button" class="toolbar-icon-button toolbar-remove-edge-button" aria-label="Remove selected edge" title="Remove selected edge"><span class="details-visually-hidden">Remove selected edge</span></button>{{ end }}
   <a class="toolbar-link" href="{{ .JSONURL }}">Graph JSON</a>

@@ -5,7 +5,7 @@
 | ID             | BSL-002                                                                                       |
 | Status         | Draft                                                                                         |
 | Realises       | [Component Baseline Tracking](../../../product/engine/ENG-006-component-baseline-tracking.md) |
-| Implemented By | [Baseline Refresh](../../features/baseline/BSL-002-baseline-refresh.md)                       |
+| Implemented By | [Baseline Refresh](../../use-cases/baseline/BSL-002-baseline-refresh.md)                      |
 
 ## Requirement
 

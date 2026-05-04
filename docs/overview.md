@@ -7,7 +7,7 @@ and is not covered here.
 ## What the engine is for
 
 A small CLI that lets a team author a structured specification model in
-markdown — product requirements, model requirements, features, components —
+markdown — product requirements, model requirements, use cases, components —
 with guaranteed formatting, traceability, and baseline integrity.
 
 ## The model
@@ -18,7 +18,7 @@ Four artifact kinds, scaffolded from templates:
 | ------------------- | ----------- | ---------------------------------------------------------------------------- |
 | Product requirement | Stakeholder | What was asked for, in the stakeholder's vocabulary. Lives under `product/`. |
 | Requirement         | Author      | A single, testable re-formulation of one or more product requirements.       |
-| Feature             | Analyst     | A grouping that implements one or more requirements.                         |
+| Use case            | Analyst     | A scenario that satisfies one or more requirements.                          |
 | Component           | Architect   | A unit of implementation pinned to an upstream repo.                         |
 
 Product requirements live under `product/`; the rest live under `model/`.
@@ -28,13 +28,13 @@ All artifacts are written in markdown.
 
 ```text
 Stakeholder ──► Author ──► Analyst ──► Architect
- product       requirements   features    components
+ product       requirements   use cases   components
  requirement
 ```
 
 Stakeholders capture demands as **product requirements** inside change
 requests; authors re-formulate them as model **requirements**; analysts and
-architects refine those into features, components, services, and APIs. See
+architects refine those into use cases, components. See
 [actors.md](actors.md) for details. Setup, review, and framework distribution
 work is described as *operational roles* in [roles.md](roles.md).
 
@@ -45,7 +45,7 @@ in isolation before joining the canonical model.
 
 ```text
 specs cr new      ──►  draft inside change-requests/NNN-slug/
-specs scaffold    ──►  add requirements / features / components / ...
+specs scaffold    ──►  add requirements / use cases / components / ...
 specs format      ──►  normalise markdown
 specs lint        ──►  style + links + baselines
 specs cr drain    ──►  git mv into canonical model paths
@@ -82,7 +82,7 @@ specs cr drain    ──►  git mv into canonical model paths
 | --------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
 | `.specs.yaml`               | Per-host configuration; resolves paths and framework.                                                                      |
 | `product/`                  | Stakeholder-facing product requirements.                                                                                   |
-| `model/`                    | Canonical model artifacts (requirements, features, components, services, APIs).                                            |
+| `model/`                    | Canonical model artifacts (requirements, use cases, components).                                                           |
 | `change-requests/NNN-slug/` | Work in progress, drained into `product/` and `model/` on merge.                                                           |
 | `.specs-framework`          | Framework content (templates, lint config). Either fetched into the user cache (managed) or supplied as a local directory. |
 

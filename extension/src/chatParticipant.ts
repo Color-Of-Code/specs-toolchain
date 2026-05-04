@@ -155,7 +155,7 @@ async function handleScaffold(
   const messages = [
     vscode.LanguageModelChatMessage.User(
       `You are a specs toolchain assistant. The user wants to scaffold a new model artifact.\n` +
-        `Available kinds: requirement, feature, component, api, service.\n` +
+        `Available kinds: requirement, use-case, component.\n` +
         `Based on their description, suggest the most appropriate kind and a kebab-case slug path ` +
         `(e.g. "core/some-slug" for requirements, "some-slug" for others). ` +
         `Then show the exact \`Specs: Scaffold\` command to run in VS Code.\n\n` +
@@ -172,7 +172,7 @@ async function handleScaffold(
     stream.markdown(chunk);
   }
   stream.button({ command: "specs.scaffold.requirement", title: "Scaffold: Requirement" });
-  stream.button({ command: "specs.scaffold.feature", title: "Scaffold: Feature" });
+  stream.button({ command: "specs.scaffold.use-case", title: "Scaffold: Use Case" });
   return { metadata: { command: "scaffold" } };
 }
 
@@ -265,7 +265,7 @@ async function handleFreeForm(
     `The workspace uses the specs-toolchain engine (binary: specs). Key concepts:\n` +
     `- Product requirements live under specs/product/\n` +
     `- Technical requirements under specs/model/requirements/\n` +
-    `- Features under specs/model/features/\n` +
+    `- Use cases under specs/model/use-cases/\n` +
     `- Traceability edges in YAML files under specs/model/traceability/\n` +
     `- Change requests under specs/change-requests/\n\n` +
     `Current graph summary:\n${graphSummary || "(not available)"}`;

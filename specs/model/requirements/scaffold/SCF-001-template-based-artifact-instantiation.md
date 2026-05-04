@@ -5,7 +5,7 @@
 | ID             | SCF-001                                                                                                       |
 | Status         | Draft                                                                                                         |
 | Realises       | [Artifact Scaffolding From Templates](../../../product/engine/ENG-004-artifact-scaffolding-from-templates.md) |
-| Implemented By | [Template Instantiation](../../features/scaffold/SCF-001-template-instantiation.md)                           |
+| Implemented By | [Template Instantiation](../../use-cases/scaffold/SCF-001-template-instantiation.md)                          |
 
 ## Requirement
 

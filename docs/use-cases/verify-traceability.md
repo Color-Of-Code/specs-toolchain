@@ -14,8 +14,8 @@ real artifacts:
 **Reviewer** *(role)* — see [../roles.md](../roles.md). Typically the **Author**, **Analyst**, or **Architect** themselves run this check before submitting a CR for review:
 
 - **Author** owns the product requirement ↔ model requirement links.
-- **Analyst** owns the requirement ↔ feature links.
-- **Architect** owns the feature ↔ component / service / API links.
+- **Analyst** owns the requirement ↔ use case (satisfy) links.
+- **Architect** owns the requirement ↔ component (refine) links.
 
 ## Purpose
 

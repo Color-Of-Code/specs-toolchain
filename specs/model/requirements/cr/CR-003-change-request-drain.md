@@ -5,7 +5,7 @@
 | ID             | CR-003                                                                                    |
 | Status         | Draft                                                                                     |
 | Realises       | [Change Request Workflow](../../../product/engine/ENG-005-change-request-workflow.md)     |
-| Implemented By | [Change Request Drain](../../features/cr/CR-003-cr-drain.md)                              |
+| Implemented By | [Change Request Drain](../../use-cases/cr/CR-003-cr-drain.md)                             |
 
 ## Requirement
 

@@ -17,5 +17,5 @@ One person typically wears several roles in the same repository.
 - **Project owner** picks one framework handling mode in `.specs.yaml`:
   - `managed` — the engine fetches the framework into the user cache; the host commits only `.specs.yaml`. This is the default.
   - `local` — `.specs.yaml` points at a directory on disk owned by the user (regular checkout, git submodule, or vendored snapshot — all treated the same).
-- **Baselines** for tracked components are owned by the **Architect** actor (see [actors.md](actors.md)), not by a separate role — the same person who decomposes features into components keeps their pinned commits current.
+- **Baselines** for tracked components are owned by the **Architect** actor (see [actors.md](actors.md)), not by a separate role — the same person who decomposes use cases into components keeps their pinned commits current.
 - **Framework maintainer** is also a project owner and reviewer on the framework's own repository; the role here describes only the *downstream-facing* responsibility of publishing framework content.

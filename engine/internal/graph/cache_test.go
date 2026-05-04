@@ -10,17 +10,17 @@ import (
 func TestRebuildCacheWritesSQLiteTables(t *testing.T) {
 	cachePath := filepath.Join(t.TempDir(), "traceability.sqlite")
 	g := &Graph{
-		ManifestPath:           "model/traceability/graph.yaml",
-		Manifest:               manifestForGraph(&Graph{Baselines: []BaselineEntry{{Component: "model/components/alpha-component"}}}),
-		Realizations:           []RelationEntry{{Source: "product/alpha", Targets: []string{"model/requirements/alpha-requirement"}}},
-		FeatureImplementations: []RelationEntry{{Source: "model/requirements/alpha-requirement", Targets: []string{"model/features/alpha-feature"}}},
+		ManifestPath: "model/traceability/graph.yaml",
+		Manifest:     manifestForGraph(&Graph{Baselines: []BaselineEntry{{Component: "model/components/alpha-component"}}}),
+		DeriveReqt:   []RelationEntry{{Source: "product/alpha", Targets: []string{"model/requirements/alpha-requirement"}}},
+		Refinements:  []RelationEntry{{Source: "model/requirements/alpha-requirement", Targets: []string{"model/use-cases/alpha-feature"}}},
 		Baselines: []BaselineEntry{{
 			Component: "model/components/alpha-component",
 			Repo:      "host-repo",
 			Path:      "/",
 			Commit:    "0123456789abcdef0123456789abcdef01234567",
 		}},
-		Layout: []LayoutEntry{{ID: "model/features/alpha-feature", X: 12.5, Y: 8.75, Locked: true}},
+		Layout: []LayoutEntry{{ID: "model/use-cases/alpha-feature", X: 12.5, Y: 8.75, Locked: true}},
 	}
 
 	stats, err := RebuildCache(cachePath, g, false)
@@ -53,7 +53,7 @@ func TestRebuildCacheWritesSQLiteTables(t *testing.T) {
 
 func TestRebuildCacheDryRunDoesNotCreateFile(t *testing.T) {
 	cachePath := filepath.Join(t.TempDir(), "traceability.sqlite")
-	g := &Graph{Realizations: []RelationEntry{{Source: "product/alpha", Targets: []string{"model/requirements/alpha-requirement"}}}}
+	g := &Graph{DeriveReqt: []RelationEntry{{Source: "product/alpha", Targets: []string{"model/requirements/alpha-requirement"}}}}
 	if _, err := RebuildCache(cachePath, g, true); err != nil {
 		t.Fatalf("RebuildCache() dry-run error = %v", err)
 	}

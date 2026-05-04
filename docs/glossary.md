@@ -13,10 +13,10 @@ model artifacts are drafted before being drained into their canonical homes.
 An implementation unit under `model/components/`, typically pinned to an
 upstream repository and tracked with a baseline.
 
-## Feature
+## Use case
 
-A model artifact under `model/features/` that groups one or more requirements
-into an implementable capability.
+A model artifact under `model/use-cases/` describing an end-to-end interaction
+scenario that satisfies one or more requirements.
 
 ## Framework dir
 
@@ -54,7 +54,7 @@ the user cache and reuses it across hosts on the same machine.
 
 ## Model artifact
 
-Any artifact stored under `model/`: requirement, feature, or component.
+Any artifact stored under `model/`: requirement, use case, or component.
 
 ## Model requirement
 

@@ -18,7 +18,7 @@ import (
 // Usage:
 //
 //	specs scaffold requirement <area>/<NNN-slug>           -> model/requirements/<area>/<NNN-slug>.md
-//	specs scaffold feature     <area>/<slug>               -> model/features/<area>/<slug>.md
+//	specs scaffold use-case    <area>/<slug>               -> model/use-cases/<area>/<slug>.md
 //	specs scaffold component   <group>/<slug>              -> model/components/<group>/<slug>.md
 //	specs scaffold ... --cr <NNN>                          -> change-requests/CR-NNN-*/<kind>s/<...>.md
 //
@@ -27,7 +27,7 @@ import (
 func cmdScaffold(args []string) error {
 	if len(args) == 0 {
 		fmt.Fprintln(os.Stderr, "Usage: specs scaffold <kind> [--cr <NNN>] [--title <title>] [--force] [--dry-run] <path>")
-		fmt.Fprintln(os.Stderr, "Kinds: product-requirement, requirement, feature, component")
+		fmt.Fprintln(os.Stderr, "Kinds: product-requirement, requirement, use-case, component")
 		return exitWith(2, "missing kind")
 	}
 	kind := args[0]
@@ -69,7 +69,7 @@ func cmdScaffold(args []string) error {
 
 	tplName, dirName, ok := scaffoldKindMap(kind)
 	if !ok {
-		return exitWith(2, "unknown kind %q (want: product-requirement|requirement|feature|component)", kind)
+		return exitWith(2, "unknown kind %q (want: product-requirement|requirement|use-case|component)", kind)
 	}
 	tplPath := filepath.Join(cfg.FrameworkDir, "templates", tplName)
 	if _, err := os.Stat(tplPath); err != nil {
@@ -119,8 +119,8 @@ func scaffoldKindMap(kind string) (tpl, dir string, ok bool) {
 		return "product-requirement.md", "product-requirements", true
 	case "requirement":
 		return "requirement.md", "requirements", true
-	case "feature":
-		return "feature.md", "features", true
+	case "use-case":
+		return "use-case.md", "use-cases", true
 	case "component":
 		return "component.md", "components", true
 	}
@@ -367,7 +367,7 @@ func cmdCRStatus(args []string) error {
 		HasIndex            bool   `json:"has_index"`
 		ProductRequirements int    `json:"product_requirements"`
 		Requirements        int    `json:"requirements"`
-		Features            int    `json:"features"`
+		Features            int    `json:"use_cases"`
 		Components          int    `json:"components"`
 		Architecture        int    `json:"architecture"`
 	}
@@ -389,7 +389,7 @@ func cmdCRStatus(args []string) error {
 			HasIndex:            hasIdx,
 			ProductRequirements: countFiles(filepath.Join(dir, "product-requirements")),
 			Requirements:        countFiles(filepath.Join(dir, "requirements")),
-			Features:            countFiles(filepath.Join(dir, "features")),
+			Features:            countFiles(filepath.Join(dir, "use-cases")),
 			Components:          countFiles(filepath.Join(dir, "components")),
 			Architecture:        countFiles(filepath.Join(dir, "architecture")),
 		})
@@ -402,7 +402,7 @@ func cmdCRStatus(args []string) error {
 		}
 		return enc.Encode(records)
 	}
-	fmt.Printf("%-8s %-40s %5s %5s %5s %5s %5s %s\n", "ID", "Slug", "PReqs", "Reqs", "Feats", "Comps", "Arch", "Index")
+	fmt.Printf("%-8s %-40s %5s %5s %5s %5s %5s %s\n", "ID", "Slug", "PReqs", "Reqs", "UCs", "Comps", "Arch", "Index")
 	for _, r := range records {
 		idx := "-"
 		if r.HasIndex {

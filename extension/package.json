@@ -43,7 +43,7 @@
           },
           {
             "name": "scaffold",
-            "description": "Scaffold a new model artifact (requirement, feature, component, api, service)"
+            "description": "Scaffold a new model artifact (requirement, use-case, component)"
           },
           {
             "name": "cr",
@@ -70,18 +70,18 @@
           },
           {
             "category": "specs_scaffold",
-            "description": "The user wants to create a new requirement, feature, component, API, or service artifact.",
+            "description": "The user wants to create a new requirement, use case, or component artifact.",
             "examples": [
               "Create a new requirement for authentication",
-              "Scaffold a feature called user-login",
-              "Add a new API artifact"
+              "Scaffold a use case called user-login",
+              "Add a new component artifact"
             ]
           },
           {
             "category": "specs_traceability",
-            "description": "The user wants to query or visualise traceability between requirements, features, and components.",
+            "description": "The user wants to query or visualise traceability between requirements, use cases, and components.",
             "examples": [
-              "Which requirements are not covered by any feature?",
+              "Which requirements are not covered by any use case?",
               "Show the traceability graph",
               "What realises requirement REQ-007?"
             ]
@@ -150,23 +150,13 @@
         "category": "Specs"
       },
       {
-        "command": "specs.scaffold.feature",
-        "title": "Scaffold: Feature",
+        "command": "specs.scaffold.use-case",
+        "title": "Scaffold: Use Case",
         "category": "Specs"
       },
       {
         "command": "specs.scaffold.component",
         "title": "Scaffold: Component",
-        "category": "Specs"
-      },
-      {
-        "command": "specs.scaffold.api",
-        "title": "Scaffold: API",
-        "category": "Specs"
-      },
-      {
-        "command": "specs.scaffold.service",
-        "title": "Scaffold: Service",
         "category": "Specs"
       },
       {
@@ -213,8 +203,8 @@
         "icon": "$(refresh)"
       },
       {
-        "command": "specs.features.refresh",
-        "title": "Refresh features",
+        "command": "specs.useCases.refresh",
+        "title": "Refresh use cases",
         "category": "Specs",
         "icon": "$(refresh)"
       },
@@ -253,8 +243,8 @@
           "contextualTitle": "Specs"
         },
         {
-          "id": "specs.features",
-          "name": "Features",
+          "id": "specs.useCases",
+          "name": "Use Cases",
           "contextualTitle": "Specs"
         }
       ]
@@ -286,8 +276,8 @@
           "group": "navigation"
         },
         {
-          "command": "specs.features.refresh",
-          "when": "view == specs.features",
+          "command": "specs.useCases.refresh",
+          "when": "view == specs.useCases",
           "group": "navigation"
         },
         {
@@ -307,7 +297,7 @@
         },
         {
           "command": "specs.visualize.previewIcon",
-          "when": "view == specs.features",
+          "when": "view == specs.useCases",
           "group": "navigation@10"
         }
       ],

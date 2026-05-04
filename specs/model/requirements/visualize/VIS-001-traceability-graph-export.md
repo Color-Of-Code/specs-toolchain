@@ -5,7 +5,7 @@
 | ID             | VIS-001                                                                                       |
 | Status         | Draft                                                                                         |
 | Realises       | [Traceability Visualization](../../../product/engine/ENG-007-traceability-visualization.md)   |
-| Implemented By | [Graph Export](../../features/visualize/VIS-001-graph-export.md)                              |
+| Implemented By | [Graph Export](../../use-cases/visualize/VIS-001-graph-export.md)                             |
 
 ## Requirement
 

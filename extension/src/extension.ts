@@ -17,7 +17,7 @@ export function activate(context: vscode.ExtensionContext): void {
   registerCRTree(context);
   registerModelTree(context, "specs.productRequirements", "product", "specs.productRequirements.refresh");
   registerModelTree(context, "specs.requirements", "model/requirements", "specs.requirements.refresh");
-  registerModelTree(context, "specs.features", "model/features", "specs.features.refresh");
+  registerModelTree(context, "specs.useCases", "model/use-cases", "specs.useCases.refresh");
   registerStatusBar(context);
   registerVisualizePanel(context);
 }

@@ -127,9 +127,9 @@ func saveTraceabilityRelations(start string, edges []relationSaveEdge) error {
 	if err != nil {
 		return err
 	}
-	traceability.Realizations = relations.realizations
-	traceability.FeatureImplementations = relations.featureImplementations
-	traceability.ComponentImplementations = relations.componentImplementations
+	traceability.DeriveReqt = relations.deriveReqt
+	traceability.Refinements = relations.refinements
+	traceability.Satisfactions = relations.satisfactions
 	if err := tracegraph.Write(cfg.GraphManifest, traceability); err != nil {
 		return fmt.Errorf("write graph %s: %w", cfg.GraphManifest, err)
 	}
@@ -139,9 +139,9 @@ func saveTraceabilityRelations(start string, edges []relationSaveEdge) error {
 func traceabilityAllowedNodeIDs(modelDir, productDir string, g *tracegraph.Graph) (map[string]struct{}, error) {
 	allowed := map[string]struct{}{}
 	for _, entries := range [][]tracegraph.RelationEntry{
-		g.Realizations,
-		g.FeatureImplementations,
-		g.ComponentImplementations,
+		g.DeriveReqt,
+		g.Refinements,
+		g.Satisfactions,
 	} {
 		for _, entry := range entries {
 			allowed[entry.Source] = struct{}{}
@@ -159,7 +159,7 @@ func traceabilityAllowedNodeIDs(modelDir, productDir string, g *tracegraph.Graph
 	}{
 		{productDir, "product"},
 		{filepath.Join(modelDir, "requirements"), "model/requirements"},
-		{filepath.Join(modelDir, "features"), "model/features"},
+		{filepath.Join(modelDir, "use-cases"), "model/use-cases"},
 		{filepath.Join(modelDir, "components"), "model/components"},
 	} {
 		if err := collectArtifactNodeIDs(allowed, root.dir, root.prefix); err != nil {
@@ -207,15 +207,15 @@ func collectArtifactNodeIDs(allowed map[string]struct{}, dir, prefix string) err
 }
 
 type relationSaveFamilies struct {
-	realizations             []tracegraph.RelationEntry
-	featureImplementations   []tracegraph.RelationEntry
-	componentImplementations []tracegraph.RelationEntry
+	deriveReqt    []tracegraph.RelationEntry
+	satisfactions []tracegraph.RelationEntry
+	refinements   []tracegraph.RelationEntry
 }
 
 func relationEntriesFromSaveEdges(edges []relationSaveEdge, allowed map[string]struct{}) (*relationSaveFamilies, error) {
-	realizations := map[string]map[string]struct{}{}
-	featureImplementations := map[string]map[string]struct{}{}
-	componentImplementations := map[string]map[string]struct{}{}
+	deriveReqt := map[string]map[string]struct{}{}
+	satisfactions := map[string]map[string]struct{}{}
+	refinements := map[string]map[string]struct{}{}
 	seen := map[string]struct{}{}
 	for index, current := range edges {
 		normalizedSource, err := tracegraph.NormalizeNodeID(current.Source)
@@ -248,29 +248,35 @@ func relationEntriesFromSaveEdges(edges []relationSaveEdge, allowed map[string]s
 		}
 		seen[key] = struct{}{}
 		switch current.Kind {
-		case string(tracegraph.PartKindRealization):
-			addRelationTarget(realizations, normalizedSource, normalizedTarget)
-		case string(tracegraph.PartKindFeatureImplementation):
-			addRelationTarget(featureImplementations, normalizedSource, normalizedTarget)
-		case string(tracegraph.PartKindComponentImplementation):
-			addRelationTarget(componentImplementations, normalizedSource, normalizedTarget)
+		case string(tracegraph.PartKindDeriveReqt):
+			// Frontend sends MR→PR; store as PR→MR
+			addRelationTarget(deriveReqt, normalizedTarget, normalizedSource)
+		case string(tracegraph.PartKindSatisfy):
+			// Frontend sends component→MR; store as MR→component
+			addRelationTarget(satisfactions, normalizedTarget, normalizedSource)
+		case string(tracegraph.PartKindRefine):
+			// Frontend sends use-case→MR; store as MR→use-case
+			addRelationTarget(refinements, normalizedTarget, normalizedSource)
 		}
 	}
 	return &relationSaveFamilies{
-		realizations:             relationEntriesFromTargetMap(realizations),
-		featureImplementations:   relationEntriesFromTargetMap(featureImplementations),
-		componentImplementations: relationEntriesFromTargetMap(componentImplementations),
+		deriveReqt:    relationEntriesFromTargetMap(deriveReqt),
+		satisfactions: relationEntriesFromTargetMap(satisfactions),
+		refinements:   relationEntriesFromTargetMap(refinements),
 	}, nil
 }
 
 func relationKindsForSave(kind string) (string, string, bool) {
 	switch kind {
-	case string(tracegraph.PartKindRealization):
-		return "product-requirement", "requirement", true
-	case string(tracegraph.PartKindFeatureImplementation):
-		return "requirement", "feature", true
-	case string(tracegraph.PartKindComponentImplementation):
-		return "requirement", "component", true
+	case string(tracegraph.PartKindDeriveReqt):
+		// SysML direction: requirement ──deriveReqt──► product-requirement
+		return "requirement", "product-requirement", true
+	case string(tracegraph.PartKindRefine):
+		// SysML direction: use-case ──refine──► requirement
+		return "use-case", "requirement", true
+	case string(tracegraph.PartKindSatisfy):
+		// SysML direction: component ──satisfy──► requirement
+		return "component", "requirement", true
 	default:
 		return "", "", false
 	}

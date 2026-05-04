@@ -13,17 +13,17 @@ func TestLoadValidGraph(t *testing.T) {
 		"schema_version: 1",
 		"node_id_format: repo_relative_markdown_path_without_extension",
 		"parts:",
-		"  - name: realizations",
-		"    file: realizations.yaml",
-		"    kind: realization",
+		"  - name: derive_reqt",
+		"    file: deriveReqt.yaml",
+		"    kind: deriveReqt",
 		"    required: true",
-		"  - name: feature_implementations",
-		"    file: feature_implementations.yaml",
-		"    kind: feature_implementation",
+		"  - name: refinements",
+		"    file: refinements.yaml",
+		"    kind: refine",
 		"    required: true",
-		"  - name: component_implementations",
-		"    file: component_implementations.yaml",
-		"    kind: component_implementation",
+		"  - name: satisfactions",
+		"    file: satisfactions.yaml",
+		"    kind: satisfy",
 		"    required: true",
 		"  - name: baselines",
 		"    file: baselines.yaml",
@@ -34,21 +34,21 @@ func TestLoadValidGraph(t *testing.T) {
 		"  markdown_baseline_fields: true",
 		"  stable_sort: lexical_id",
 	}, "\n"))
-	writeGraphFile(t, dir, "realizations.yaml", strings.Join([]string{
-		"kind: realization",
+	writeGraphFile(t, dir, "deriveReqt.yaml", strings.Join([]string{
+		"kind: deriveReqt",
 		"entries:",
 		"  - source: product/alpha",
 		"    targets:",
 		"      - model/requirements/alpha-requirement",
 	}, "\n"))
-	writeGraphFile(t, dir, "feature_implementations.yaml", strings.Join([]string{
-		"kind: feature_implementation",
+	writeGraphFile(t, dir, "refinements.yaml", strings.Join([]string{
+		"kind: refine",
 		"entries:",
 		"  - source: model/requirements/alpha-requirement",
 		"    targets:",
-		"      - model/features/alpha-feature",
+		"      - model/use-cases/alpha-feature",
 	}, "\n"))
-	writeGraphFile(t, dir, "component_implementations.yaml", "kind: component_implementation\nentries: []\n")
+	writeGraphFile(t, dir, "satisfactions.yaml", "kind: satisfy\nentries: []\n")
 	writeGraphFile(t, dir, "baselines.yaml", strings.Join([]string{
 		"kind: baseline",
 		"entries:",
@@ -64,15 +64,15 @@ func TestLoadValidGraph(t *testing.T) {
 	}
 	wantIDs := []string{
 		"model/components/alpha-component",
-		"model/features/alpha-feature",
 		"model/requirements/alpha-requirement",
+		"model/use-cases/alpha-feature",
 		"product/alpha",
 	}
 	gotIDs := g.NodeIDs()
 	if strings.Join(gotIDs, ",") != strings.Join(wantIDs, ",") {
 		t.Fatalf("NodeIDs() = %v, want %v", gotIDs, wantIDs)
 	}
-	if got := MarkdownPath("model/features/alpha-feature"); got != "model/features/alpha-feature.md" {
+	if got := MarkdownPath("model/use-cases/alpha-feature"); got != "model/use-cases/alpha-feature.md" {
 		t.Fatalf("MarkdownPath() = %q", got)
 	}
 }
@@ -83,17 +83,17 @@ func TestLoadRejectsOutOfOrderParts(t *testing.T) {
 		"schema_version: 1",
 		"node_id_format: repo_relative_markdown_path_without_extension",
 		"parts:",
-		"  - name: feature_implementations",
-		"    file: feature_implementations.yaml",
-		"    kind: feature_implementation",
+		"  - name: satisfactions",
+		"    file: satisfactions.yaml",
+		"    kind: satisfy",
 		"    required: true",
-		"  - name: realizations",
-		"    file: realizations.yaml",
-		"    kind: realization",
+		"  - name: derive_reqt",
+		"    file: deriveReqt.yaml",
+		"    kind: deriveReqt",
 		"    required: true",
-		"  - name: component_implementations",
-		"    file: component_implementations.yaml",
-		"    kind: component_implementation",
+		"  - name: refinements",
+		"    file: refinements.yaml",
+		"    kind: refine",
 		"    required: true",
 		"generation:",
 		"  markdown_relationship_fields: true",
@@ -112,32 +112,32 @@ func TestLoadRejectsNonCanonicalNodeIDs(t *testing.T) {
 		"schema_version: 1",
 		"node_id_format: repo_relative_markdown_path_without_extension",
 		"parts:",
-		"  - name: realizations",
-		"    file: realizations.yaml",
-		"    kind: realization",
+		"  - name: derive_reqt",
+		"    file: deriveReqt.yaml",
+		"    kind: deriveReqt",
 		"    required: true",
-		"  - name: feature_implementations",
-		"    file: feature_implementations.yaml",
-		"    kind: feature_implementation",
+		"  - name: refinements",
+		"    file: refinements.yaml",
+		"    kind: refine",
 		"    required: true",
-		"  - name: component_implementations",
-		"    file: component_implementations.yaml",
-		"    kind: component_implementation",
+		"  - name: satisfactions",
+		"    file: satisfactions.yaml",
+		"    kind: satisfy",
 		"    required: true",
 		"generation:",
 		"  markdown_relationship_fields: true",
 		"  markdown_baseline_fields: true",
 		"  stable_sort: lexical_id",
 	}, "\n"))
-	writeGraphFile(t, dir, "realizations.yaml", strings.Join([]string{
-		"kind: realization",
+	writeGraphFile(t, dir, "deriveReqt.yaml", strings.Join([]string{
+		"kind: deriveReqt",
 		"entries:",
 		"  - source: ./product/alpha.md",
 		"    targets:",
 		"      - model/requirements/alpha-requirement",
 	}, "\n"))
-	writeGraphFile(t, dir, "feature_implementations.yaml", "kind: feature_implementation\nentries: []\n")
-	writeGraphFile(t, dir, "component_implementations.yaml", "kind: component_implementation\nentries: []\n")
+	writeGraphFile(t, dir, "satisfactions.yaml", "kind: satisfy\nentries: []\n")
+	writeGraphFile(t, dir, "refinements.yaml", "kind: refine\nentries: []\n")
 
 	if _, err := Load(filepath.Join(dir, "graph.yaml")); err == nil || !strings.Contains(err.Error(), "must be normalized") {
 		t.Fatalf("Load() error = %v, want normalization error", err)
@@ -145,12 +145,12 @@ func TestLoadRejectsNonCanonicalNodeIDs(t *testing.T) {
 }
 
 func TestNormalizeNodeID(t *testing.T) {
-	got, err := NormalizeNodeID(`model\\features\\alpha.md`)
+	got, err := NormalizeNodeID(`model\\use-cases\\alpha.md`)
 	if err != nil {
 		t.Fatalf("NormalizeNodeID() error = %v", err)
 	}
-	if got != "model/features/alpha" {
-		t.Fatalf("NormalizeNodeID() = %q, want %q", got, "model/features/alpha")
+	if got != "model/use-cases/alpha" {
+		t.Fatalf("NormalizeNodeID() = %q, want %q", got, "model/use-cases/alpha")
 	}
 }
 

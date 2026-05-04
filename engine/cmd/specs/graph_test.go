@@ -19,7 +19,7 @@ func TestCmdGraphValidateJSON(t *testing.T) {
 		filepath.Join(specsDir, "model", "traceability"),
 		filepath.Join(specsDir, "product"),
 		filepath.Join(specsDir, "model", "requirements"),
-		filepath.Join(specsDir, "model", "features"),
+		filepath.Join(specsDir, "model", "use-cases"),
 		filepath.Join(specsDir, "model", "components"),
 	} {
 		if err := os.MkdirAll(path, 0o755); err != nil {
@@ -56,8 +56,8 @@ func TestCmdGraphValidateJSON(t *testing.T) {
 	for _, want := range []string{
 		`"manifest_path":`,
 		`"node_count": 4`,
-		`"realization_edge_count": 1`,
-		`"feature_implementation_edge_count": 1`,
+		`"derive_reqt_edge_count": 1`,
+		`"refine_edge_count": 1`,
 		`"baseline_count": 1`,
 	} {
 		if !strings.Contains(out, want) {
@@ -73,7 +73,7 @@ func TestCmdGraphValidateRejectsMissingNodeFile(t *testing.T) {
 		filepath.Join(specsDir, "model", "traceability"),
 		filepath.Join(specsDir, "product"),
 		filepath.Join(specsDir, "model", "requirements"),
-		filepath.Join(specsDir, "model", "features"),
+		filepath.Join(specsDir, "model", "use-cases"),
 		filepath.Join(specsDir, "model", "components"),
 	} {
 		if err := os.MkdirAll(path, 0o755); err != nil {
@@ -100,12 +100,12 @@ func TestCmdGraphValidateRejectsMissingNodeFile(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err := os.Remove(filepath.Join(specsDir, "model", "features", "alpha-feature.md")); err != nil {
+	if err := os.Remove(filepath.Join(specsDir, "model", "use-cases", "alpha-feature.md")); err != nil {
 		t.Fatal(err)
 	}
 
 	err = cmdGraphValidate(nil)
-	if err == nil || !strings.Contains(err.Error(), `model/features/alpha-feature`) {
+	if err == nil || !strings.Contains(err.Error(), `model/use-cases/alpha-feature`) {
 		t.Fatalf("cmdGraphValidate() error = %v, want missing node file error", err)
 	}
 }
@@ -131,7 +131,7 @@ func TestCmdGraphImportMarkdownWritesCanonicalGraph(t *testing.T) {
 	for _, path := range []string{
 		filepath.Join(specsDir, "product"),
 		filepath.Join(specsDir, "model", "requirements"),
-		filepath.Join(specsDir, "model", "features"),
+		filepath.Join(specsDir, "model", "use-cases"),
 		filepath.Join(specsDir, "model", "components"),
 		filepath.Join(specsDir, "model", "baselines"),
 	} {
@@ -166,7 +166,7 @@ func TestCmdGraphImportMarkdownWritesCanonicalGraph(t *testing.T) {
 	if err != nil {
 		t.Fatalf("graph.Load() error = %v", err)
 	}
-	if len(reloaded.Realizations) != 1 || len(reloaded.FeatureImplementations) != 1 || len(reloaded.ComponentImplementations) != 1 {
+	if len(reloaded.DeriveReqt) != 1 || len(reloaded.Satisfactions) != 1 || len(reloaded.Refinements) != 1 {
 		t.Fatalf("unexpected imported graph sizes: %+v", reloaded)
 	}
 	if len(reloaded.Baselines) != 1 {
@@ -180,7 +180,7 @@ func TestCmdGraphGenerateMarkdownUpdatesFiles(t *testing.T) {
 	for _, path := range []string{
 		filepath.Join(specsDir, "product"),
 		filepath.Join(specsDir, "model", "requirements"),
-		filepath.Join(specsDir, "model", "features"),
+		filepath.Join(specsDir, "model", "use-cases"),
 		filepath.Join(specsDir, "model", "components"),
 	} {
 		if err := os.MkdirAll(path, 0o755); err != nil {
@@ -192,9 +192,9 @@ func TestCmdGraphGenerateMarkdownUpdatesFiles(t *testing.T) {
 	}
 	writeGraphGenerateFixture(t, specsDir)
 	graphData := &graph.Graph{
-		Realizations:             []graph.RelationEntry{{Source: "product/alpha", Targets: []string{"model/requirements/alpha-requirement"}}},
-		FeatureImplementations:   []graph.RelationEntry{{Source: "model/requirements/alpha-requirement", Targets: []string{"model/features/alpha-feature"}}},
-		ComponentImplementations: []graph.RelationEntry{{Source: "model/requirements/alpha-requirement", Targets: []string{"model/components/alpha-component"}}},
+		DeriveReqt:    []graph.RelationEntry{{Source: "product/alpha", Targets: []string{"model/requirements/alpha-requirement"}}},
+		Refinements:   []graph.RelationEntry{{Source: "model/requirements/alpha-requirement", Targets: []string{"model/use-cases/alpha-feature"}}},
+		Satisfactions: []graph.RelationEntry{{Source: "model/requirements/alpha-requirement", Targets: []string{"model/components/alpha-component"}}},
 	}
 	if err := graph.Write(filepath.Join(specsDir, "model", "traceability", "graph.yaml"), graphData); err != nil {
 		t.Fatal(err)
@@ -232,7 +232,7 @@ func TestCmdGraphRebuildCacheWritesSQLite(t *testing.T) {
 		filepath.Join(specsDir, "model", "traceability"),
 		filepath.Join(specsDir, "product"),
 		filepath.Join(specsDir, "model", "requirements"),
-		filepath.Join(specsDir, "model", "features"),
+		filepath.Join(specsDir, "model", "use-cases"),
 		filepath.Join(specsDir, "model", "components"),
 	} {
 		if err := os.MkdirAll(path, 0o755); err != nil {
@@ -290,7 +290,7 @@ func TestCmdGraphSaveRelationsWritesCanonicalRelations(t *testing.T) {
 		filepath.Join(specsDir, "model", "traceability"),
 		filepath.Join(specsDir, "product"),
 		filepath.Join(specsDir, "model", "requirements"),
-		filepath.Join(specsDir, "model", "features"),
+		filepath.Join(specsDir, "model", "use-cases"),
 		filepath.Join(specsDir, "model", "components"),
 	} {
 		if err := os.MkdirAll(path, 0o755); err != nil {
@@ -302,7 +302,7 @@ func TestCmdGraphSaveRelationsWritesCanonicalRelations(t *testing.T) {
 	}
 	writeGraphFixture(t, specsDir)
 	inputPath := filepath.Join(dir, "relations.json")
-	if err := os.WriteFile(inputPath, []byte(`{"edges":[{"source":"model/requirements/alpha-requirement","target":"model/features/alpha-feature","kind":"feature_implementation"}]}`), 0o644); err != nil {
+	if err := os.WriteFile(inputPath, []byte(`{"edges":[{"source":"model/use-cases/alpha-feature","target":"model/requirements/alpha-requirement","kind":"refine"}]}`), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -326,14 +326,14 @@ func TestCmdGraphSaveRelationsWritesCanonicalRelations(t *testing.T) {
 	if err != nil {
 		t.Fatalf("graph.Load() error = %v", err)
 	}
-	if len(reloaded.Realizations) != 0 {
-		t.Fatalf("len(Realizations) = %d, want 0", len(reloaded.Realizations))
+	if len(reloaded.DeriveReqt) != 0 {
+		t.Fatalf("len(DeriveReqt) = %d, want 0", len(reloaded.DeriveReqt))
 	}
-	if len(reloaded.FeatureImplementations) != 1 {
-		t.Fatalf("len(FeatureImplementations) = %d, want 1", len(reloaded.FeatureImplementations))
+	if len(reloaded.Refinements) != 1 {
+		t.Fatalf("len(Refinements) = %d, want 1", len(reloaded.Refinements))
 	}
-	if reloaded.FeatureImplementations[0].Source != "model/requirements/alpha-requirement" || len(reloaded.FeatureImplementations[0].Targets) != 1 || reloaded.FeatureImplementations[0].Targets[0] != "model/features/alpha-feature" {
-		t.Fatalf("unexpected feature implementation entry: %+v", reloaded.FeatureImplementations[0])
+	if reloaded.Refinements[0].Source != "model/requirements/alpha-requirement" || len(reloaded.Refinements[0].Targets) != 1 || reloaded.Refinements[0].Targets[0] != "model/use-cases/alpha-feature" {
+		t.Fatalf("unexpected feature implementation entry: %+v", reloaded.Refinements[0])
 	}
 }
 
@@ -344,7 +344,7 @@ func TestCmdGraphSaveRelationsAllowsUnlinkedArtifactNode(t *testing.T) {
 		filepath.Join(specsDir, "model", "traceability"),
 		filepath.Join(specsDir, "product"),
 		filepath.Join(specsDir, "model", "requirements"),
-		filepath.Join(specsDir, "model", "features"),
+		filepath.Join(specsDir, "model", "use-cases"),
 		filepath.Join(specsDir, "model", "components"),
 	} {
 		if err := os.MkdirAll(path, 0o755); err != nil {
@@ -359,7 +359,7 @@ func TestCmdGraphSaveRelationsAllowsUnlinkedArtifactNode(t *testing.T) {
 		t.Fatal(err)
 	}
 	inputPath := filepath.Join(dir, "relations.json")
-	if err := os.WriteFile(inputPath, []byte(`{"edges":[{"source":"model/requirements/alpha-requirement","target":"model/components/beta-component","kind":"component_implementation"}]}`), 0o644); err != nil {
+	if err := os.WriteFile(inputPath, []byte(`{"edges":[{"source":"model/components/beta-component","target":"model/requirements/alpha-requirement","kind":"satisfy"}]}`), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -383,11 +383,11 @@ func TestCmdGraphSaveRelationsAllowsUnlinkedArtifactNode(t *testing.T) {
 	if err != nil {
 		t.Fatalf("graph.Load() error = %v", err)
 	}
-	if len(reloaded.ComponentImplementations) != 1 {
-		t.Fatalf("len(ComponentImplementations) = %d, want 1", len(reloaded.ComponentImplementations))
+	if len(reloaded.Satisfactions) != 1 {
+		t.Fatalf("len(Satisfactions) = %d, want 1", len(reloaded.Satisfactions))
 	}
-	if reloaded.ComponentImplementations[0].Source != "model/requirements/alpha-requirement" || len(reloaded.ComponentImplementations[0].Targets) != 1 || reloaded.ComponentImplementations[0].Targets[0] != "model/components/beta-component" {
-		t.Fatalf("unexpected component implementation entry: %+v", reloaded.ComponentImplementations[0])
+	if reloaded.Satisfactions[0].Source != "model/requirements/alpha-requirement" || len(reloaded.Satisfactions[0].Targets) != 1 || reloaded.Satisfactions[0].Targets[0] != "model/components/beta-component" {
+		t.Fatalf("unexpected component implementation entry: %+v", reloaded.Satisfactions[0])
 	}
 }
 
@@ -397,7 +397,7 @@ func writeGraphFixture(t *testing.T, specsDir string) {
 	artifacts := map[string]string{
 		filepath.Join(specsDir, "product", "alpha.md"):                           "# Alpha\n",
 		filepath.Join(specsDir, "model", "requirements", "alpha-requirement.md"): "# Alpha Requirement\n",
-		filepath.Join(specsDir, "model", "features", "alpha-feature.md"):         "# Alpha Feature\n",
+		filepath.Join(specsDir, "model", "use-cases", "alpha-feature.md"):        "# Alpha Feature\n",
 		filepath.Join(specsDir, "model", "components", "alpha-component.md"):     "# Alpha Component\n",
 	}
 	for path, content := range artifacts {
@@ -410,19 +410,18 @@ func writeGraphFixture(t *testing.T, specsDir string) {
 			"schema_version: 1",
 			"node_id_format: repo_relative_markdown_path_without_extension",
 			"parts:",
-			"  - name: realizations",
-			"    file: realizations.yaml",
-			"    kind: realization",
+			"  - name: derive_reqt",
+			"    file: deriveReqt.yaml",
+			"    kind: deriveReqt",
 			"    required: true",
-			"  - name: feature_implementations",
-			"    file: feature_implementations.yaml",
-			"    kind: feature_implementation",
+			"  - name: refinements",
+			"    file: refinements.yaml",
+			"    kind: refine",
 			"    required: true",
-			"  - name: component_implementations",
-			"    file: component_implementations.yaml",
-			"    kind: component_implementation",
+			"  - name: satisfactions",
+			"    file: satisfactions.yaml",
+			"    kind: satisfy",
 			"    required: true",
-
 			"  - name: baselines",
 			"    file: baselines.yaml",
 			"    kind: baseline",
@@ -432,21 +431,21 @@ func writeGraphFixture(t *testing.T, specsDir string) {
 			"  markdown_baseline_fields: true",
 			"  stable_sort: lexical_id",
 		}, "\n"),
-		"realizations.yaml": strings.Join([]string{
-			"kind: realization",
+		"deriveReqt.yaml": strings.Join([]string{
+			"kind: deriveReqt",
 			"entries:",
 			"  - source: product/alpha",
 			"    targets:",
 			"      - model/requirements/alpha-requirement",
 		}, "\n"),
-		"feature_implementations.yaml": strings.Join([]string{
-			"kind: feature_implementation",
+		"refinements.yaml": strings.Join([]string{
+			"kind: refine",
 			"entries:",
 			"  - source: model/requirements/alpha-requirement",
 			"    targets:",
-			"      - model/features/alpha-feature",
+			"      - model/use-cases/alpha-feature",
 		}, "\n"),
-		"component_implementations.yaml": "kind: component_implementation\nentries: []\n",
+		"satisfactions.yaml": "kind: satisfy\nentries: []\n",
 		"baselines.yaml": strings.Join([]string{
 			"kind: baseline",
 			"entries:",
@@ -478,9 +477,9 @@ func writeGraphImportFixture(t *testing.T, specsDir string) {
 			"",
 			"| Field | Value |",
 			"| ----- | ----- |",
-			"| Implemented By | [Alpha Feature](../features/alpha-feature.md), [Alpha Component](../components/alpha-component.md) |",
+			"| Implemented By | [Alpha Feature](../use-cases/alpha-feature.md), [Alpha Component](../components/alpha-component.md) |",
 		}, "\n"),
-		filepath.Join(specsDir, "model", "features", "alpha-feature.md"): strings.Join([]string{
+		filepath.Join(specsDir, "model", "use-cases", "alpha-feature.md"): strings.Join([]string{
 			"# Alpha Feature",
 			"",
 			"## Requirements",
@@ -528,7 +527,7 @@ func writeGraphGenerateFixture(t *testing.T, specsDir string) {
 			"| Status | Draft |",
 			"| Implemented By | — |",
 		}, "\n"),
-		filepath.Join(specsDir, "model", "features", "alpha-feature.md"): strings.Join([]string{
+		filepath.Join(specsDir, "model", "use-cases", "alpha-feature.md"): strings.Join([]string{
 			"# Alpha Feature",
 			"",
 			"| Field | Value |",

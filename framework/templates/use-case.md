@@ -7,7 +7,7 @@
 
 ## Workflow
 
-Describe the end-to-end user or maintainer workflow this feature supports.
+Describe the end-to-end user or maintainer workflow this use case supports.
 
 ## Engine Surface
 
@@ -19,4 +19,4 @@ List any command palette action, tree view, panel, or setting affected.
 
 ## Validation
 
-Describe the narrow check that proves the feature still works.
+Describe the narrow check that proves the use case still works.

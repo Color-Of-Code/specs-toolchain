@@ -5,7 +5,7 @@
 | ID             | GRP-002                                                                                             |
 | Status         | Draft                                                                                               |
 | Realises       | [Traceability Graph Validation](../../../product/engine/ENG-003-traceability-graph-validation.md)   |
-| Implemented By | [Graph Markdown Roundtrip](../../features/graph/GRP-002-graph-markdown-roundtrip.md)                |
+| Implemented By | [Graph Markdown Roundtrip](../../use-cases/graph/GRP-002-graph-markdown-roundtrip.md)               |
 
 ## Requirement
 

@@ -13,7 +13,7 @@ func TestGenerateMarkdownUpdatesArtifactFields(t *testing.T) {
 	productDir := filepath.Join(root, "product")
 	for _, dir := range []string{
 		filepath.Join(modelDir, "requirements"),
-		filepath.Join(modelDir, "features"),
+		filepath.Join(modelDir, "use-cases"),
 		filepath.Join(modelDir, "components"),
 		productDir,
 	} {
@@ -37,7 +37,7 @@ func TestGenerateMarkdownUpdatesArtifactFields(t *testing.T) {
 		"| Status | Draft |",
 		"| Implemented By | — |",
 	}, "\n"))
-	writeGenerateFile(t, filepath.Join(modelDir, "features", "alpha-feature.md"), strings.Join([]string{
+	writeGenerateFile(t, filepath.Join(modelDir, "use-cases", "alpha-feature.md"), strings.Join([]string{
 		"# Alpha Feature",
 		"",
 		"| Field | Value |",
@@ -56,10 +56,10 @@ func TestGenerateMarkdownUpdatesArtifactFields(t *testing.T) {
 	}, "\n"))
 
 	g := &Graph{
-		Realizations:             []RelationEntry{{Source: "product/alpha", Targets: []string{"model/requirements/alpha-requirement"}}},
-		FeatureImplementations:   []RelationEntry{{Source: "model/requirements/alpha-requirement", Targets: []string{"model/features/alpha-feature"}}},
-		ComponentImplementations: []RelationEntry{{Source: "model/requirements/alpha-requirement", Targets: []string{"model/components/alpha-component"}}},
-		Baselines:                []BaselineEntry{{Component: "model/components/alpha-component", Repo: "host-repo", Path: "/", Commit: "0123456789abcdef0123456789abcdef01234567"}},
+		DeriveReqt:    []RelationEntry{{Source: "product/alpha", Targets: []string{"model/requirements/alpha-requirement"}}},
+		Refinements:   []RelationEntry{{Source: "model/requirements/alpha-requirement", Targets: []string{"model/use-cases/alpha-feature"}}},
+		Satisfactions: []RelationEntry{{Source: "model/requirements/alpha-requirement", Targets: []string{"model/components/alpha-component"}}},
+		Baselines:     []BaselineEntry{{Component: "model/components/alpha-component", Repo: "host-repo", Path: "/", Commit: "0123456789abcdef0123456789abcdef01234567"}},
 	}
 
 	result, err := GenerateMarkdown(modelDir, productDir, g, false)
@@ -73,7 +73,7 @@ func TestGenerateMarkdownUpdatesArtifactFields(t *testing.T) {
 	requirementBody := readGenerateFile(t, filepath.Join(modelDir, "requirements", "alpha-requirement.md"))
 	for _, want := range []string{
 		"| Realises | [Alpha](../../product/alpha.md) |",
-		"[Alpha Component](../components/alpha-component.md), [Alpha Feature](../features/alpha-feature.md)",
+		"[Alpha Component](../components/alpha-component.md), [Alpha Feature](../use-cases/alpha-feature.md)",
 	} {
 		if !strings.Contains(requirementBody, want) {
 			t.Fatalf("requirement body missing %q:\n%s", want, requirementBody)

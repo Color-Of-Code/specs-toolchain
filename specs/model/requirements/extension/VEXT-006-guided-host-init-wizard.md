@@ -5,7 +5,7 @@
 | ID             | VEXT-006                                                                                       |
 | Status         | Draft                                                                                          |
 | Realises       | [Guided Host Initialisation](../../../product/extension/EXT-006-guided-host-initialisation.md) |
-| Implemented By | [Init Wizard](../../features/extension/VEXT-006-init-wizard.md)                                |
+| Implemented By | [Init Wizard](../../use-cases/extension/VEXT-006-init-wizard.md)                               |
 
 ## Requirement
 
