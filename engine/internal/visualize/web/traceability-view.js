@@ -435,6 +435,7 @@
     let selectedNode;
     let createEdgeMode = false;
     let edgeSourceNode;
+    let edgeAnchorRole;
     let currentGraph = emptyGraph();
     const openPath = typeof options.onOpenPath === "function"
       ? options.onOpenPath
@@ -533,17 +534,19 @@
     function describeCreateMode() {
       const spec = currentRelationSpec();
       if (edgeSourceNode) {
+        const nextRole = edgeAnchorRole === "source" ? "target" : "source";
+        const nextKind = edgeAnchorRole === "source" ? spec.targetKind : spec.sourceKind;
         return detailsMarkup("Add Edge", edgeSourceNode.data("label") || edgeSourceNode.id(), [
           { label: "Relation", value: spec.label },
           { label: "Source kind", value: displayKind(spec.sourceKind) },
           { label: "Target kind", value: displayKind(spec.targetKind) },
-          { label: "Source ID", value: edgeSourceNode.id() },
-        ], `Select a ${displayKind(spec.targetKind)} target to create this relation. The UI asks for confirmation before saving it.`);
+          { label: edgeAnchorRole === "source" ? "Source ID" : "Target ID", value: edgeSourceNode.id() },
+        ], `Select a ${displayKind(nextKind)} ${nextRole} to create this relation. The UI asks for confirmation before saving it.`);
       }
       return detailsMarkup("Add Edge", spec.label, [
         { label: "Source kind", value: displayKind(spec.sourceKind) },
         { label: "Target kind", value: displayKind(spec.targetKind) },
-      ], `Select a ${displayKind(spec.sourceKind)} source node to start. The UI asks for confirmation before saving the relation.`);
+      ], `Select a ${displayKind(spec.sourceKind)} source or ${displayKind(spec.targetKind)} target to start. The UI asks for confirmation before saving the relation.`);
     }
 
     function updateDetailsPanel() {
@@ -585,14 +588,25 @@
         return;
       }
       const spec = currentRelationSpec();
-      const candidateKind = edgeSourceNode ? spec.targetKind : spec.sourceKind;
       cy.nodes().forEach((node) => {
         if (edgeSourceNode && edgeSourceNode.same(node)) {
+          node.addClass(edgeAnchorRole === "target" ? "traceability-create-target" : "traceability-create-source");
+          return;
+        }
+        if (!edgeSourceNode && node.data("kind") === spec.sourceKind) {
           node.addClass("traceability-create-source");
           return;
         }
-        if (node.data("kind") === candidateKind) {
-          node.addClass(edgeSourceNode ? "traceability-create-target" : "traceability-create-source");
+        if (!edgeSourceNode && node.data("kind") === spec.targetKind) {
+          node.addClass("traceability-create-target");
+          return;
+        }
+        if (edgeSourceNode && edgeAnchorRole === "source" && node.data("kind") === spec.targetKind) {
+          node.addClass("traceability-create-target");
+          return;
+        }
+        if (edgeSourceNode && edgeAnchorRole === "target" && node.data("kind") === spec.sourceKind) {
+          node.addClass("traceability-create-source");
           return;
         }
         node.addClass("traceability-create-inactive");
@@ -601,7 +615,10 @@
 
     function invalidCreateSelectionMessage(stage) {
       const spec = currentRelationSpec();
-      if (stage === "source") {
+      if (stage === "start") {
+        return `choose a ${displayKind(spec.sourceKind)} source or ${displayKind(spec.targetKind)} target for ${spec.label.toLowerCase()}`;
+      }
+      if (edgeAnchorRole === "target") {
         return `choose a ${displayKind(spec.sourceKind)} source for ${spec.label.toLowerCase()}`;
       }
       return `choose a ${displayKind(spec.targetKind)} target for ${spec.label.toLowerCase()}`;
@@ -612,6 +629,7 @@
         edgeSourceNode.unselect();
       }
       edgeSourceNode = undefined;
+      edgeAnchorRole = undefined;
       updateCreateClasses();
     }
 
@@ -650,7 +668,7 @@
       updateRemoveEdgeButton();
       updateAddEdgeButton();
       updateCreateClasses();
-      setCreateStatus(invalidCreateSelectionMessage("source").replace("choose a ", "select a "));
+      setCreateStatus(invalidCreateSelectionMessage("start").replace("choose a ", "select a "));
       updateDetailsPanel();
     }
 
@@ -662,18 +680,16 @@
     }
 
     async function addRelation(targetNode) {
-      if (!cy || !edgeSourceNode) {
+      if (!cy || !edgeSourceNode || !edgeAnchorRole) {
         return;
       }
-      const nextEdge = {
-        source: edgeSourceNode.id(),
-        target: targetNode.id(),
-        kind: currentRelationKind(),
-      };
+      const nextEdge = edgeAnchorRole === "target"
+        ? { source: targetNode.id(), target: edgeSourceNode.id(), kind: currentRelationKind() }
+        : { source: edgeSourceNode.id(), target: targetNode.id(), kind: currentRelationKind() };
       const nextEdgePreview = {
         ...nextEdge,
-        sourceLabel: nodeDisplayLabel(edgeSourceNode),
-        targetLabel: nodeDisplayLabel(targetNode),
+        sourceLabel: edgeAnchorRole === "target" ? nodeDisplayLabel(targetNode) : nodeDisplayLabel(edgeSourceNode),
+        targetLabel: edgeAnchorRole === "target" ? nodeDisplayLabel(edgeSourceNode) : nodeDisplayLabel(targetNode),
       };
       if (nextEdge.source === nextEdge.target) {
         setMetaStatus(options, "edge source and target must differ");
@@ -725,7 +741,7 @@
         }
         clearEdgeSourceSelection();
         updateCreateClasses();
-        setCreateStatus(invalidCreateSelectionMessage("source").replace("choose a ", "select a "));
+        setCreateStatus(invalidCreateSelectionMessage("start").replace("choose a ", "select a "));
         updateDetailsPanel();
       });
     }
@@ -823,6 +839,17 @@
       });
     }
 
+    if (typeof window !== "undefined" && typeof window.addEventListener === "function") {
+      window.addEventListener("keydown", (event) => {
+        if (!createEdgeMode || event.key !== "Escape") {
+          return;
+        }
+        event.preventDefault();
+        exitCreateEdgeMode();
+        setMetaStatus(options, "edge creation cancelled");
+      });
+    }
+
     resolveGraph(options)
       .then((graph) => {
         currentGraph = graph;
@@ -837,7 +864,7 @@
             if (event.target === cy) {
               if (createEdgeMode) {
                 clearEdgeSourceSelection();
-                setCreateStatus(invalidCreateSelectionMessage("source").replace("choose a ", "select a "));
+                setCreateStatus(invalidCreateSelectionMessage("start").replace("choose a ", "select a "));
               }
               selectedEdge = undefined;
               selectedNode = undefined;
@@ -859,22 +886,23 @@
               const tappedNode = event.target;
               const spec = currentRelationSpec();
               if (!edgeSourceNode) {
-                if (tappedNode.data("kind") !== spec.sourceKind) {
-                  setCreateStatus(invalidCreateSelectionMessage("source"));
+                if (tappedNode.data("kind") !== spec.sourceKind && tappedNode.data("kind") !== spec.targetKind) {
+                  setCreateStatus(invalidCreateSelectionMessage("start"));
                   return;
                 }
                 edgeSourceNode = tappedNode;
+                edgeAnchorRole = tappedNode.data("kind") === spec.targetKind ? "target" : "source";
                 edgeSourceNode.select();
                 updateCreateClasses();
-                setCreateStatus(`select a ${displayKind(spec.targetKind)} target for ${spec.label.toLowerCase()}`);
+                setCreateStatus(`select a ${displayKind(edgeAnchorRole === "target" ? spec.sourceKind : spec.targetKind)} ${edgeAnchorRole === "target" ? "source" : "target"} for ${spec.label.toLowerCase()}`);
                 updateDetailsPanel();
                 return;
               }
               if (edgeSourceNode.same(tappedNode)) {
-                setCreateStatus("choose a different target node");
+                setCreateStatus("choose a different node");
                 return;
               }
-              if (tappedNode.data("kind") !== spec.targetKind) {
+              if (tappedNode.data("kind") !== (edgeAnchorRole === "target" ? spec.sourceKind : spec.targetKind)) {
                 setCreateStatus(invalidCreateSelectionMessage("target"));
                 return;
               }
