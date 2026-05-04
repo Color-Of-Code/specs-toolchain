@@ -1,12 +1,12 @@
 # Artifact Scaffolding From Templates
 
-| Field       | Value                                                                    |
-| ----------- | ------------------------------------------------------------------------ |
-| ID          | ENG-004                                                                  |
-| Status      | Draft                                                                    |
-| Stakeholder | Spec author, stakeholder                                                 |
-| Source      | [Commands](../../../docs/commands.md), [Actors](../../../docs/actors.md) |
-| Realised By | —                                                                        |
+| Field       | Value                                                                                                                                                                               |
+| ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ID          | ENG-004                                                                                                                                                                             |
+| Status      | Draft                                                                                                                                                                               |
+| Stakeholder | Spec author, stakeholder                                                                                                                                                            |
+| Source      | [Commands](../../../docs/commands.md), [Actors](../../../docs/actors.md)                                                                                                            |
+| Realised By | [SCF-001](../../model/requirements/scaffold/SCF-001-template-based-artifact-instantiation.md), [SCF-002](../../model/requirements/scaffold/SCF-002-cr-scoped-scaffold-placement.md) |
 
 ## Summary
 

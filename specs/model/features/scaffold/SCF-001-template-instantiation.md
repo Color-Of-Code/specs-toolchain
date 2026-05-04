@@ -1,10 +1,10 @@
 # Template Instantiation
 
-| Field        | Value   |
-| ------------ | ------- |
-| ID           | SCF-001 |
-| Status       | Draft   |
-| Requirements | —       |
+| Field        | Value                                                                                                                 |
+| ------------ | --------------------------------------------------------------------------------------------------------------------- |
+| ID           | SCF-001                                                                                                               |
+| Status       | Draft                                                                                                                 |
+| Requirements | [Template-Based Artifact Instantiation](../../requirements/scaffold/SCF-001-template-based-artifact-instantiation.md) |
 
 ## Workflow
 

@@ -1,5 +1,10 @@
 kind: realization
 entries:
+    - source: product/engine/ENG-001-consistent-markdown-formatting
+      targets:
+        - model/requirements/format/FMT-001-format-in-place
+        - model/requirements/format/FMT-002-format-check-mode
+        - model/requirements/lint/LNT-003-lint-check-flags
     - source: product/engine/ENG-002-style-compliance-linting
       targets:
         - model/requirements/lint/LNT-001-style-rule-enforcement

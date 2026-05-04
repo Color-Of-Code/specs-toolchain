@@ -1,12 +1,12 @@
 # Change Request Workflow
 
-| Field       | Value                                                                    |
-| ----------- | ------------------------------------------------------------------------ |
-| ID          | ENG-005                                                                  |
-| Status      | Draft                                                                    |
-| Stakeholder | Spec author, project lead                                                |
-| Source      | [Overview](../../../docs/overview.md), [Actors](../../../docs/actors.md) |
-| Realised By | —                                                                        |
+| Field       | Value                                                                                                                                                                                                                          |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| ID          | ENG-005                                                                                                                                                                                                                        |
+| Status      | Draft                                                                                                                                                                                                                          |
+| Stakeholder | Spec author, project lead                                                                                                                                                                                                      |
+| Source      | [Overview](../../../docs/overview.md), [Actors](../../../docs/actors.md)                                                                                                                                                       |
+| Realised By | [CR-001](../../model/requirements/cr/CR-001-change-request-creation.md), [CR-002](../../model/requirements/cr/CR-002-change-request-status-reporting.md), [CR-003](../../model/requirements/cr/CR-003-change-request-drain.md) |
 
 ## Summary
 

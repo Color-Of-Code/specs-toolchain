@@ -1,10 +1,10 @@
 # Graph Export
 
-| Field        | Value   |
-| ------------ | ------- |
-| ID           | VIS-001 |
-| Status       | Draft   |
-| Requirements | —       |
+| Field        | Value                                                                                          |
+| ------------ | ---------------------------------------------------------------------------------------------- |
+| ID           | VIS-001                                                                                        |
+| Status       | Draft                                                                                          |
+| Requirements | [Traceability Graph Export](../../requirements/visualize/VIS-001-traceability-graph-export.md) |
 
 ## Workflow
 

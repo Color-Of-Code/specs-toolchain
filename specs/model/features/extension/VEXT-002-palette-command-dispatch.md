@@ -1,10 +1,10 @@
 # Palette Command Dispatch
 
-| Field        | Value    |
-| ------------ | -------- |
-| ID           | VEXT-002 |
-| Status       | Draft    |
-| Requirements | —        |
+| Field        | Value                                                                                         |
+| ------------ | --------------------------------------------------------------------------------------------- |
+| ID           | VEXT-002                                                                                      |
+| Status       | Draft                                                                                         |
+| Requirements | [Palette Command Dispatch](../../requirements/extension/VEXT-002-palette-command-dispatch.md) |
 
 ## Workflow
 

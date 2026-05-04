@@ -1,10 +1,10 @@
 # Graph Markdown Roundtrip
 
-| Field        | Value   |
-| ------------ | ------- |
-| ID           | GRP-002 |
-| Status       | Draft   |
-| Requirements | —       |
+| Field        | Value                                                                                               |
+| ------------ | --------------------------------------------------------------------------------------------------- |
+| ID           | GRP-002                                                                                             |
+| Status       | Draft                                                                                               |
+| Requirements | [Graph Markdown Round-Trip Sync](../../requirements/graph/GRP-002-graph-markdown-roundtrip-sync.md) |
 
 ## Workflow
 

@@ -1,10 +1,10 @@
 # CR-Scoped Placement
 
-| Field        | Value   |
-| ------------ | ------- |
-| ID           | SCF-002 |
-| Status       | Draft   |
-| Requirements | —       |
+| Field        | Value                                                                                                           |
+| ------------ | --------------------------------------------------------------------------------------------------------------- |
+| ID           | SCF-002                                                                                                         |
+| Status       | Draft                                                                                                           |
+| Requirements | [Change-Request Scoped Scaffold Placement](../../requirements/scaffold/SCF-002-cr-scoped-scaffold-placement.md) |
 
 ## Workflow
 

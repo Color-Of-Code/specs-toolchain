@@ -1,10 +1,10 @@
 # Change Request Creation
 
-| Field        | Value   |
-| ------------ | ------- |
-| ID           | CR-001  |
-| Status       | Draft   |
-| Requirements | —       |
+| Field        | Value                                                                              |
+| ------------ | ---------------------------------------------------------------------------------- |
+| ID           | CR-001                                                                             |
+| Status       | Draft                                                                              |
+| Requirements | [Change Request Creation](../../requirements/cr/CR-001-change-request-creation.md) |
 
 ## Workflow
 

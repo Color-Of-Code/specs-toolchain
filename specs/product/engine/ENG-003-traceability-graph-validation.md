@@ -1,12 +1,12 @@
 # Traceability Graph Validation
 
-| Field       | Value                                                                        |
-| ----------- | ---------------------------------------------------------------------------- |
-| ID          | ENG-003                                                                      |
-| Status      | Draft                                                                        |
-| Stakeholder | Project lead, architect                                                      |
-| Source      | [Overview](../../../docs/overview.md), [Concepts](../../../docs/concepts.md) |
-| Realised By | —                                                                            |
+| Field       | Value                                                                                                                                                                            |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ID          | ENG-003                                                                                                                                                                          |
+| Status      | Draft                                                                                                                                                                            |
+| Stakeholder | Project lead, architect                                                                                                                                                          |
+| Source      | [Overview](../../../docs/overview.md), [Concepts](../../../docs/concepts.md)                                                                                                     |
+| Realised By | [GRP-001](../../model/requirements/graph/GRP-001-traceability-graph-integrity-validation.md), [GRP-002](../../model/requirements/graph/GRP-002-graph-markdown-roundtrip-sync.md) |
 
 ## Summary
 

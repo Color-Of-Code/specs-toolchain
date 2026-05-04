@@ -6,7 +6,7 @@
 | Status      | Draft                                                                                   |
 | Stakeholder | Product manager, architect                                                              |
 | Source      | [Overview](../../../docs/overview.md), [Extension README](../../../extension/README.md) |
-| Realised By | —                                                                                       |
+| Realised By | [VEXT-003](../../model/requirements/extension/VEXT-003-traceability-graph-panel.md)     |
 
 ## Summary
 

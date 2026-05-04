@@ -1,10 +1,10 @@
 # Graph Validation
 
-| Field        | Value   |
-| ------------ | ------- |
-| ID           | GRP-001 |
-| Status       | Draft   |
-| Requirements | —       |
+| Field        | Value                                                                                                                  |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------- |
+| ID           | GRP-001                                                                                                                |
+| Status       | Draft                                                                                                                  |
+| Requirements | [Traceability Graph Integrity Validation](../../requirements/graph/GRP-001-traceability-graph-integrity-validation.md) |
 
 ## Workflow
 

@@ -1,10 +1,10 @@
 # Baseline Refresh
 
-| Field        | Value   |
-| ------------ | ------- |
-| ID           | BSL-002 |
-| Status       | Draft   |
-| Requirements | —       |
+| Field        | Value                                                                                           |
+| ------------ | ----------------------------------------------------------------------------------------------- |
+| ID           | BSL-002                                                                                         |
+| Status       | Draft                                                                                           |
+| Requirements | [Component Baseline Refresh](../../requirements/baseline/BSL-002-component-baseline-refresh.md) |
 
 ## Workflow
 

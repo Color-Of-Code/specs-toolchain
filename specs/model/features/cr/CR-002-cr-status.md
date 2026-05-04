@@ -1,10 +1,10 @@
 # Change Request Status
 
-| Field        | Value   |
-| ------------ | ------- |
-| ID           | CR-002  |
-| Status       | Draft   |
-| Requirements | —       |
+| Field        | Value                                                                                              |
+| ------------ | -------------------------------------------------------------------------------------------------- |
+| ID           | CR-002                                                                                             |
+| Status       | Draft                                                                                              |
+| Requirements | [Change Request Status Reporting](../../requirements/cr/CR-002-change-request-status-reporting.md) |
 
 ## Workflow
 

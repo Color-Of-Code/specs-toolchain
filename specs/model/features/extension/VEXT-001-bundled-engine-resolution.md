@@ -1,10 +1,10 @@
 # Bundled Engine Resolution
 
-| Field        | Value    |
-| ------------ | -------- |
-| ID           | VEXT-001 |
-| Status       | Draft    |
-| Requirements | —        |
+| Field        | Value                                                                                                             |
+| ------------ | ----------------------------------------------------------------------------------------------------------------- |
+| ID           | VEXT-001                                                                                                          |
+| Status       | Draft                                                                                                             |
+| Requirements | [Bundled Engine Resolution Priority](../../requirements/extension/VEXT-001-bundled-engine-resolution-priority.md) |
 
 ## Workflow
 

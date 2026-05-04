@@ -1,10 +1,10 @@
 # Init Wizard
 
-| Field        | Value    |
-| ------------ | -------- |
-| ID           | VEXT-006 |
-| Status       | Draft    |
-| Requirements | —        |
+| Field        | Value                                                                                       |
+| ------------ | ------------------------------------------------------------------------------------------- |
+| ID           | VEXT-006                                                                                    |
+| Status       | Draft                                                                                       |
+| Requirements | [Guided Host Init Wizard](../../requirements/extension/VEXT-006-guided-host-init-wizard.md) |
 
 ## Workflow
 

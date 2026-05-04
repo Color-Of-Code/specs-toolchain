@@ -1,10 +1,10 @@
 # Scaffold Wizard
 
-| Field        | Value    |
-| ------------ | -------- |
-| ID           | VEXT-005 |
-| Status       | Draft    |
-| Requirements | —        |
+| Field        | Value                                                                                     |
+| ------------ | ----------------------------------------------------------------------------------------- |
+| ID           | VEXT-005                                                                                  |
+| Status       | Draft                                                                                     |
+| Requirements | [Guided Scaffold Wizard](../../requirements/extension/VEXT-005-guided-scaffold-wizard.md) |
 
 ## Workflow
 
