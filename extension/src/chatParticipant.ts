@@ -1,0 +1,222 @@
+// @specs Chat Participant — central AI entry point for the specs toolchain.
+import * as vscode from "vscode";
+import { runAndCapture, findSpecsFolder, findSpecsRoot } from "./engine";
+
+const PARTICIPANT_ID = "specs-toolchain.specs";
+
+// Map slash commands to engine subcommand args.
+const COMMAND_ARGS: Record<string, string[]> = {
+  lint: ["lint"],
+  doctor: ["doctor"],
+  trace: ["graph", "validate"],
+};
+
+export function registerChatParticipant(context: vscode.ExtensionContext): void {
+  const participant = vscode.chat.createChatParticipant(PARTICIPANT_ID, makeHandler(context));
+  participant.iconPath = new vscode.ThemeIcon("book");
+  participant.followupProvider = { provideFollowups };
+  context.subscriptions.push(participant);
+}
+
+function makeHandler(
+  context: vscode.ExtensionContext,
+): vscode.ChatRequestHandler {
+  return async (
+    request: vscode.ChatRequest,
+    _chatContext: vscode.ChatContext,
+    stream: vscode.ChatResponseStream,
+    token: vscode.CancellationToken,
+  ): Promise<vscode.ChatResult> => {
+    const folder = findSpecsFolder();
+    if (!folder) {
+      stream.markdown(
+        "No specs workspace found. Open a folder containing `.specs.yaml` first.",
+      );
+      return {};
+    }
+    const cwd = findSpecsRoot(folder) ?? folder.uri.fsPath;
+
+    // Slash-command dispatch.
+    if (request.command) {
+      return handleCommand(request, context, stream, token, cwd);
+    }
+
+    // Free-form: forward to the language model with workspace context.
+    return handleFreeForm(request, stream, token, context, cwd);
+  };
+}
+
+async function handleCommand(
+  request: vscode.ChatRequest,
+  context: vscode.ExtensionContext,
+  stream: vscode.ChatResponseStream,
+  token: vscode.CancellationToken,
+  cwd: string,
+): Promise<vscode.ChatResult> {
+  const cmd = request.command!;
+
+  // Scaffold: delegate to LLM with scaffolding instructions.
+  if (cmd === "scaffold") {
+    return handleScaffold(request, stream, token);
+  }
+
+  // CR: delegate to LLM with CR context.
+  if (cmd === "cr") {
+    return handleCR(request, stream, token);
+  }
+
+  const engineArgs = COMMAND_ARGS[cmd];
+  if (!engineArgs) {
+    stream.markdown(`Unknown command \`/${cmd}\`.`);
+    return {};
+  }
+
+  stream.progress(`Running \`specs ${engineArgs.join(" ")}\`…`);
+  const result = await runAndCapture(context, engineArgs, cwd);
+  if (token.isCancellationRequested) {
+    return {};
+  }
+
+  const combined = [result.stdout, result.stderr].filter(Boolean).join("\n").trim();
+  if (combined) {
+    stream.markdown("```\n" + combined + "\n```");
+  } else {
+    stream.markdown("Done — no output.");
+  }
+  if (result.exitCode !== 0) {
+    stream.markdown(`\n_Engine exited with code ${result.exitCode}._`);
+  }
+  return { metadata: { command: cmd } };
+}
+
+async function handleScaffold(
+  request: vscode.ChatRequest,
+  stream: vscode.ChatResponseStream,
+  token: vscode.CancellationToken,
+): Promise<vscode.ChatResult> {
+  const models = await vscode.lm.selectChatModels({ family: "gpt-4o" });
+  const model = models[0] ?? request.model;
+  const prompt = request.prompt.trim() || "requirement";
+  const messages = [
+    vscode.LanguageModelChatMessage.User(
+      `You are a specs toolchain assistant. The user wants to scaffold a new model artifact.\n` +
+        `Available kinds: requirement, feature, component, api, service.\n` +
+        `Based on their description, suggest the most appropriate kind and a kebab-case slug path ` +
+        `(e.g. "core/some-slug" for requirements, "some-slug" for others). ` +
+        `Then show the exact \`Specs: Scaffold\` command to run in VS Code.\n\n` +
+        `User request: ${prompt}`,
+    ),
+  ];
+
+  if (token.isCancellationRequested) {
+    return {};
+  }
+
+  const response = await model.sendRequest(messages, {}, token);
+  for await (const chunk of response.text) {
+    stream.markdown(chunk);
+  }
+  stream.button({ command: "specs.scaffold.requirement", title: "Scaffold: Requirement" });
+  stream.button({ command: "specs.scaffold.feature", title: "Scaffold: Feature" });
+  return { metadata: { command: "scaffold" } };
+}
+
+async function handleCR(
+  request: vscode.ChatRequest,
+  stream: vscode.ChatResponseStream,
+  token: vscode.CancellationToken,
+): Promise<vscode.ChatResult> {
+  const models = await vscode.lm.selectChatModels({ family: "gpt-4o" });
+  const model = models[0] ?? request.model;
+  const prompt = request.prompt.trim() || "list open change requests";
+  const messages = [
+    vscode.LanguageModelChatMessage.User(
+      `You are a specs toolchain assistant helping manage change requests.\n` +
+        `Change requests live under the CR directory (e.g. specs/change-requests/).\n` +
+        `Each CR is a numbered directory, e.g. CR-001-some-description.\n` +
+        `The engine commands are:\n` +
+        `  specs cr new --title "..." [--id NNN]\n` +
+        `  specs cr status\n` +
+        `  specs cr drain --id NNN [--yes] [--dry-run]\n\n` +
+        `Based on the user's request, explain what to do and show the appropriate command.\n\n` +
+        `User request: ${prompt}`,
+    ),
+  ];
+
+  if (token.isCancellationRequested) {
+    return {};
+  }
+
+  const response = await model.sendRequest(messages, {}, token);
+  for await (const chunk of response.text) {
+    stream.markdown(chunk);
+  }
+  stream.button({ command: "specs.cr.new", title: "New Change Request" });
+  stream.button({ command: "specs.cr.status", title: "CR Status" });
+  return { metadata: { command: "cr" } };
+}
+
+async function handleFreeForm(
+  request: vscode.ChatRequest,
+  stream: vscode.ChatResponseStream,
+  token: vscode.CancellationToken,
+  context: vscode.ExtensionContext,
+  cwd: string,
+): Promise<vscode.ChatResult> {
+  // Gather lightweight workspace context from the engine.
+  const [graphResult] = await Promise.all([
+    runAndCapture(context, ["graph", "validate"], cwd),
+  ]);
+  const graphSummary = graphResult.stdout.split("\n").slice(0, 10).join("\n");
+
+  const systemPrompt =
+    `You are the Specs assistant, an expert in requirements engineering and ` +
+    `the specs-toolchain. You help authors write, link, and validate technical ` +
+    `specifications stored as Markdown files.\n\n` +
+    `The workspace uses the specs-toolchain engine (binary: specs). Key concepts:\n` +
+    `- Product requirements live under specs/product/\n` +
+    `- Technical requirements under specs/model/requirements/\n` +
+    `- Features under specs/model/features/\n` +
+    `- Traceability edges in YAML files under specs/model/traceability/\n` +
+    `- Change requests under specs/change-requests/\n\n` +
+    `Current graph summary:\n${graphSummary || "(not available)"}`;
+
+  const messages = [
+    vscode.LanguageModelChatMessage.User(systemPrompt),
+    vscode.LanguageModelChatMessage.User(request.prompt),
+  ];
+
+  if (token.isCancellationRequested) {
+    return {};
+  }
+
+  const response = await request.model.sendRequest(messages, {}, token);
+  for await (const chunk of response.text) {
+    stream.markdown(chunk);
+  }
+  return {};
+}
+
+function provideFollowups(
+  result: vscode.ChatResult,
+  _context: vscode.ChatContext,
+  _token: vscode.CancellationToken,
+): vscode.ChatFollowup[] {
+  const cmd = (result.metadata as Record<string, string> | undefined)?.command;
+  if (cmd === "lint") {
+    return [
+      { prompt: "@specs /trace", label: "Check traceability" },
+      { prompt: "@specs /doctor", label: "Run diagnostics" },
+    ];
+  }
+  if (cmd === "scaffold") {
+    return [{ prompt: "@specs /lint", label: "Lint after scaffolding" }];
+  }
+  if (cmd === "cr") {
+    return [{ prompt: "@specs /trace", label: "Verify traceability" }];
+  }
+  return [
+    { prompt: "@specs /lint", label: "Lint the model" },
+    { prompt: "@specs /trace", label: "Validate traceability" },
+  ];
+}

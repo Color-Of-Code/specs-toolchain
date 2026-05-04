@@ -29,6 +29,75 @@
     "workspaceContains:specs/.specs.yaml"
   ],
   "contributes": {
+    "chatParticipants": [
+      {
+        "id": "specs-toolchain.specs",
+        "name": "specs",
+        "fullName": "Specs",
+        "description": "Ask about your specs model, lint, scaffold, or trace requirements",
+        "isSticky": false,
+        "commands": [
+          {
+            "name": "lint",
+            "description": "Run lint checks on the specs model"
+          },
+          {
+            "name": "scaffold",
+            "description": "Scaffold a new model artifact (requirement, feature, component, api, service)"
+          },
+          {
+            "name": "cr",
+            "description": "Manage change requests (new, status, drain)"
+          },
+          {
+            "name": "trace",
+            "description": "Show traceability graph information"
+          },
+          {
+            "name": "doctor",
+            "description": "Run environment diagnostics"
+          }
+        ],
+        "disambiguation": [
+          {
+            "category": "specs_lint",
+            "description": "The user wants to check, lint, or validate their specs model files.",
+            "examples": [
+              "Lint the specs model",
+              "Are there any broken links in the requirements?",
+              "Check markdown style in my specs"
+            ]
+          },
+          {
+            "category": "specs_scaffold",
+            "description": "The user wants to create a new requirement, feature, component, API, or service artifact.",
+            "examples": [
+              "Create a new requirement for authentication",
+              "Scaffold a feature called user-login",
+              "Add a new API artifact"
+            ]
+          },
+          {
+            "category": "specs_traceability",
+            "description": "The user wants to query or visualise traceability between requirements, features, and components.",
+            "examples": [
+              "Which requirements are not covered by any feature?",
+              "Show the traceability graph",
+              "What realises requirement REQ-007?"
+            ]
+          },
+          {
+            "category": "specs_cr",
+            "description": "The user wants to work with change requests.",
+            "examples": [
+              "What change requests are open?",
+              "Create a new change request",
+              "Drain CR-003 to the canonical model"
+            ]
+          }
+        ]
+      }
+    ],
     "commands": [
       {
         "command": "specs.bootstrap",
