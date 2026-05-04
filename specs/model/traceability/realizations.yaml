@@ -8,10 +8,51 @@ entries:
     - source: product/engine/ENG-002-style-compliance-linting
       targets:
         - model/requirements/lint/LNT-001-style-rule-enforcement
+    - source: product/engine/ENG-003-traceability-graph-validation
+      targets:
+        - model/requirements/graph/GRP-001-traceability-graph-integrity-validation
+        - model/requirements/graph/GRP-002-graph-markdown-roundtrip-sync
+    - source: product/engine/ENG-004-artifact-scaffolding-from-templates
+      targets:
+        - model/requirements/scaffold/SCF-001-template-based-artifact-instantiation
+        - model/requirements/scaffold/SCF-002-cr-scoped-scaffold-placement
+    - source: product/engine/ENG-005-change-request-workflow
+      targets:
+        - model/requirements/cr/CR-001-change-request-creation
+        - model/requirements/cr/CR-002-change-request-status-reporting
+        - model/requirements/cr/CR-003-change-request-drain
+    - source: product/engine/ENG-006-component-baseline-tracking
+      targets:
+        - model/requirements/baseline/BSL-001-component-baseline-drift-detection
+        - model/requirements/baseline/BSL-002-component-baseline-refresh
+    - source: product/engine/ENG-007-traceability-visualization
+      targets:
+        - model/requirements/visualize/VIS-001-traceability-graph-export
+        - model/requirements/visualize/VIS-002-interactive-graph-server
+    - source: product/engine/ENG-008-environment-diagnostics
+      targets:
+        - model/requirements/workspace/WS-004-workspace-diagnostics-reporting
+        - model/requirements/workspace/WS-005-doctor-json-contract
     - source: product/engine/ENG-009-repo-local-specs-host
       targets:
         - model/requirements/workspace/WS-001-repo-local-specs-host
         - model/requirements/workspace/WS-002-config-relative-framework-directory
         - model/requirements/workspace/WS-003-repo-local-engine-integration
-        - model/requirements/workspace/WS-004-workspace-diagnostics-reporting
-        - model/requirements/workspace/WS-005-doctor-json-contract
+    - source: product/extension/EXT-001-zero-setup-installation
+      targets:
+        - model/requirements/extension/VEXT-001-bundled-engine-resolution-priority
+    - source: product/extension/EXT-002-palette-command-access
+      targets:
+        - model/requirements/extension/VEXT-002-palette-command-dispatch
+    - source: product/extension/EXT-003-traceability-graph-panel
+      targets:
+        - model/requirements/extension/VEXT-003-traceability-graph-panel
+    - source: product/extension/EXT-004-workspace-status-visibility
+      targets:
+        - model/requirements/extension/VEXT-004-status-bar-workspace-indicator
+    - source: product/extension/EXT-005-guided-scaffold-wizard
+      targets:
+        - model/requirements/extension/VEXT-005-guided-scaffold-wizard
+    - source: product/extension/EXT-006-guided-host-initialisation
+      targets:
+        - model/requirements/extension/VEXT-006-guided-host-init-wizard
