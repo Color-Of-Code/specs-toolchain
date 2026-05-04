@@ -144,6 +144,34 @@ body.traceability-shell {
   mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='black' d='M6 1h4l.5 1H13v1.5H3V2h2.5L6 1ZM4.5 5h1.25v6H4.5V5Zm2.875 0h1.25v6h-1.25V5ZM10.25 5h1.25v6h-1.25V5ZM4 4h8l-.4 8.2A1 1 0 0 1 10.6 13H5.4a1 1 0 0 1-.999-.8L4 4Z'/%3E%3C/svg%3E") center / contain no-repeat;
 }
 
+.drag-connect-handle {
+  position: fixed;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--traceability-link, #5aa9ff);
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--traceability-link, #5aa9ff) 35%, transparent);
+  cursor: crosshair;
+  z-index: 9001;
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.1s;
+}
+
+.drag-connect-handle:hover {
+  transform: scale(1.3);
+}
+
+.drag-connect-line {
+  stroke: var(--traceability-link, #5aa9ff);
+  stroke-width: 2.5;
+  stroke-dasharray: 6 4;
+  stroke-linecap: round;
+}
+
 #layout-mode {
   min-width: 112px;
 }

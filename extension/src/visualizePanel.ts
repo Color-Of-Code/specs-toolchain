@@ -304,13 +304,13 @@ ${fallbackBanner}
   </select>
   <input type="search" id="filter" placeholder="Filter nodes…" aria-label="Filter nodes">
   <select id="relation-kind" aria-label="Relation kind">
+    <option value="automatic">Automatic</option>
     <option value="realization">Realization</option>
     <option value="feature_implementation">Feature</option>
     <option value="component_implementation">Component</option>
     <option value="service_implementation">Service</option>
     <option value="api_implementation">API</option>
   </select>
-  <button id="add-edge" class="toolbar-icon-button toolbar-add-edge-button" aria-label="Add edge" title="Add edge"><span class="details-visually-hidden">Add edge</span></button>
   <button id="remove-edge" class="toolbar-icon-button toolbar-remove-edge-button" aria-label="Remove selected edge" title="Remove selected edge"><span class="details-visually-hidden">Remove selected edge</span></button>
   <button id="export-json">Export JSON</button>
   <div class="meta" id="meta">${graph.nodes.length} nodes / ${graph.edges.length} edges</div>
@@ -353,7 +353,6 @@ ${fallbackInline ? "" : `<script nonce="${nonce}" src="${cytoscapeUri}"></script
       zoomOutButton: document.getElementById('zoom-out'),
       layoutSelect: document.getElementById('layout-mode'),
       filterInput: document.getElementById('filter'),
-      addEdgeButton: document.getElementById('add-edge'),
       relationKindSelect: document.getElementById('relation-kind'),
       removeEdgeButton: document.getElementById('remove-edge'),
       metaElement: document.getElementById('meta'),

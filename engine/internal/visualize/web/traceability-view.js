@@ -36,6 +36,23 @@
     },
   };
 
+  function autoRelationKindFor(sourceKind, targetKind) {
+    for (const [kind, spec] of Object.entries(relationSpecs)) {
+      if (spec.sourceKind === sourceKind && spec.targetKind === targetKind) {
+        return kind;
+      }
+    }
+    return null;
+  }
+
+  function resolveRelationKindForPair(options, sourceKind, targetKind) {
+    const selected = options.relationKindSelect && options.relationKindSelect.value;
+    if (!selected || selected === "automatic") {
+      return autoRelationKindFor(sourceKind, targetKind);
+    }
+    return selected;
+  }
+
   const kindOrder = {
     "product-requirement": 0,
     requirement: 1,
@@ -450,9 +467,6 @@
     let cy;
     let selectedEdge;
     let selectedNode;
-    let createEdgeMode = false;
-    let edgeSourceNode;
-    let edgeAnchorRole;
     let currentGraph = emptyGraph();
     const openPath = typeof options.onOpenPath === "function"
       ? options.onOpenPath
@@ -515,16 +529,6 @@
         gravity: 40,
         numIter: 1000,
       }).run();
-    }
-
-    function currentRelationKind() {
-      return options.relationKindSelect && options.relationKindSelect.value
-        ? options.relationKindSelect.value
-        : "realization";
-    }
-
-    function currentRelationSpec() {
-      return relationSpec(currentRelationKind());
     }
 
     function applyFilter(filterText) {
@@ -596,30 +600,8 @@
       ], canSaveRelations ? "Use the remove button to delete this relation. The UI asks for confirmation before persisting the change." : "");
     }
 
-    function describeCreateMode() {
-      const spec = currentRelationSpec();
-      if (edgeSourceNode) {
-        const nextRole = edgeAnchorRole === "source" ? "target" : "source";
-        const nextKind = edgeAnchorRole === "source" ? spec.targetKind : spec.sourceKind;
-        return detailsMarkup("Add Edge", edgeSourceNode.data("label") || edgeSourceNode.id(), [
-          { label: "Relation", value: spec.label },
-          { label: "Source kind", value: displayKind(spec.sourceKind) },
-          { label: "Target kind", value: displayKind(spec.targetKind) },
-          { label: edgeAnchorRole === "source" ? "Source ID" : "Target ID", value: edgeSourceNode.id() },
-        ], `Select a ${displayKind(nextKind)} ${nextRole} to create this relation. The UI asks for confirmation before saving it.`);
-      }
-      return detailsMarkup("Add Edge", spec.label, [
-        { label: "Source kind", value: displayKind(spec.sourceKind) },
-        { label: "Target kind", value: displayKind(spec.targetKind) },
-      ], `Select a ${displayKind(spec.sourceKind)} source or ${displayKind(spec.targetKind)} target to start. The UI asks for confirmation before saving the relation.`);
-    }
-
     function updateDetailsPanel() {
       if (!options.detailsElement) {
-        return;
-      }
-      if (createEdgeMode) {
-        setDetails(options, describeCreateMode());
         return;
       }
       if (selectedEdge) {
@@ -637,65 +619,11 @@
       setMetaStatus(options, message);
     }
 
-    function clearCreateClasses() {
+    function clearDragTargetClasses() {
       if (!cy) {
         return;
       }
       cy.nodes().removeClass("traceability-create-inactive traceability-create-source traceability-create-target");
-    }
-
-    function updateCreateClasses() {
-      if (!cy) {
-        return;
-      }
-      clearCreateClasses();
-      if (!createEdgeMode) {
-        return;
-      }
-      const spec = currentRelationSpec();
-      cy.nodes().forEach((node) => {
-        if (edgeSourceNode && edgeSourceNode.same(node)) {
-          node.addClass(edgeAnchorRole === "target" ? "traceability-create-target" : "traceability-create-source");
-          return;
-        }
-        if (!edgeSourceNode && node.data("kind") === spec.sourceKind) {
-          node.addClass("traceability-create-source");
-          return;
-        }
-        if (!edgeSourceNode && node.data("kind") === spec.targetKind) {
-          node.addClass("traceability-create-target");
-          return;
-        }
-        if (edgeSourceNode && edgeAnchorRole === "source" && node.data("kind") === spec.targetKind) {
-          node.addClass("traceability-create-target");
-          return;
-        }
-        if (edgeSourceNode && edgeAnchorRole === "target" && node.data("kind") === spec.sourceKind) {
-          node.addClass("traceability-create-source");
-          return;
-        }
-        node.addClass("traceability-create-inactive");
-      });
-    }
-
-    function invalidCreateSelectionMessage(stage) {
-      const spec = currentRelationSpec();
-      if (stage === "start") {
-        return `choose a ${displayKind(spec.sourceKind)} source or ${displayKind(spec.targetKind)} target for ${spec.label.toLowerCase()}`;
-      }
-      if (edgeAnchorRole === "target") {
-        return `choose a ${displayKind(spec.sourceKind)} source for ${spec.label.toLowerCase()}`;
-      }
-      return `choose a ${displayKind(spec.targetKind)} target for ${spec.label.toLowerCase()}`;
-    }
-
-    function clearEdgeSourceSelection() {
-      if (edgeSourceNode) {
-        edgeSourceNode.unselect();
-      }
-      edgeSourceNode = undefined;
-      edgeAnchorRole = undefined;
-      updateCreateClasses();
     }
 
     function currentSelectedEdge() {
@@ -709,34 +637,6 @@
       return selectedEdges.length > 0 ? selectedEdges[0] : undefined;
     }
 
-    function updateAddEdgeButton() {
-      if (!options.addEdgeButton) {
-        return;
-      }
-      options.addEdgeButton.disabled = !canSaveRelations;
-      options.addEdgeButton.setAttribute("aria-pressed", createEdgeMode ? "true" : "false");
-      options.addEdgeButton.classList.toggle("is-active", createEdgeMode);
-    }
-
-    function exitCreateEdgeMode() {
-      createEdgeMode = false;
-      clearEdgeSourceSelection();
-      clearCreateClasses();
-      updateAddEdgeButton();
-      updateDetailsPanel();
-    }
-
-    function enterCreateEdgeMode() {
-      createEdgeMode = true;
-      selectedEdge = undefined;
-      selectedNode = undefined;
-      updateRemoveEdgeButton();
-      updateAddEdgeButton();
-      updateCreateClasses();
-      setCreateStatus(invalidCreateSelectionMessage("start").replace("choose a ", "select a "));
-      updateDetailsPanel();
-    }
-
     function relationAlreadyExists(source, target, kind) {
       if (!cy) {
         return false;
@@ -744,49 +644,34 @@
       return cy.edges().some((edge) => edge.data("source") === source && edge.data("target") === target && edge.data("kind") === kind);
     }
 
-    async function addRelation(targetNode) {
-      if (!cy || !edgeSourceNode || !edgeAnchorRole) {
+    async function completeDragConnect(sourceNode, targetNode) {
+      if (!cy) {
         return;
       }
-      const nextEdge = edgeAnchorRole === "target"
-        ? { source: targetNode.id(), target: edgeSourceNode.id(), kind: currentRelationKind() }
-        : { source: edgeSourceNode.id(), target: targetNode.id(), kind: currentRelationKind() };
-      const nextEdgePreview = {
-        ...nextEdge,
-        sourceLabel: edgeAnchorRole === "target" ? nodeDisplayLabel(targetNode) : nodeDisplayLabel(edgeSourceNode),
-        targetLabel: edgeAnchorRole === "target" ? nodeDisplayLabel(edgeSourceNode) : nodeDisplayLabel(targetNode),
-      };
-      if (nextEdge.source === nextEdge.target) {
-        setMetaStatus(options, "edge source and target must differ");
+      const sourceKind = sourceNode.data("kind");
+      const targetKind = targetNode.data("kind");
+      const kind = resolveRelationKindForPair(options, sourceKind, targetKind);
+      if (!kind) {
+        setMetaStatus(options, `no relation defined between ${displayKind(sourceKind)} and ${displayKind(targetKind)}`);
         return;
       }
-      if (relationAlreadyExists(nextEdge.source, nextEdge.target, nextEdge.kind)) {
+      const edge = { source: sourceNode.id(), target: targetNode.id(), kind };
+      if (relationAlreadyExists(edge.source, edge.target, edge.kind)) {
         setMetaStatus(options, "edge already exists");
         return;
       }
-      if (!confirmRelationChange(options, "Add", nextEdgePreview)) {
-        setMetaStatus(options, "edge creation cancelled");
-        return;
-      }
-      if (options.addEdgeButton) {
-        options.addEdgeButton.disabled = true;
-      }
       try {
-        await persistRelations(options, cy, { appendEdges: [nextEdge] });
-        const addedEdge = cy.add({ data: { id: createClientEdgeId(), source: nextEdge.source, target: nextEdge.target, kind: nextEdge.kind } });
+        await persistRelations(options, cy, { appendEdges: [edge] });
+        const addedEdge = cy.add({ data: { id: createClientEdgeId(), ...edge } });
         selectedNode = undefined;
         selectedEdge = addedEdge[0];
         updateMetaSummary(options, cy.nodes().length, cy.edges().length);
         updateRemoveEdgeButton();
         setMetaStatus(options, "edge added");
-        exitCreateEdgeMode();
+        updateDetailsPanel();
       } catch (error) {
         console.error(error);
         setMetaStatus(options, "edge creation failed");
-        window.setTimeout(() => {
-          updateAddEdgeButton();
-        }, 1200);
-        return;
       }
     }
 
@@ -800,30 +685,6 @@
 
     if (options.relationKindSelect) {
       options.relationKindSelect.disabled = !canSaveRelations;
-      options.relationKindSelect.addEventListener("change", () => {
-        if (!createEdgeMode) {
-          return;
-        }
-        clearEdgeSourceSelection();
-        updateCreateClasses();
-        setCreateStatus(invalidCreateSelectionMessage("start").replace("choose a ", "select a "));
-        updateDetailsPanel();
-      });
-    }
-
-    if (options.addEdgeButton) {
-      updateAddEdgeButton();
-      options.addEdgeButton.addEventListener("click", () => {
-        if (!canSaveRelations) {
-          return;
-        }
-        if (createEdgeMode) {
-          exitCreateEdgeMode();
-          setMetaStatus(options, "edge creation cancelled");
-          return;
-        }
-        enterCreateEdgeMode();
-      });
     }
 
     if (options.fitButton) {
@@ -920,17 +781,6 @@
       });
     }
 
-    if (typeof window !== "undefined" && typeof window.addEventListener === "function") {
-      window.addEventListener("keydown", (event) => {
-        if (!createEdgeMode || event.key !== "Escape") {
-          return;
-        }
-        event.preventDefault();
-        exitCreateEdgeMode();
-        setMetaStatus(options, "edge creation cancelled");
-      });
-    }
-
     resolveGraph(options)
       .then((graph) => {
         currentGraph = graph;
@@ -941,12 +791,152 @@
           if (options.filterInput) {
             applyFilter(options.filterInput.value);
           }
+
+          // ── Drag-to-connect handle ─────────────────────────────────────────
+          let dragSourceNode = null;
+          let isDraggingEdge = false;
+          let hideHandleTimer = null;
+
+          const handle = typeof document !== "undefined" ? document.createElement("div") : null;
+          const svgNS = "http://www.w3.org/2000/svg";
+          const dragSvg = typeof document !== "undefined" ? document.createElementNS(svgNS, "svg") : null;
+          const dragLine = dragSvg ? document.createElementNS(svgNS, "line") : null;
+
+          if (handle && dragSvg && dragLine && canSaveRelations) {
+            handle.className = "drag-connect-handle";
+            handle.style.display = "none";
+            document.body.appendChild(handle);
+
+            dragSvg.setAttribute("class", "drag-connect-overlay");
+            dragSvg.style.cssText = "position:fixed;top:0;left:0;width:100vw;height:100vh;pointer-events:none;z-index:9000;display:none;";
+            dragLine.setAttribute("class", "drag-connect-line");
+            dragSvg.appendChild(dragLine);
+            document.body.appendChild(dragSvg);
+
+            function renderedToViewport(renderedPos) {
+              const rect = container.getBoundingClientRect();
+              return { x: rect.left + renderedPos.x, y: rect.top + renderedPos.y };
+            }
+
+            function findNodeAtViewport(clientX, clientY) {
+              const rect = container.getBoundingClientRect();
+              const rx = clientX - rect.left;
+              const ry = clientY - rect.top;
+              let found;
+              cy.nodes().forEach((node) => {
+                const bb = node.renderedBoundingBox();
+                if (rx >= bb.x1 && rx <= bb.x2 && ry >= bb.y1 && ry <= bb.y2) {
+                  found = node;
+                }
+              });
+              return found;
+            }
+
+            function highlightDragTargets(srcNode) {
+              cy.nodes().forEach((node) => {
+                if (node.same(srcNode)) {
+                  node.addClass("traceability-create-source");
+                  return;
+                }
+                const kind = resolveRelationKindForPair(options, srcNode.data("kind"), node.data("kind"));
+                if (kind) {
+                  node.addClass("traceability-create-target");
+                } else {
+                  node.addClass("traceability-create-inactive");
+                }
+              });
+            }
+
+            function showHandle(node) {
+              const bb = node.renderedBoundingBox();
+              const rect = container.getBoundingClientRect();
+              const cx = rect.left + (bb.x1 + bb.x2) / 2;
+              const cy2 = rect.top + bb.y1 - 4;
+              handle.style.left = `${cx - 10}px`;
+              handle.style.top = `${cy2 - 10}px`;
+              handle.style.display = "flex";
+            }
+
+            function hideHandle() {
+              if (!isDraggingEdge) {
+                handle.style.display = "none";
+              }
+            }
+
+            function scheduleHideHandle() {
+              hideHandleTimer = window.setTimeout(hideHandle, 120);
+            }
+
+            function cancelHideHandle() {
+              if (hideHandleTimer) {
+                window.clearTimeout(hideHandleTimer);
+                hideHandleTimer = null;
+              }
+            }
+
+            handle.addEventListener("mouseenter", cancelHideHandle);
+            handle.addEventListener("mouseleave", scheduleHideHandle);
+
+            handle.addEventListener("mousedown", (event) => {
+              const nodeUnder = findNodeAtViewport(event.clientX, event.clientY + 14);
+              if (!nodeUnder) {
+                return;
+              }
+              event.stopPropagation();
+              event.preventDefault();
+              isDraggingEdge = true;
+              dragSourceNode = nodeUnder;
+              highlightDragTargets(dragSourceNode);
+              const srcVP = renderedToViewport(dragSourceNode.renderedPosition());
+              dragLine.setAttribute("x1", srcVP.x);
+              dragLine.setAttribute("y1", srcVP.y);
+              dragLine.setAttribute("x2", event.clientX);
+              dragLine.setAttribute("y2", event.clientY);
+              dragSvg.style.display = "block";
+
+              function onMouseMove(e) {
+                const srcVP2 = renderedToViewport(dragSourceNode.renderedPosition());
+                dragLine.setAttribute("x1", srcVP2.x);
+                dragLine.setAttribute("y1", srcVP2.y);
+                dragLine.setAttribute("x2", e.clientX);
+                dragLine.setAttribute("y2", e.clientY);
+              }
+
+              function onMouseUp(e) {
+                document.removeEventListener("mousemove", onMouseMove);
+                document.removeEventListener("mouseup", onMouseUp);
+                isDraggingEdge = false;
+                dragSvg.style.display = "none";
+                hideHandle();
+                clearDragTargetClasses();
+                const targetNode = findNodeAtViewport(e.clientX, e.clientY);
+                if (targetNode && !targetNode.same(dragSourceNode)) {
+                  void completeDragConnect(dragSourceNode, targetNode);
+                } else {
+                  setMetaStatus(options, "drag cancelled");
+                }
+                dragSourceNode = null;
+              }
+
+              document.addEventListener("mousemove", onMouseMove);
+              document.addEventListener("mouseup", onMouseUp);
+            });
+
+            cy.on("mouseover", "node", (event) => {
+              if (!isDraggingEdge) {
+                cancelHideHandle();
+                showHandle(event.target);
+              }
+            });
+
+            cy.on("mouseout", "node", () => {
+              scheduleHideHandle();
+            });
+          }
+          // ── end drag-to-connect ───────────────────────────────────────────
+
           cy.on("tap", (event) => {
             if (event.target === cy) {
-              if (createEdgeMode) {
-                clearEdgeSourceSelection();
-                setCreateStatus(invalidCreateSelectionMessage("start").replace("choose a ", "select a "));
-              }
               selectedEdge = undefined;
               selectedNode = undefined;
               updateRemoveEdgeButton();
@@ -954,42 +944,12 @@
             }
           });
           cy.on("tap", "edge", (event) => {
-            if (createEdgeMode) {
-              return;
-            }
             selectedEdge = event.target;
             selectedNode = undefined;
             updateRemoveEdgeButton();
             updateDetailsPanel();
           });
           cy.on("tap", "node", (event) => {
-            if (createEdgeMode) {
-              const tappedNode = event.target;
-              const spec = currentRelationSpec();
-              if (!edgeSourceNode) {
-                if (tappedNode.data("kind") !== spec.sourceKind && tappedNode.data("kind") !== spec.targetKind) {
-                  setCreateStatus(invalidCreateSelectionMessage("start"));
-                  return;
-                }
-                edgeSourceNode = tappedNode;
-                edgeAnchorRole = tappedNode.data("kind") === spec.targetKind ? "target" : "source";
-                edgeSourceNode.select();
-                updateCreateClasses();
-                setCreateStatus(`select a ${displayKind(edgeAnchorRole === "target" ? spec.sourceKind : spec.targetKind)} ${edgeAnchorRole === "target" ? "source" : "target"} for ${spec.label.toLowerCase()}`);
-                updateDetailsPanel();
-                return;
-              }
-              if (edgeSourceNode.same(tappedNode)) {
-                setCreateStatus("choose a different node");
-                return;
-              }
-              if (tappedNode.data("kind") !== (edgeAnchorRole === "target" ? spec.sourceKind : spec.targetKind)) {
-                setCreateStatus(invalidCreateSelectionMessage("target"));
-                return;
-              }
-              void addRelation(tappedNode);
-              return;
-            }
             selectedEdge = undefined;
             selectedNode = event.target;
             updateRemoveEdgeButton();
