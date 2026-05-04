@@ -11,11 +11,61 @@ const COMMAND_ARGS: Record<string, string[]> = {
   trace: ["graph", "validate"],
 };
 
+interface AgentCommand {
+  name: string;
+  description: string;
+}
+
+interface AgentInfo {
+  id: string;
+  name: string;
+  description: string;
+  commands?: AgentCommand[];
+  systemPrompt: string;
+  file: string;
+}
+
+// In-process cache of agents loaded from the framework.
+let cachedAgents: AgentInfo[] = [];
+
 export function registerChatParticipant(context: vscode.ExtensionContext): void {
   const participant = vscode.chat.createChatParticipant(PARTICIPANT_ID, makeHandler(context));
   participant.iconPath = new vscode.ThemeIcon("book");
   participant.followupProvider = { provideFollowups };
   context.subscriptions.push(participant);
+
+  // Load agents from the framework initially and on config changes.
+  void loadAgents(context);
+  const watcher = vscode.workspace.createFileSystemWatcher("**/.specs.yaml");
+  const reload = () => void loadAgents(context);
+  watcher.onDidChange(reload, undefined, context.subscriptions);
+  watcher.onDidCreate(reload, undefined, context.subscriptions);
+  watcher.onDidDelete(reload, undefined, context.subscriptions);
+  context.subscriptions.push(watcher);
+}
+
+async function loadAgents(context: vscode.ExtensionContext): Promise<void> {
+  const folder = findSpecsFolder();
+  if (!folder) {
+    cachedAgents = [];
+    return;
+  }
+  const cwd = findSpecsRoot(folder) ?? folder.uri.fsPath;
+  const result = await runAndCapture(context, ["framework", "agents", "list"], cwd);
+  if (result.exitCode !== 0 || !result.stdout.trim()) {
+    cachedAgents = [];
+    return;
+  }
+  try {
+    cachedAgents = JSON.parse(result.stdout) as AgentInfo[];
+  } catch {
+    cachedAgents = [];
+  }
+}
+
+/** Returns the agent whose command list includes the given slash-command name, if any. */
+function findAgentForCommand(command: string): AgentInfo | undefined {
+  return cachedAgents.find((a) => a.commands?.some((c) => c.name === command));
 }
 
 function makeHandler(
@@ -67,6 +117,11 @@ async function handleCommand(
 
   const engineArgs = COMMAND_ARGS[cmd];
   if (!engineArgs) {
+    // Check whether a framework agent owns this command.
+    const agent = findAgentForCommand(cmd);
+    if (agent) {
+      return handleAgentCommand(request, stream, token, agent, context, cwd);
+    }
     stream.markdown(`Unknown command \`/${cmd}\`.`);
     return {};
   }
@@ -156,6 +211,39 @@ async function handleCR(
   return { metadata: { command: "cr" } };
 }
 
+async function handleAgentCommand(
+  request: vscode.ChatRequest,
+  stream: vscode.ChatResponseStream,
+  token: vscode.CancellationToken,
+  agent: AgentInfo,
+  context: vscode.ExtensionContext,
+  cwd: string,
+): Promise<vscode.ChatResult> {
+  // Collect graph context to enrich the agent's prompt.
+  const graphResult = await runAndCapture(context, ["graph", "validate"], cwd);
+  const graphSummary = graphResult.stdout.split("\n").slice(0, 10).join("\n");
+
+  const messages = [
+    vscode.LanguageModelChatMessage.User(
+      agent.systemPrompt +
+        `\n\nWorkspace graph summary:\n${graphSummary || "(not available)"}`,
+    ),
+    vscode.LanguageModelChatMessage.User(
+      request.prompt || `Please perform the /${request.command} analysis.`,
+    ),
+  ];
+
+  if (token.isCancellationRequested) {
+    return {};
+  }
+
+  const response = await request.model.sendRequest(messages, {}, token);
+  for await (const chunk of response.text) {
+    stream.markdown(chunk);
+  }
+  return { metadata: { command: request.command, agentId: agent.id } };
+}
+
 async function handleFreeForm(
   request: vscode.ChatRequest,
   stream: vscode.ChatResponseStream,
@@ -164,12 +252,13 @@ async function handleFreeForm(
   cwd: string,
 ): Promise<vscode.ChatResult> {
   // Gather lightweight workspace context from the engine.
-  const [graphResult] = await Promise.all([
-    runAndCapture(context, ["graph", "validate"], cwd),
-  ]);
+  const graphResult = await runAndCapture(context, ["graph", "validate"], cwd);
   const graphSummary = graphResult.stdout.split("\n").slice(0, 10).join("\n");
 
-  const systemPrompt =
+  // Pick the best matching agent for the user's prompt, or fall back to the
+  // default specs assistant persona.
+  const agentSystemPrompt = selectAgentForPrompt(request.prompt);
+  const baseSystemPrompt =
     `You are the Specs assistant, an expert in requirements engineering and ` +
     `the specs-toolchain. You help authors write, link, and validate technical ` +
     `specifications stored as Markdown files.\n\n` +
@@ -180,6 +269,10 @@ async function handleFreeForm(
     `- Traceability edges in YAML files under specs/model/traceability/\n` +
     `- Change requests under specs/change-requests/\n\n` +
     `Current graph summary:\n${graphSummary || "(not available)"}`;
+
+  const systemPrompt = agentSystemPrompt
+    ? agentSystemPrompt + `\n\nWorkspace graph summary:\n${graphSummary || "(not available)"}`
+    : baseSystemPrompt;
 
   const messages = [
     vscode.LanguageModelChatMessage.User(systemPrompt),
@@ -195,6 +288,24 @@ async function handleFreeForm(
     stream.markdown(chunk);
   }
   return {};
+}
+
+/**
+ * Naively selects the first agent whose disambiguation examples contain a
+ * keyword match against the user's prompt. Falls back to undefined (default
+ * specs persona) when no agent matches.
+ */
+function selectAgentForPrompt(prompt: string): string | undefined {
+  const lower = prompt.toLowerCase();
+  for (const agent of cachedAgents) {
+    for (const dis of agent.commands ?? []) {
+      // Check agent command names as keywords.
+      if (lower.includes(dis.name.toLowerCase())) {
+        return agent.systemPrompt;
+      }
+    }
+  }
+  return undefined;
 }
 
 function provideFollowups(

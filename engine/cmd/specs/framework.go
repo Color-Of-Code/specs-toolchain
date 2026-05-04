@@ -36,8 +36,10 @@ func cmdFramework(args []string) error {
 		return cmdFrameworkUpdate(args[1:])
 	case "skills":
 		return cmdFrameworkSkills(args[1:])
+	case "agents":
+		return cmdFrameworkAgents(args[1:])
 	case "-h", "--help", "help":
-		fmt.Fprintln(os.Stderr, "Usage: specs framework <list|add|remove|seed|update|skills> [flags]")
+		fmt.Fprintln(os.Stderr, "Usage: specs framework <list|add|remove|seed|update|skills|agents> [flags]")
 		return nil
 	default:
 		return exitWith(2, "unknown subcommand: specs framework %s", args[0])
@@ -455,4 +457,136 @@ func extractFrontmatter(content string) (string, error) {
 		buf.WriteByte('\n')
 	}
 	return "", fmt.Errorf("front-matter not closed with ---")
+}
+
+// extractBody returns the text after the closing "---" of the front-matter.
+func extractBody(content string) string {
+	lines := strings.SplitN(content, "\n", -1)
+	if len(lines) < 2 || strings.TrimSpace(lines[0]) != "---" {
+		return content
+	}
+	for i, line := range lines[1:] {
+		if strings.TrimSpace(line) == "---" {
+			rest := strings.Join(lines[i+2:], "\n")
+			return strings.TrimSpace(rest)
+		}
+	}
+	return ""
+}
+
+// AgentCommand describes a slash command contributed by an agent.
+type AgentCommand struct {
+	Name        string `yaml:"name" json:"name"`
+	Description string `yaml:"description" json:"description"`
+}
+
+// AgentDisambiguation holds a detection category for auto-routing.
+type AgentDisambiguation struct {
+	Category    string   `yaml:"category" json:"category"`
+	Description string   `yaml:"description" json:"description"`
+	Examples    []string `yaml:"examples" json:"examples"`
+}
+
+// AgentFrontmatter holds the YAML front-matter of an agent file.
+type AgentFrontmatter struct {
+	ID             string                `yaml:"id"`
+	Name           string                `yaml:"name"`
+	Description    string                `yaml:"description"`
+	Commands       []AgentCommand        `yaml:"commands"`
+	Disambiguation []AgentDisambiguation `yaml:"disambiguation"`
+}
+
+// AgentInfo is the JSON-serialisable record emitted by `specs framework agents list`.
+type AgentInfo struct {
+	ID             string                `json:"id"`
+	Name           string                `json:"name"`
+	Description    string                `json:"description"`
+	Commands       []AgentCommand        `json:"commands,omitempty"`
+	Disambiguation []AgentDisambiguation `json:"disambiguation,omitempty"`
+	SystemPrompt   string                `json:"systemPrompt"`
+	File           string                `json:"file"`
+}
+
+// cmdFrameworkAgents handles `specs framework agents list`.
+func cmdFrameworkAgents(args []string) error {
+	fs2 := flag.NewFlagSet("framework agents", flag.ContinueOnError)
+	fs2.Usage = func() { fmt.Fprintln(os.Stderr, "Usage: specs framework agents list") }
+	if err := fs2.Parse(args); err != nil {
+		return err
+	}
+	if len(fs2.Args()) == 0 || fs2.Args()[0] == "list" {
+		return cmdFrameworkAgentsList()
+	}
+	fs2.Usage()
+	return exitWith(2, "unknown subcommand: specs framework agents %s", fs2.Args()[0])
+}
+
+func cmdFrameworkAgentsList() error {
+	cfg, err := config.Load("")
+	if err != nil {
+		return err
+	}
+	if cfg.FrameworkDir == "" {
+		fmt.Println("[]")
+		return nil
+	}
+	agentsDir := filepath.Join(cfg.FrameworkDir, "agents")
+	entries, err := os.ReadDir(agentsDir)
+	if err != nil {
+		if os.IsNotExist(err) {
+			fmt.Println("[]")
+			return nil
+		}
+		return fmt.Errorf("read agents dir: %w", err)
+	}
+
+	var agents []AgentInfo
+	for _, e := range entries {
+		if e.IsDir() || !strings.HasSuffix(e.Name(), ".md") {
+			continue
+		}
+		filePath := filepath.Join(agentsDir, e.Name())
+		info, err := parseAgentFile(filePath)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "warning: skip %s: %v\n", e.Name(), err)
+			continue
+		}
+		info.File = filePath
+		agents = append(agents, *info)
+	}
+
+	enc := json.NewEncoder(os.Stdout)
+	enc.SetIndent("", "  ")
+	if agents == nil {
+		_, err = os.Stdout.WriteString("[]\n")
+		return err
+	}
+	return enc.Encode(agents)
+}
+
+func parseAgentFile(path string) (*AgentInfo, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	content := string(data)
+	frontmatter, err := extractFrontmatter(content)
+	if err != nil {
+		return nil, fmt.Errorf("frontmatter: %w", err)
+	}
+	var fm AgentFrontmatter
+	if err := yaml.Unmarshal([]byte(frontmatter), &fm); err != nil {
+		return nil, fmt.Errorf("parse frontmatter: %w", err)
+	}
+	if fm.ID == "" {
+		return nil, fmt.Errorf("missing required field: id")
+	}
+	return &AgentInfo{
+		ID:             fm.ID,
+		Name:           fm.Name,
+		Description:    fm.Description,
+		Commands:       fm.Commands,
+		Disambiguation: fm.Disambiguation,
+		SystemPrompt:   extractBody(content),
+	}, nil
 }
