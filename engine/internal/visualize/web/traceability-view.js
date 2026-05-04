@@ -248,17 +248,16 @@
           sort: compareNodeOrder,
         };
       case "clustered":
+        // Initial load falls back to layered; switching to clustered goes through runClusteredLayout
         return {
-          name: "concentric",
+          name: "breadthfirst",
+          directed: true,
+          roots: defaultRoots(graph),
           fit: true,
           padding: 40,
-          animate: false,
-          minNodeSpacing: 30,
-          concentric: (ele) => {
-            const rank = kindRank(ele.data("kind"));
-            return rank === Number.MAX_SAFE_INTEGER ? 0 : Object.keys(kindOrder).length - rank;
-          },
-          levelWidth: () => 1,
+          spacingFactor: 1.2,
+          avoidOverlap: true,
+          depthSort: compareNodeOrder,
         };
       case "layered":
       default:
@@ -464,10 +463,58 @@
       if (!cy) {
         return;
       }
-      cy.layout(layoutOptions(currentGraph, layoutName)).run();
+      if (layoutName === "clustered") {
+        runClusteredLayout();
+      } else {
+        cy.layout(layoutOptions(currentGraph, layoutName)).run();
+      }
       if (statusMessage) {
         setMetaStatus(options, statusMessage);
       }
+    }
+
+    function runClusteredLayout() {
+      if (!cy) {
+        return;
+      }
+      // Step 1: pre-position nodes in concentric rings by kind rank
+      const kindCount = Object.keys(kindOrder).length;
+      const groups = {};
+      cy.nodes().forEach((ele) => {
+        const rank = kindRank(ele.data("kind"));
+        const key = rank === Number.MAX_SAFE_INTEGER ? kindCount : rank;
+        if (!groups[key]) {
+          groups[key] = [];
+        }
+        groups[key].push(ele);
+      });
+      const sortedRings = Object.keys(groups).map(Number).sort((a, b) => a - b);
+      const w = cy.width();
+      const h = cy.height();
+      const cx = w / 2;
+      const ch = h / 2;
+      const maxRadius = Math.min(w, h) * 0.45;
+      sortedRings.forEach((ringKey, ringIdx) => {
+        const r = maxRadius * (ringIdx + 1) / sortedRings.length;
+        const nodes = groups[ringKey];
+        nodes.forEach((node, i) => {
+          const angle = (2 * Math.PI * i) / nodes.length - Math.PI / 2;
+          node.position({ x: cx + r * Math.cos(angle), y: ch + r * Math.sin(angle) });
+        });
+      });
+      // Step 2: run cose from these positions to minimize edge crossings
+      cy.layout({
+        name: "cose",
+        fit: true,
+        padding: 40,
+        animate: false,
+        randomize: false,
+        nodeRepulsion: 4500,
+        idealEdgeLength: 80,
+        edgeElasticity: 100,
+        gravity: 40,
+        numIter: 1000,
+      }).run();
     }
 
     function currentRelationKind() {
