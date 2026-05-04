@@ -14,7 +14,7 @@ make build              # build engine + extension
 make build-engine       # engine binary only -> ./bin/specs
 make build-extension    # compile extension TypeScript
 make package-extension  # produce a .vsix
-make deploy-dev         # build + symlink extension into ~/.vscode/extensions
+make deploy-dev         # build repo-local engine + extension, then symlink into ~/.vscode/extensions
 make check              # format-check + lint
 make format             # format all .md files in place
 make format-check       # exit 1 if any .md needs formatting
@@ -84,7 +84,7 @@ pnpm run package:bundled -- <target>
 
 ## Developing the VS Code Extension Locally
 
-To incrementally test the extension without reinstalling on every iteration, use `make deploy-dev`. It builds and symlinks the extension folder into `~/.vscode/extensions`, so changes are picked up on the next window reload.
+To incrementally test the extension without reinstalling on every iteration, use `make deploy-dev`. It builds the repo-local engine into `./bin/specs`, compiles the extension, and symlinks the extension folder into `~/.vscode/extensions`, so changes are picked up on the next window reload.
 
 ### Steps
 
@@ -95,9 +95,11 @@ To incrementally test the extension without reinstalling on every iteration, use
    ```
 
    This will:
-   - Build the `specs` engine binary into `./bin/specs` and (via the script) `extension/bin/`.
+   - Build the `specs` engine binary into `./bin/specs`.
    - Compile the TypeScript extension source.
    - Symlink the `extension` folder into `~/.vscode/extensions/Color-Of-Code.specs`.
+
+   When the repo is open in VS Code, the extension prefers `./bin/specs` over its bundled copy so palette commands match terminal workflows.
 
 2. **Reload the VS Code window**
 

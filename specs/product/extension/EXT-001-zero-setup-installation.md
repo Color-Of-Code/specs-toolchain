@@ -28,8 +28,10 @@ step, so that the barrier to getting started is as low as possible.
 ## Acceptance Signal
 
 After installing the `.vsix`, running any palette command (e.g. `Specs:
-Doctor`) invokes the bundled binary without any additional configuration.
-The `specs.enginePath` setting overrides the bundled binary when set. The
-`specs.useGlobalBinary` setting makes the extension prefer the `specs`
-binary found on `PATH`. The bundled binary is platform-specific and ships
-for each supported platform as a separate `.vsix`.
+Doctor`) in a workspace without a local `bin/specs` invokes the bundled
+binary without any additional configuration. In workspaces that do contain a
+local `bin/specs`, the extension prefers that local build so development
+workflows match terminal usage. The `specs.enginePath` setting overrides the
+other sources when set. The `specs.useGlobalBinary` setting makes the
+extension prefer the `specs` binary found on `PATH`. The bundled binary is
+platform-specific and ships for each supported platform as a separate `.vsix`.

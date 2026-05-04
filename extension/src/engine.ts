@@ -17,8 +17,8 @@ export function getOutput(): vscode.OutputChannel {
  * Resolution order:
  *   1. specs.enginePath setting (absolute path or relative to workspace)
  *   2. specs.useGlobalBinary === true: 'specs' on PATH
- *   3. extension's bundled binary at <extensionPath>/bin/specs[.exe]
- *   4. workspace-local binary at <workspace>/bin/specs[.exe]
+ *   3. workspace-local binary at <workspace>/bin/specs[.exe]
+ *   4. extension's bundled binary at <extensionPath>/bin/specs[.exe]
  *   5. fallback: 'specs' on PATH
  */
 export function resolveBinary(context: vscode.ExtensionContext): string {
@@ -29,15 +29,15 @@ export function resolveBinary(context: vscode.ExtensionContext): string {
   }
   const useGlobal = cfg.get<boolean>("useGlobalBinary", false);
   const exe = process.platform === "win32" ? "specs.exe" : "specs";
-  const bundled = path.join(context.extensionPath, "bin", exe);
-  if (!useGlobal && fs.existsSync(bundled)) {
-    return bundled;
-  }
   if (!useGlobal) {
     const local = findWorkspaceBinary(exe);
     if (local) {
       return local;
     }
+  }
+  const bundled = path.join(context.extensionPath, "bin", exe);
+  if (!useGlobal && fs.existsSync(bundled)) {
+    return bundled;
   }
   return "specs"; // resolved via PATH
 }

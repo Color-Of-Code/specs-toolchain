@@ -15,7 +15,7 @@ The extension bundles a matching `specs` binary, so installing it is the only st
 
 3. Open a workspace that contains `.specs.yaml` (or run **Specs: Init host** from the palette to create one).
 
-The extension never requires a separately installed engine. If you happen to have one on `PATH`, you can opt in with the `specs.useGlobalBinary` setting; see [extension/README.md](../extension/README.md) for the full settings reference.
+The extension never requires a separately installed engine. If the open workspace already contains `bin/specs`, the extension uses that local binary first so development workflows stay aligned with terminal commands. If you happen to have one on `PATH`, you can opt in with the `specs.useGlobalBinary` setting; see [extension/README.md](../extension/README.md) for the full settings reference.
 
 ## Option 2 — engine only
 
@@ -36,7 +36,7 @@ specs doctor
 
 ## Combining both
 
-Installing the extension and the engine side by side is fine and common: the extension uses its bundled binary by default, and you still get `specs` on the terminal for ad-hoc commands and CI. Set `specs.useGlobalBinary = true` to make the extension prefer the engine on `PATH` so both stay on the same version.
+Installing the extension and the engine side by side is fine and common: in ordinary workspaces the extension uses its bundled binary by default, and in development workspaces that contain `bin/specs` it prefers that local build. Set `specs.useGlobalBinary = true` to make the extension prefer the engine on `PATH` so both stay on the same version.
 
 ---
 

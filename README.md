@@ -20,7 +20,7 @@ You can use either one alone, or install both side by side.
 
 3. Open a workspace and run **Specs: Init host** (new or existing project) or **Specs: Doctor** from the Command Palette.
 
-The extension uses its bundled binary by default, so no separate engine install is required. See [extension/README.md](extension/README.md) for the settings reference.
+The extension uses the workspace-local `bin/specs` when one is present and otherwise falls back to its bundled binary, so no separate engine install is required. See [extension/README.md](extension/README.md) for the settings reference.
 
 ## Quick start — engine only
 

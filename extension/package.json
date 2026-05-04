@@ -260,12 +260,12 @@
         "specs.useGlobalBinary": {
           "type": "boolean",
           "default": false,
-          "description": "Prefer the 'specs' binary on PATH over the one bundled with the extension."
+          "description": "Prefer the 'specs' binary on PATH over the workspace-local and bundled binaries."
         },
         "specs.enginePath": {
           "type": "string",
           "default": "",
-          "description": "Explicit path to the specs engine binary. Overrides bundled and PATH lookup."
+          "description": "Explicit path to the specs engine binary. Overrides workspace-local, bundled, and PATH lookup."
         },
         "specs.defaultFramework": {
           "type": "string",

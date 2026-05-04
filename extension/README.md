@@ -7,6 +7,10 @@ without any separate engine installation. A few admin-only commands
 (`init`, `format`, `vscode init`, `framework` registry management) remain
 terminal-only — see [docs/commands.md](https://github.com/Color-Of-Code/specs-toolchain/blob/main/docs/commands.md).
 
+When the open workspace contains `bin/specs`, the extension prefers that
+local build so development workspaces and palette commands use the same
+engine.
+
 This package is part of the [specs-toolchain](https://github.com/Color-Of-Code/specs-toolchain)
 monorepo. Releases ship a per-platform `.vsix` attached to each
 [GitHub release](https://github.com/Color-Of-Code/specs-toolchain/releases).
@@ -29,5 +33,8 @@ selected nodes and relations.
 
 | Setting                 | Default | Purpose                                                             |
 | ----------------------- | ------- | ------------------------------------------------------------------- |
-| `specs.useGlobalBinary` | `false` | Prefer `specs` on `PATH` over the bundled binary.                   |
-| `specs.enginePath`      | `""`    | Explicit path to a specs engine binary. Overrides bundled and PATH. |
+| `specs.useGlobalBinary` | `false` | Prefer `specs` on `PATH` over the workspace-local and bundled binaries. |
+| `specs.enginePath`      | `""`    | Explicit path to a specs engine binary. Overrides workspace-local, bundled, and PATH lookup. |
+
+With the default settings, the extension looks for `bin/specs` in the open
+workspace before falling back to the bundled binary.
