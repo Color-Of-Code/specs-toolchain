@@ -1,8 +1,8 @@
 # Workspace Diagnostics
 
-| Field        | Value                                                                                              |
-| ------------ | -------------------------------------------------------------------------------------------------- |
-| Status       | Draft                                                                                              |
+| Field        | Value                                                                                                     |
+| ------------ | --------------------------------------------------------------------------------------------------------- |
+| Status       | Draft                                                                                                     |
 | Requirements | [Workspace Diagnostics Reporting](../../requirements/workspace/WS-004-workspace-diagnostics-reporting.md) |
 
 ## Responsibilities

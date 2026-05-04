@@ -1,10 +1,10 @@
 # Vscode Extension
 
-| Field        | Value                                                                                          |
-| ------------ | ---------------------------------------------------------------------------------------------- |
-| Status       | Draft                                                                                          |
+| Field        | Value                                                                                                 |
+| ------------ | ----------------------------------------------------------------------------------------------------- |
+| Status       | Draft                                                                                                 |
 | Requirements | [Repo Local Engine Integration](../../requirements/workspace/WS-003-repo-local-engine-integration.md) |
-| Baseline     | —                                                                                              |
+| Baseline     | —                                                                                                     |
 
 ## Responsibilities
 
