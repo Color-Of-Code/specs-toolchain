@@ -772,6 +772,22 @@
       });
     }
 
+    if (options.zoomInButton) {
+      options.zoomInButton.addEventListener("click", () => {
+        if (cy) {
+          cy.zoom({ level: cy.zoom() * 1.25, renderedPosition: { x: cy.width() / 2, y: cy.height() / 2 } });
+        }
+      });
+    }
+
+    if (options.zoomOutButton) {
+      options.zoomOutButton.addEventListener("click", () => {
+        if (cy) {
+          cy.zoom({ level: cy.zoom() * 0.8, renderedPosition: { x: cy.width() / 2, y: cy.height() / 2 } });
+        }
+      });
+    }
+
     if (options.relayoutButton) {
       options.relayoutButton.addEventListener("click", () => {
         const layoutName = activeLayoutName(options);

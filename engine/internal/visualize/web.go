@@ -41,6 +41,8 @@ var traceabilityPageTemplate = template.Must(template.New("traceability-page").P
 <div class="toolbar">
   <button id="refresh" type="button">Refresh</button>
   <button id="fit" type="button">Fit</button>
+  <button id="zoom-in" type="button" class="toolbar-icon-button toolbar-zoom-in-button" aria-label="Zoom in" title="Zoom in"><span class="details-visually-hidden">Zoom in</span></button>
+  <button id="zoom-out" type="button" class="toolbar-icon-button toolbar-zoom-out-button" aria-label="Zoom out" title="Zoom out"><span class="details-visually-hidden">Zoom out</span></button>
   <select id="layout-mode" aria-label="Layout mode">
     <option value="layered">Layered</option>
     <option value="organic">Organic</option>
@@ -75,6 +77,8 @@ var traceabilityPageTemplate = template.Must(template.New("traceability-page").P
     artifactBaseUrl: {{ printf "%q" .ArtifactURL }},
     container: document.getElementById('graph'),
     fitButton: document.getElementById('fit'),
+    zoomInButton: document.getElementById('zoom-in'),
+    zoomOutButton: document.getElementById('zoom-out'),
     layoutSelect: document.getElementById('layout-mode'),
     relayoutButton: document.getElementById('relayout'),
     filterInput: document.getElementById('filter'),
