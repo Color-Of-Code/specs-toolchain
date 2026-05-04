@@ -39,8 +39,8 @@ var traceabilityPageTemplate = template.Must(template.New("traceability-page").P
 </head>
 <body class="traceability-shell">
 <div class="toolbar">
-  <button id="refresh" type="button">Refresh</button>
-  <button id="fit" type="button">Fit</button>
+  <button id="refresh" type="button" class="toolbar-icon-button toolbar-refresh-button" aria-label="Refresh" title="Refresh"><span class="details-visually-hidden">Refresh</span></button>
+  <button id="fit" type="button" class="toolbar-icon-button toolbar-fit-button" aria-label="Fit" title="Fit"><span class="details-visually-hidden">Fit</span></button>
   <button id="zoom-in" type="button" class="toolbar-icon-button toolbar-zoom-in-button" aria-label="Zoom in" title="Zoom in"><span class="details-visually-hidden">Zoom in</span></button>
   <button id="zoom-out" type="button" class="toolbar-icon-button toolbar-zoom-out-button" aria-label="Zoom out" title="Zoom out"><span class="details-visually-hidden">Zoom out</span></button>
   <select id="layout-mode" aria-label="Layout mode">

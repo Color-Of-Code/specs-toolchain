@@ -292,8 +292,8 @@ function renderHtml(
 <body class="traceability-shell">
 ${fallbackBanner}
 <div class="toolbar">
-  <button id="refresh">Refresh</button>
-  <button id="fit">Fit</button>
+  <button id="refresh" class="toolbar-icon-button toolbar-refresh-button" aria-label="Refresh" title="Refresh"><span class="details-visually-hidden">Refresh</span></button>
+  <button id="fit" class="toolbar-icon-button toolbar-fit-button" aria-label="Fit" title="Fit"><span class="details-visually-hidden">Fit</span></button>
   <button id="zoom-in" class="toolbar-icon-button toolbar-zoom-in-button" aria-label="Zoom in" title="Zoom in"><span class="details-visually-hidden">Zoom in</span></button>
   <button id="zoom-out" class="toolbar-icon-button toolbar-zoom-out-button" aria-label="Zoom out" title="Zoom out"><span class="details-visually-hidden">Zoom out</span></button>
   <select id="layout-mode" aria-label="Layout mode">
