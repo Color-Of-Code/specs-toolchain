@@ -20,6 +20,7 @@ const (
 	PartKindDeriveReqt PartKind = "deriveReqt"
 	PartKindSatisfy    PartKind = "satisfy"
 	PartKindRefine     PartKind = "refine"
+	PartKindTrace      PartKind = "trace"
 	PartKindBaseline   PartKind = "baseline"
 	PartKindLayout     PartKind = "layout"
 )
@@ -64,14 +65,12 @@ type LayoutEntry struct {
 }
 
 type Graph struct {
-	ManifestPath  string
-	RootDir       string
-	Manifest      Manifest
-	DeriveReqt    []RelationEntry
-	Refinements   []RelationEntry
-	Satisfactions []RelationEntry
-	Baselines     []BaselineEntry
-	Layout        []LayoutEntry
+	ManifestPath string
+	RootDir      string
+	Manifest     Manifest
+	Relations    map[PartKind][]RelationEntry
+	Baselines    []BaselineEntry
+	Layout       []LayoutEntry
 }
 
 type relationPart struct {
@@ -94,12 +93,44 @@ type partSpec struct {
 	File     string
 	Kind     PartKind
 	Required bool
+	// Relation-only fields (meaningful when isRelation is true).
+	isRelation   bool
+	sourceKind   string // storage source kind; empty = any valid node kind
+	targetKind   string // storage target kind; empty = any valid node kind
+	invertOnSave bool   // frontend sends (target→source); swap before storing
+}
+
+// RelationPartSpec is the exported view of a relation part spec.
+type RelationPartSpec struct {
+	Kind         PartKind
+	Required     bool
+	SourceKind   string
+	TargetKind   string
+	InvertOnSave bool
+}
+
+// AllRelationSpecs returns metadata for all registered relation parts in manifest order.
+func AllRelationSpecs() []RelationPartSpec {
+	var specs []RelationPartSpec
+	for _, spec := range manifestPartSpecs {
+		if spec.isRelation {
+			specs = append(specs, RelationPartSpec{
+				Kind:         spec.Kind,
+				Required:     spec.Required,
+				SourceKind:   spec.sourceKind,
+				TargetKind:   spec.targetKind,
+				InvertOnSave: spec.invertOnSave,
+			})
+		}
+	}
+	return specs
 }
 
 var manifestPartSpecs = []partSpec{
-	{Name: "derive_reqt", File: "deriveReqt.yaml", Kind: PartKindDeriveReqt, Required: true},
-	{Name: "refinements", File: "refinements.yaml", Kind: PartKindRefine, Required: true},
-	{Name: "satisfactions", File: "satisfactions.yaml", Kind: PartKindSatisfy, Required: true},
+	{Name: "derive_reqt", File: "deriveReqt.yaml", Kind: PartKindDeriveReqt, Required: true, isRelation: true, sourceKind: "product-requirement", targetKind: "requirement", invertOnSave: true},
+	{Name: "refinements", File: "refinements.yaml", Kind: PartKindRefine, Required: true, isRelation: true, sourceKind: "requirement", targetKind: "use-case", invertOnSave: true},
+	{Name: "satisfactions", File: "satisfactions.yaml", Kind: PartKindSatisfy, Required: true, isRelation: true, sourceKind: "requirement", targetKind: "component", invertOnSave: true},
+	{Name: "traces", File: "traces.yaml", Kind: PartKindTrace, Required: false, isRelation: true},
 	{Name: "baselines", File: "baselines.yaml", Kind: PartKindBaseline, Required: false},
 	{Name: "layout", File: "layout.yaml", Kind: PartKindLayout, Required: false},
 }
@@ -129,6 +160,7 @@ func Load(manifestPath string) (*Graph, error) {
 		ManifestPath: absManifest,
 		RootDir:      filepath.Dir(absManifest),
 		Manifest:     manifest,
+		Relations:    make(map[PartKind][]RelationEntry),
 	}
 
 	for _, part := range manifest.Parts {
@@ -188,12 +220,11 @@ func MarkdownPath(nodeID string) string {
 
 func (g *Graph) NodeIDs() []string {
 	seen := map[string]struct{}{}
-	for _, entries := range [][]RelationEntry{
-		g.DeriveReqt,
-		g.Refinements,
-		g.Satisfactions,
-	} {
-		for _, entry := range entries {
+	for _, spec := range manifestPartSpecs {
+		if !spec.isRelation {
+			continue
+		}
+		for _, entry := range g.Relations[spec.Kind] {
 			seen[entry.Source] = struct{}{}
 			for _, target := range entry.Targets {
 				seen[target] = struct{}{}
@@ -285,25 +316,17 @@ func (g *Graph) loadPart(part ManifestPart) error {
 		return fmt.Errorf("read %s: %w", part.File, err)
 	}
 
+	for _, spec := range manifestPartSpecs {
+		if spec.isRelation && spec.Kind == part.Kind {
+			entries, err := loadRelationEntries(data, part.Kind)
+			if err != nil {
+				return fmt.Errorf("load %s: %w", part.File, err)
+			}
+			g.Relations[part.Kind] = entries
+			return nil
+		}
+	}
 	switch part.Kind {
-	case PartKindDeriveReqt:
-		entries, err := loadRelationEntries(data, part.Kind)
-		if err != nil {
-			return fmt.Errorf("load %s: %w", part.File, err)
-		}
-		g.DeriveReqt = entries
-	case PartKindRefine:
-		entries, err := loadRelationEntries(data, part.Kind)
-		if err != nil {
-			return fmt.Errorf("load %s: %w", part.File, err)
-		}
-		g.Refinements = entries
-	case PartKindSatisfy:
-		entries, err := loadRelationEntries(data, part.Kind)
-		if err != nil {
-			return fmt.Errorf("load %s: %w", part.File, err)
-		}
-		g.Satisfactions = entries
 	case PartKindBaseline:
 		entries, err := loadBaselineEntries(data)
 		if err != nil {
@@ -356,14 +379,13 @@ func loadLayoutEntries(data []byte) ([]LayoutEntry, error) {
 }
 
 func (g *Graph) validate() error {
-	if err := validateRelationEntries(g.DeriveReqt, PartKindDeriveReqt, "product-requirement", "requirement"); err != nil {
-		return err
-	}
-	if err := validateRelationEntries(g.Refinements, PartKindRefine, "requirement", "use-case"); err != nil {
-		return err
-	}
-	if err := validateRelationEntries(g.Satisfactions, PartKindSatisfy, "requirement", "component"); err != nil {
-		return err
+	for _, spec := range manifestPartSpecs {
+		if !spec.isRelation {
+			continue
+		}
+		if err := validateRelationEntries(g.Relations[spec.Kind], spec.Kind, spec.sourceKind, spec.targetKind); err != nil {
+			return err
+		}
 	}
 	if err := validateBaselines(g.Baselines); err != nil {
 		return err
@@ -384,7 +406,7 @@ func validateRelationEntries(entries []RelationEntry, partKind PartKind, sourceK
 		if normalizedSource != entry.Source {
 			return fmt.Errorf("%s entry %d source must be normalized as %q", partKind, index, normalizedSource)
 		}
-		if KindForNodeID(entry.Source) != sourceKind {
+		if sourceKind != "" && KindForNodeID(entry.Source) != sourceKind {
 			return fmt.Errorf("%s entry %d source %q must be a %s", partKind, index, entry.Source, sourceKind)
 		}
 		if _, exists := seenSources[entry.Source]; exists {
@@ -406,7 +428,7 @@ func validateRelationEntries(entries []RelationEntry, partKind PartKind, sourceK
 			if normalizedTarget != target {
 				return fmt.Errorf("%s entry %d target %d must be normalized as %q", partKind, index, targetIndex, normalizedTarget)
 			}
-			if KindForNodeID(target) != targetKind {
+			if targetKind != "" && KindForNodeID(target) != targetKind {
 				return fmt.Errorf("%s entry %d target %q must be a %s", partKind, index, target, targetKind)
 			}
 			if _, exists := seenTargets[target]; exists {

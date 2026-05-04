@@ -13,6 +13,7 @@ var fmFieldKeys = map[string]string{
 	"Realises":       "realises",
 	"Implemented By": "implemented_by",
 	"Requirements":   "requirements",
+	"Traces":         "traces",
 }
 
 // splitFrontmatter separates the YAML frontmatter from the markdown body.
@@ -60,11 +61,14 @@ func frontmatterStringList(fmBytes []byte, key string) ([]string, error) {
 // fmUpdate describes a single key update to apply to a YAML frontmatter block.
 // When isScalar is true, Scalar is used as a YAML value literal; otherwise
 // Paths is used as a YAML sequence.
+// When omitIfAbsent is true, the key is only written if it already exists in
+// the frontmatter or there are actual paths to write.
 type fmUpdate struct {
-	key      string
-	paths    []string
-	scalar   string
-	isScalar bool
+	key          string
+	paths        []string
+	scalar       string
+	isScalar     bool
+	omitIfAbsent bool
 }
 
 // applyFMUpdates returns new file content with the given frontmatter keys updated.
@@ -78,6 +82,8 @@ func applyFMUpdates(content string, updates []fmUpdate) (string, error) {
 	for _, u := range updates {
 		if u.isScalar {
 			fm = setFMScalar(fm, u.key, u.scalar)
+		} else if u.omitIfAbsent && len(u.paths) == 0 && !fmKeyExists(fm, u.key) {
+			continue
 		} else {
 			fm = setFMSequence(fm, u.key, u.paths)
 		}
@@ -108,6 +114,18 @@ func setFMSequence(fm, key string, paths []string) string {
 // quoted string).
 func setFMScalar(fm, key, value string) string {
 	return replaceFMKey(fm, key, key+": "+value+"\n")
+}
+
+// fmKeyExists reports whether key appears as a top-level entry in the raw
+// frontmatter string fm.
+func fmKeyExists(fm, key string) bool {
+	for _, line := range strings.Split(fm, "\n") {
+		t := strings.TrimRight(line, " \t")
+		if t == key+":" || strings.HasPrefix(t, key+": ") {
+			return true
+		}
+	}
+	return false
 }
 
 // replaceFMKey replaces the existing key block (key line + indented continuation)

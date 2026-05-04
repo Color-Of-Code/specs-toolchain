@@ -25,10 +25,16 @@ func RebuildCache(cachePath string, g *Graph, dryRun bool) (*CacheStats, error) 
 	if err != nil {
 		return nil, err
 	}
+	edgeCount := 0
+	for _, spec := range manifestPartSpecs {
+		if spec.isRelation {
+			edgeCount += relationEntryCount(g.Relations[spec.Kind])
+		}
+	}
 	stats := &CacheStats{
 		CachePath:     absCachePath,
 		NodeCount:     len(g.NodeIDs()),
-		EdgeCount:     relationEntryCount(g.DeriveReqt) + relationEntryCount(g.Satisfactions) + relationEntryCount(g.Refinements),
+		EdgeCount:     edgeCount,
 		BaselineCount: len(g.Baselines),
 		LayoutCount:   len(g.Layout),
 	}
@@ -107,17 +113,13 @@ func RebuildCache(cachePath string, g *Graph, dryRun bool) (*CacheStats, error) 
 		return nil, err
 	}
 	defer edgeStmt.Close()
-	for _, group := range []struct {
-		kind    PartKind
-		entries []RelationEntry
-	}{
-		{kind: PartKindDeriveReqt, entries: g.DeriveReqt},
-		{kind: PartKindRefine, entries: g.Refinements},
-		{kind: PartKindSatisfy, entries: g.Satisfactions},
-	} {
-		for _, entry := range group.entries {
+	for _, spec := range manifestPartSpecs {
+		if !spec.isRelation {
+			continue
+		}
+		for _, entry := range g.Relations[spec.Kind] {
 			for _, target := range entry.Targets {
-				if _, err := edgeStmt.Exec(group.kind, entry.Source, target); err != nil {
+				if _, err := edgeStmt.Exec(spec.Kind, entry.Source, target); err != nil {
 					return nil, err
 				}
 			}

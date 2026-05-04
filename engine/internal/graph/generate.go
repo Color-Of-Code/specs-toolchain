@@ -13,16 +13,20 @@ type GenerateResult struct {
 }
 
 func GenerateMarkdown(modelDir, productDir string, g *Graph, dryRun bool) (*GenerateResult, error) {
-	realisesByRequirement := invertRelationEntries(g.DeriveReqt)
+	realisesByRequirement := invertRelationEntries(g.Relations[PartKindDeriveReqt])
 	implementedByByRequirement := mergeRelationEntries(
-		g.Refinements,
-		g.Satisfactions,
+		g.Relations[PartKindRefine],
+		g.Relations[PartKindSatisfy],
 	)
-	requirementsByUseCase := invertRelationEntries(g.Refinements)
-	requirementsByComponent := invertRelationEntries(g.Satisfactions)
+	requirementsByUseCase := invertRelationEntries(g.Relations[PartKindRefine])
+	requirementsByComponent := invertRelationEntries(g.Relations[PartKindSatisfy])
 	baselinesByComponent := map[string]BaselineEntry{}
 	for _, entry := range g.Baselines {
 		baselinesByComponent[entry.Component] = entry
+	}
+	traceTargets := map[string][]string{}
+	for _, entry := range g.Relations[PartKindTrace] {
+		traceTargets[entry.Source] = entry.Targets
 	}
 
 	result := &GenerateResult{}
@@ -37,10 +41,10 @@ func GenerateMarkdown(modelDir, productDir string, g *Graph, dryRun bool) (*Gene
 				if err != nil {
 					return err
 				}
-				updated, err := applyFMUpdates(string(body), []fmUpdate{{
-					key:   "realised_by",
-					paths: pathsForNodeLinks(path, g.DeriveReqt, nodeID, modelDir, productDir),
-				}})
+				updated, err := applyFMUpdates(string(body), []fmUpdate{
+					{key: "realised_by", paths: pathsForNodeLinks(path, g.Relations[PartKindDeriveReqt], nodeID, modelDir, productDir)},
+					{key: "traces", paths: pathsForTargets(path, traceTargets[nodeID], modelDir, productDir), omitIfAbsent: true},
+				})
 				if err != nil {
 					return fmt.Errorf("update %s: %w", path, err)
 				}
@@ -65,6 +69,7 @@ func GenerateMarkdown(modelDir, productDir string, g *Graph, dryRun bool) (*Gene
 			updated, err := applyFMUpdates(string(body), []fmUpdate{
 				{key: "realises", paths: pathsForTargets(path, realisesByRequirement[nodeID], modelDir, productDir)},
 				{key: "implemented_by", paths: pathsForTargets(path, implementedByByRequirement[nodeID], modelDir, productDir)},
+				{key: "traces", paths: pathsForTargets(path, traceTargets[nodeID], modelDir, productDir), omitIfAbsent: true},
 			})
 			if err != nil {
 				return fmt.Errorf("update %s: %w", path, err)
@@ -95,10 +100,10 @@ func GenerateMarkdown(modelDir, productDir string, g *Graph, dryRun bool) (*Gene
 			if err != nil {
 				return err
 			}
-			updates := []fmUpdate{{
-				key:   "requirements",
-				paths: pathsForTargets(path, area.requirements[nodeID], modelDir, productDir),
-			}}
+			updates := []fmUpdate{
+				{key: "requirements", paths: pathsForTargets(path, area.requirements[nodeID], modelDir, productDir)},
+				{key: "traces", paths: pathsForTargets(path, traceTargets[nodeID], modelDir, productDir), omitIfAbsent: true},
+			}
 			if area.includeBase {
 				updates = append(updates, fmUpdate{
 					key:      "baseline",

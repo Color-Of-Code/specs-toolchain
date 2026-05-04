@@ -162,9 +162,9 @@ func Build(modelDir, productDir string, g *tracegraph.Graph) (*Graph, error) {
 			}
 		}
 	}
-	appendEdges(string(tracegraph.PartKindDeriveReqt), g.DeriveReqt)
-	appendEdges(string(tracegraph.PartKindRefine), g.Refinements)
-	appendEdges(string(tracegraph.PartKindSatisfy), g.Satisfactions)
+	for _, spec := range tracegraph.AllRelationSpecs() {
+		appendEdges(string(spec.Kind), g.Relations[spec.Kind])
+	}
 	sort.Slice(result.Edges, func(i, j int) bool {
 		if result.Edges[i].From != result.Edges[j].From {
 			return result.Edges[i].From < result.Edges[j].From

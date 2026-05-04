@@ -122,13 +122,25 @@ func cmdGraphSaveRelations(args []string) error {
 	if err != nil {
 		return exitWith(1, "save relations: %v", err)
 	}
-	traceability.DeriveReqt = relations.deriveReqt
-	traceability.Refinements = relations.refinements
-	traceability.Satisfactions = relations.satisfactions
+	for _, spec := range graph.AllRelationSpecs() {
+		entries, inPayload := relations[spec.Kind]
+		if spec.Required {
+			if !inPayload {
+				entries = []graph.RelationEntry{}
+			}
+			traceability.Relations[spec.Kind] = entries
+		} else if inPayload {
+			traceability.Relations[spec.Kind] = entries
+		}
+	}
 	if err := graph.Write(path, traceability); err != nil {
 		return exitWith(1, "write graph: %v", err)
 	}
-	summary := graphSaveRelationsJSON{ManifestPath: path, EdgeCount: relationEdgeCount(traceability.DeriveReqt) + relationEdgeCount(traceability.Satisfactions) + relationEdgeCount(traceability.Refinements)}
+	totalEdges := 0
+	for _, entries := range traceability.Relations {
+		totalEdges += relationEdgeCount(entries)
+	}
+	summary := graphSaveRelationsJSON{ManifestPath: path, EdgeCount: totalEdges}
 	if *jsonOut {
 		enc := json.NewEncoder(os.Stdout)
 		enc.SetIndent("", "  ")
@@ -287,9 +299,9 @@ func cmdGraphImportMarkdown(args []string) error {
 	}
 	summary := graphImportJSON{
 		ManifestPath:    path,
-		DeriveReqtEdges: relationEdgeCount(g.DeriveReqt),
-		SatisfyEdges:    relationEdgeCount(g.Satisfactions),
-		RefineEdges:     relationEdgeCount(g.Refinements),
+		DeriveReqtEdges: relationEdgeCount(g.Relations[graph.PartKindDeriveReqt]),
+		SatisfyEdges:    relationEdgeCount(g.Relations[graph.PartKindSatisfy]),
+		RefineEdges:     relationEdgeCount(g.Relations[graph.PartKindRefine]),
 		BaselineCount:   len(g.Baselines),
 		DryRun:          *dryRun,
 	}
@@ -358,9 +370,9 @@ func cmdGraphValidate(args []string) error {
 	summary := graphValidateJSON{
 		ManifestPath:    path,
 		NodeCount:       len(g.NodeIDs()),
-		DeriveReqtEdges: relationEdgeCount(g.DeriveReqt),
-		SatisfyEdges:    relationEdgeCount(g.Satisfactions),
-		RefineEdges:     relationEdgeCount(g.Refinements),
+		DeriveReqtEdges: relationEdgeCount(g.Relations[graph.PartKindDeriveReqt]),
+		SatisfyEdges:    relationEdgeCount(g.Relations[graph.PartKindSatisfy]),
+		RefineEdges:     relationEdgeCount(g.Relations[graph.PartKindRefine]),
 		BaselineCount:   len(g.Baselines),
 		LayoutNodeCount: len(g.Layout),
 		RepoCount:       len(cfg.Repos),

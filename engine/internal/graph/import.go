@@ -21,10 +21,13 @@ func ImportMarkdown(modelDir, productDir, baselinesFile string) (*Graph, error) 
 		return nil, fmt.Errorf("model dir %s: %w", modelDir, err)
 	}
 
-	graphData := &Graph{}
+	graphData := &Graph{
+		Relations: make(map[PartKind][]RelationEntry),
+	}
 	realizations := map[string]map[string]struct{}{}
 	satisfactions := map[string]map[string]struct{}{}
 	refinements := map[string]map[string]struct{}{}
+	traces := map[string]map[string]struct{}{}
 
 	addEdge := func(edges map[string]map[string]struct{}, source, target string) {
 		if edges[source] == nil {
@@ -129,9 +132,44 @@ func ImportMarkdown(modelDir, productDir, baselinesFile string) (*Graph, error) 
 		graphData.Baselines = entries
 	}
 
-	graphData.DeriveReqt = relationEntriesFromMap(realizations)
-	graphData.Refinements = relationEntriesFromMap(refinements)
-	graphData.Satisfactions = relationEntriesFromMap(satisfactions)
+	// Collect Trace relations from all artifact directories.
+	for _, area := range []string{
+		productDir,
+		filepath.Join(modelDir, "requirements"),
+		filepath.Join(modelDir, "use-cases"),
+		filepath.Join(modelDir, "components"),
+	} {
+		if area == "" {
+			continue
+		}
+		if _, err := os.Stat(area); err != nil {
+			continue
+		}
+		if err := walkMarkdownFiles(area, func(path string) error {
+			targets, err := linkedNodeIDs(path, modelDir, productDir, "Traces")
+			if err != nil {
+				return err
+			}
+			if len(targets) == 0 {
+				return nil
+			}
+			source, err := nodeIDForMarkdownPath(path, modelDir, productDir)
+			if err != nil {
+				return err
+			}
+			for _, target := range targets {
+				addEdge(traces, source, target)
+			}
+			return nil
+		}); err != nil {
+			return nil, err
+		}
+	}
+
+	graphData.Relations[PartKindDeriveReqt] = relationEntriesFromMap(realizations)
+	graphData.Relations[PartKindRefine] = relationEntriesFromMap(refinements)
+	graphData.Relations[PartKindSatisfy] = relationEntriesFromMap(satisfactions)
+	graphData.Relations[PartKindTrace] = relationEntriesFromMap(traces)
 	graphData.Manifest = manifestForGraph(graphData)
 	if err := graphData.validate(); err != nil {
 		return nil, err
@@ -155,18 +193,16 @@ func Write(manifestPath string, g *Graph) error {
 	manifest := manifestForGraph(g)
 	toWrite := map[string]any{
 		"graph.yaml": manifest,
-		"deriveReqt.yaml": relationPart{
-			Kind:    PartKindDeriveReqt,
-			Entries: g.DeriveReqt,
-		},
-		"refinements.yaml": relationPart{
-			Kind:    PartKindRefine,
-			Entries: g.Refinements,
-		},
-		"satisfactions.yaml": relationPart{
-			Kind:    PartKindSatisfy,
-			Entries: g.Satisfactions,
-		},
+	}
+	for _, spec := range manifestPartSpecs {
+		if !spec.isRelation {
+			continue
+		}
+		entries := g.Relations[spec.Kind]
+		if !spec.Required && len(entries) == 0 {
+			continue
+		}
+		toWrite[spec.File] = relationPart{Kind: spec.Kind, Entries: entries}
 	}
 	if len(g.Baselines) > 0 {
 		toWrite["baselines.yaml"] = baselinePart{Kind: PartKindBaseline, Entries: g.Baselines}
@@ -192,12 +228,30 @@ func Write(manifestPath string, g *Graph) error {
 			return err
 		}
 	}
+	// Remove optional relation files when they have no entries.
+	for _, spec := range manifestPartSpecs {
+		if spec.Required || !spec.isRelation {
+			continue
+		}
+		if _, ok := toWrite[spec.File]; ok {
+			continue
+		}
+		if err := os.Remove(filepath.Join(manifestDir, spec.File)); err != nil && !os.IsNotExist(err) {
+			return err
+		}
+	}
 	return nil
 }
 
 func manifestForGraph(g *Graph) Manifest {
 	parts := make([]ManifestPart, 0, len(manifestPartSpecs))
 	for _, spec := range manifestPartSpecs {
+		if spec.isRelation {
+			if spec.Required || len(g.Relations[spec.Kind]) > 0 {
+				parts = append(parts, ManifestPart{Name: spec.Name, File: spec.File, Kind: spec.Kind, Required: spec.Required})
+			}
+			continue
+		}
 		if !spec.Required {
 			switch spec.Kind {
 			case PartKindBaseline:

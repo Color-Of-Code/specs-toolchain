@@ -127,9 +127,20 @@ func saveTraceabilityRelations(start string, edges []relationSaveEdge) error {
 	if err != nil {
 		return err
 	}
-	traceability.DeriveReqt = relations.deriveReqt
-	traceability.Refinements = relations.refinements
-	traceability.Satisfactions = relations.satisfactions
+	// Replace required relation kinds unconditionally; update optional kinds only
+	// when they appeared in the payload (preserves e.g. trace relations the UI
+	// does not yet know how to edit).
+	for _, spec := range tracegraph.AllRelationSpecs() {
+		entries, inPayload := relations[spec.Kind]
+		if spec.Required {
+			if !inPayload {
+				entries = []tracegraph.RelationEntry{}
+			}
+			traceability.Relations[spec.Kind] = entries
+		} else if inPayload {
+			traceability.Relations[spec.Kind] = entries
+		}
+	}
 	if err := tracegraph.Write(cfg.GraphManifest, traceability); err != nil {
 		return fmt.Errorf("write graph %s: %w", cfg.GraphManifest, err)
 	}
@@ -138,11 +149,7 @@ func saveTraceabilityRelations(start string, edges []relationSaveEdge) error {
 
 func traceabilityAllowedNodeIDs(modelDir, productDir string, g *tracegraph.Graph) (map[string]struct{}, error) {
 	allowed := map[string]struct{}{}
-	for _, entries := range [][]tracegraph.RelationEntry{
-		g.DeriveReqt,
-		g.Refinements,
-		g.Satisfactions,
-	} {
+	for _, entries := range g.Relations {
 		for _, entry := range entries {
 			allowed[entry.Source] = struct{}{}
 			for _, target := range entry.Targets {
@@ -206,17 +213,10 @@ func collectArtifactNodeIDs(allowed map[string]struct{}, dir, prefix string) err
 	})
 }
 
-type relationSaveFamilies struct {
-	deriveReqt    []tracegraph.RelationEntry
-	satisfactions []tracegraph.RelationEntry
-	refinements   []tracegraph.RelationEntry
-}
-
-func relationEntriesFromSaveEdges(edges []relationSaveEdge, allowed map[string]struct{}) (*relationSaveFamilies, error) {
-	deriveReqt := map[string]map[string]struct{}{}
-	satisfactions := map[string]map[string]struct{}{}
-	refinements := map[string]map[string]struct{}{}
+func relationEntriesFromSaveEdges(edges []relationSaveEdge, allowed map[string]struct{}) (map[tracegraph.PartKind][]tracegraph.RelationEntry, error) {
+	byKind := map[tracegraph.PartKind]map[string]map[string]struct{}{}
 	seen := map[string]struct{}{}
+	specs := tracegraph.AllRelationSpecs()
 	for index, current := range edges {
 		normalizedSource, err := tracegraph.NormalizeNodeID(current.Source)
 		if err != nil {
@@ -232,54 +232,47 @@ func relationEntriesFromSaveEdges(edges []relationSaveEdge, allowed map[string]s
 		if _, ok := allowed[normalizedTarget]; !ok {
 			return nil, fmt.Errorf("relation edge %d target %q is not in the traceability graph", index, normalizedTarget)
 		}
-		sourceKind, targetKind, ok := relationKindsForSave(current.Kind)
-		if !ok {
+		kind := tracegraph.PartKind(current.Kind)
+		var spec *tracegraph.RelationPartSpec
+		for i := range specs {
+			if specs[i].Kind == kind {
+				spec = &specs[i]
+				break
+			}
+		}
+		if spec == nil {
 			return nil, fmt.Errorf("relation edge %d kind %q is unsupported", index, current.Kind)
 		}
-		if tracegraph.KindForNodeID(normalizedSource) != sourceKind {
-			return nil, fmt.Errorf("relation edge %d source %q must be a %s", index, normalizedSource, sourceKind)
+		// Derive the expected source/target node kinds as the frontend sends them.
+		frontendSrc, frontendTgt := spec.SourceKind, spec.TargetKind
+		if spec.InvertOnSave {
+			frontendSrc, frontendTgt = spec.TargetKind, spec.SourceKind
 		}
-		if tracegraph.KindForNodeID(normalizedTarget) != targetKind {
-			return nil, fmt.Errorf("relation edge %d target %q must be a %s", index, normalizedTarget, targetKind)
+		if frontendSrc != "" && tracegraph.KindForNodeID(normalizedSource) != frontendSrc {
+			return nil, fmt.Errorf("relation edge %d source %q must be a %s", index, normalizedSource, frontendSrc)
+		}
+		if frontendTgt != "" && tracegraph.KindForNodeID(normalizedTarget) != frontendTgt {
+			return nil, fmt.Errorf("relation edge %d target %q must be a %s", index, normalizedTarget, frontendTgt)
 		}
 		key := current.Kind + "\x00" + normalizedSource + "\x00" + normalizedTarget
 		if _, exists := seen[key]; exists {
 			return nil, fmt.Errorf("relation edge %d duplicates %s -> %s (%s)", index, normalizedSource, normalizedTarget, current.Kind)
 		}
 		seen[key] = struct{}{}
-		switch current.Kind {
-		case string(tracegraph.PartKindDeriveReqt):
-			// Frontend sends MR→PR; store as PR→MR
-			addRelationTarget(deriveReqt, normalizedTarget, normalizedSource)
-		case string(tracegraph.PartKindSatisfy):
-			// Frontend sends component→MR; store as MR→component
-			addRelationTarget(satisfactions, normalizedTarget, normalizedSource)
-		case string(tracegraph.PartKindRefine):
-			// Frontend sends use-case→MR; store as MR→use-case
-			addRelationTarget(refinements, normalizedTarget, normalizedSource)
+		if byKind[kind] == nil {
+			byKind[kind] = map[string]map[string]struct{}{}
+		}
+		if spec.InvertOnSave {
+			addRelationTarget(byKind[kind], normalizedTarget, normalizedSource)
+		} else {
+			addRelationTarget(byKind[kind], normalizedSource, normalizedTarget)
 		}
 	}
-	return &relationSaveFamilies{
-		deriveReqt:    relationEntriesFromTargetMap(deriveReqt),
-		satisfactions: relationEntriesFromTargetMap(satisfactions),
-		refinements:   relationEntriesFromTargetMap(refinements),
-	}, nil
-}
-
-func relationKindsForSave(kind string) (string, string, bool) {
-	switch kind {
-	case string(tracegraph.PartKindDeriveReqt):
-		// SysML direction: requirement ──deriveReqt──► product-requirement
-		return "requirement", "product-requirement", true
-	case string(tracegraph.PartKindRefine):
-		// SysML direction: use-case ──refine──► requirement
-		return "use-case", "requirement", true
-	case string(tracegraph.PartKindSatisfy):
-		// SysML direction: component ──satisfy──► requirement
-		return "component", "requirement", true
-	default:
-		return "", "", false
+	result := map[tracegraph.PartKind][]tracegraph.RelationEntry{}
+	for kind, targets := range byKind {
+		result[kind] = relationEntriesFromTargetMap(targets)
 	}
+	return result, nil
 }
 
 func addRelationTarget(edges map[string]map[string]struct{}, source, target string) {

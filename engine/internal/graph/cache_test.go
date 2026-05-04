@@ -12,8 +12,10 @@ func TestRebuildCacheWritesSQLiteTables(t *testing.T) {
 	g := &Graph{
 		ManifestPath: "model/traceability/graph.yaml",
 		Manifest:     manifestForGraph(&Graph{Baselines: []BaselineEntry{{Component: "model/components/alpha-component"}}}),
-		DeriveReqt:   []RelationEntry{{Source: "product/alpha", Targets: []string{"model/requirements/alpha-requirement"}}},
-		Refinements:  []RelationEntry{{Source: "model/requirements/alpha-requirement", Targets: []string{"model/use-cases/alpha-feature"}}},
+		Relations: map[PartKind][]RelationEntry{
+			PartKindDeriveReqt: {{Source: "product/alpha", Targets: []string{"model/requirements/alpha-requirement"}}},
+			PartKindRefine:     {{Source: "model/requirements/alpha-requirement", Targets: []string{"model/use-cases/alpha-feature"}}},
+		},
 		Baselines: []BaselineEntry{{
 			Component: "model/components/alpha-component",
 			Repo:      "host-repo",
@@ -53,7 +55,9 @@ func TestRebuildCacheWritesSQLiteTables(t *testing.T) {
 
 func TestRebuildCacheDryRunDoesNotCreateFile(t *testing.T) {
 	cachePath := filepath.Join(t.TempDir(), "traceability.sqlite")
-	g := &Graph{DeriveReqt: []RelationEntry{{Source: "product/alpha", Targets: []string{"model/requirements/alpha-requirement"}}}}
+	g := &Graph{Relations: map[PartKind][]RelationEntry{
+		PartKindDeriveReqt: {{Source: "product/alpha", Targets: []string{"model/requirements/alpha-requirement"}}},
+	}}
 	if _, err := RebuildCache(cachePath, g, true); err != nil {
 		t.Fatalf("RebuildCache() dry-run error = %v", err)
 	}

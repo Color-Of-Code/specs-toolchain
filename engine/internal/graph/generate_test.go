@@ -57,10 +57,12 @@ func TestGenerateMarkdownUpdatesArtifactFields(t *testing.T) {
 	}, "\n"))
 
 	g := &Graph{
-		DeriveReqt:    []RelationEntry{{Source: "product/alpha", Targets: []string{"model/requirements/alpha-requirement"}}},
-		Refinements:   []RelationEntry{{Source: "model/requirements/alpha-requirement", Targets: []string{"model/use-cases/alpha-feature"}}},
-		Satisfactions: []RelationEntry{{Source: "model/requirements/alpha-requirement", Targets: []string{"model/components/alpha-component"}}},
-		Baselines:     []BaselineEntry{{Component: "model/components/alpha-component", Repo: "host-repo", Path: "/", Commit: "0123456789abcdef0123456789abcdef01234567"}},
+		Relations: map[PartKind][]RelationEntry{
+			PartKindDeriveReqt: {{Source: "product/alpha", Targets: []string{"model/requirements/alpha-requirement"}}},
+			PartKindRefine:     {{Source: "model/requirements/alpha-requirement", Targets: []string{"model/use-cases/alpha-feature"}}},
+			PartKindSatisfy:    {{Source: "model/requirements/alpha-requirement", Targets: []string{"model/components/alpha-component"}}},
+		},
+		Baselines: []BaselineEntry{{Component: "model/components/alpha-component", Repo: "host-repo", Path: "/", Commit: "0123456789abcdef0123456789abcdef01234567"}},
 	}
 
 	result, err := GenerateMarkdown(modelDir, productDir, g, false)

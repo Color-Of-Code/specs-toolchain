@@ -166,7 +166,7 @@ func TestCmdGraphImportMarkdownWritesCanonicalGraph(t *testing.T) {
 	if err != nil {
 		t.Fatalf("graph.Load() error = %v", err)
 	}
-	if len(reloaded.DeriveReqt) != 1 || len(reloaded.Satisfactions) != 1 || len(reloaded.Refinements) != 1 {
+	if len(reloaded.Relations[graph.PartKindDeriveReqt]) != 1 || len(reloaded.Relations[graph.PartKindSatisfy]) != 1 || len(reloaded.Relations[graph.PartKindRefine]) != 1 {
 		t.Fatalf("unexpected imported graph sizes: %+v", reloaded)
 	}
 	if len(reloaded.Baselines) != 1 {
@@ -192,9 +192,11 @@ func TestCmdGraphGenerateMarkdownUpdatesFiles(t *testing.T) {
 	}
 	writeGraphGenerateFixture(t, specsDir)
 	graphData := &graph.Graph{
-		DeriveReqt:    []graph.RelationEntry{{Source: "product/alpha", Targets: []string{"model/requirements/alpha-requirement"}}},
-		Refinements:   []graph.RelationEntry{{Source: "model/requirements/alpha-requirement", Targets: []string{"model/use-cases/alpha-feature"}}},
-		Satisfactions: []graph.RelationEntry{{Source: "model/requirements/alpha-requirement", Targets: []string{"model/components/alpha-component"}}},
+		Relations: map[graph.PartKind][]graph.RelationEntry{
+			graph.PartKindDeriveReqt: {{Source: "product/alpha", Targets: []string{"model/requirements/alpha-requirement"}}},
+			graph.PartKindRefine:     {{Source: "model/requirements/alpha-requirement", Targets: []string{"model/use-cases/alpha-feature"}}},
+			graph.PartKindSatisfy:    {{Source: "model/requirements/alpha-requirement", Targets: []string{"model/components/alpha-component"}}},
+		},
 	}
 	if err := graph.Write(filepath.Join(specsDir, "model", "traceability", "graph.yaml"), graphData); err != nil {
 		t.Fatal(err)
@@ -326,14 +328,14 @@ func TestCmdGraphSaveRelationsWritesCanonicalRelations(t *testing.T) {
 	if err != nil {
 		t.Fatalf("graph.Load() error = %v", err)
 	}
-	if len(reloaded.DeriveReqt) != 0 {
-		t.Fatalf("len(DeriveReqt) = %d, want 0", len(reloaded.DeriveReqt))
+	if len(reloaded.Relations[graph.PartKindDeriveReqt]) != 0 {
+		t.Fatalf("len(Relations[deriveReqt]) = %d, want 0", len(reloaded.Relations[graph.PartKindDeriveReqt]))
 	}
-	if len(reloaded.Refinements) != 1 {
-		t.Fatalf("len(Refinements) = %d, want 1", len(reloaded.Refinements))
+	if len(reloaded.Relations[graph.PartKindRefine]) != 1 {
+		t.Fatalf("len(Relations[refine]) = %d, want 1", len(reloaded.Relations[graph.PartKindRefine]))
 	}
-	if reloaded.Refinements[0].Source != "model/requirements/alpha-requirement" || len(reloaded.Refinements[0].Targets) != 1 || reloaded.Refinements[0].Targets[0] != "model/use-cases/alpha-feature" {
-		t.Fatalf("unexpected feature implementation entry: %+v", reloaded.Refinements[0])
+	if reloaded.Relations[graph.PartKindRefine][0].Source != "model/requirements/alpha-requirement" || len(reloaded.Relations[graph.PartKindRefine][0].Targets) != 1 || reloaded.Relations[graph.PartKindRefine][0].Targets[0] != "model/use-cases/alpha-feature" {
+		t.Fatalf("unexpected feature implementation entry: %+v", reloaded.Relations[graph.PartKindRefine][0])
 	}
 }
 
@@ -383,11 +385,11 @@ func TestCmdGraphSaveRelationsAllowsUnlinkedArtifactNode(t *testing.T) {
 	if err != nil {
 		t.Fatalf("graph.Load() error = %v", err)
 	}
-	if len(reloaded.Satisfactions) != 1 {
-		t.Fatalf("len(Satisfactions) = %d, want 1", len(reloaded.Satisfactions))
+	if len(reloaded.Relations[graph.PartKindSatisfy]) != 1 {
+		t.Fatalf("len(Relations[satisfy]) = %d, want 1", len(reloaded.Relations[graph.PartKindSatisfy]))
 	}
-	if reloaded.Satisfactions[0].Source != "model/requirements/alpha-requirement" || len(reloaded.Satisfactions[0].Targets) != 1 || reloaded.Satisfactions[0].Targets[0] != "model/components/beta-component" {
-		t.Fatalf("unexpected component implementation entry: %+v", reloaded.Satisfactions[0])
+	if reloaded.Relations[graph.PartKindSatisfy][0].Source != "model/requirements/alpha-requirement" || len(reloaded.Relations[graph.PartKindSatisfy][0].Targets) != 1 || reloaded.Relations[graph.PartKindSatisfy][0].Targets[0] != "model/components/beta-component" {
+		t.Fatalf("unexpected component implementation entry: %+v", reloaded.Relations[graph.PartKindSatisfy][0])
 	}
 }
 

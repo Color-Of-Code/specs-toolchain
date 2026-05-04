@@ -71,14 +71,14 @@ func TestImportMarkdownAndWriteRoundTrip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ImportMarkdown() error = %v", err)
 	}
-	if got := len(g.DeriveReqt); got != 1 {
-		t.Fatalf("len(DeriveReqt) = %d, want 1", got)
+	if got := len(g.Relations[PartKindDeriveReqt]); got != 1 {
+		t.Fatalf("len(Relations[deriveReqt]) = %d, want 1", got)
 	}
-	if got := len(g.Satisfactions); got != 1 {
-		t.Fatalf("len(Satisfactions) = %d, want 1", got)
+	if got := len(g.Relations[PartKindSatisfy]); got != 1 {
+		t.Fatalf("len(Relations[satisfy]) = %d, want 1", got)
 	}
-	if got := len(g.Refinements); got != 1 {
-		t.Fatalf("len(Refinements) = %d, want 1", got)
+	if got := len(g.Relations[PartKindRefine]); got != 1 {
+		t.Fatalf("len(Relations[refine]) = %d, want 1", got)
 	}
 	if got := len(g.Baselines); got != 1 {
 		t.Fatalf("len(Baselines) = %d, want 1", got)

@@ -30,26 +30,30 @@ func sampleGraph(t *testing.T) (string, string, *tracegraph.Graph) {
 	write(t, filepath.Join(model, "components", "core", "comp.md"), "# Comp\n")
 	write(t, filepath.Join(product, "core", "001-login.md"), "# Login PR\n")
 	return model, product, &tracegraph.Graph{
-		DeriveReqt: []tracegraph.RelationEntry{{
-			Source:  "product/core/001-login",
-			Targets: []string{"model/requirements/core/001-foo"},
-		}},
-		Refinements: []tracegraph.RelationEntry{{
-			Source:  "model/requirements/core/001-foo",
-			Targets: []string{"model/use-cases/core/foo"},
-		}},
-		Satisfactions: []tracegraph.RelationEntry{{
-			Source:  "model/requirements/core/001-foo",
-			Targets: []string{"model/components/core/comp"},
-		}},
+		Relations: map[tracegraph.PartKind][]tracegraph.RelationEntry{
+			tracegraph.PartKindDeriveReqt: {{
+				Source:  "product/core/001-login",
+				Targets: []string{"model/requirements/core/001-foo"},
+			}},
+			tracegraph.PartKindRefine: {{
+				Source:  "model/requirements/core/001-foo",
+				Targets: []string{"model/use-cases/core/foo"},
+			}},
+			tracegraph.PartKindSatisfy: {{
+				Source:  "model/requirements/core/001-foo",
+				Targets: []string{"model/components/core/comp"},
+			}},
+		},
 	}
 }
 
 func sampleModelGraph(t *testing.T) (string, *tracegraph.Graph) {
 	model, _, traceability := sampleGraph(t)
 	return model, &tracegraph.Graph{
-		Refinements:   traceability.Refinements,
-		Satisfactions: traceability.Satisfactions,
+		Relations: map[tracegraph.PartKind][]tracegraph.RelationEntry{
+			tracegraph.PartKindRefine:  traceability.Relations[tracegraph.PartKindRefine],
+			tracegraph.PartKindSatisfy: traceability.Relations[tracegraph.PartKindSatisfy],
+		},
 		Layout: []tracegraph.LayoutEntry{{
 			ID:     "model/use-cases/core/foo",
 			X:      12.5,
