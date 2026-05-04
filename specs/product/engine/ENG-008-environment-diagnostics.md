@@ -1,12 +1,12 @@
 # Environment Diagnostics
 
-| Field       | Value                                                                      |
-| ----------- | -------------------------------------------------------------------------- |
-| ID          | ENG-008                                                                    |
-| Status      | Draft                                                                      |
-| Stakeholder | Spec author, maintainer                                                    |
-| Source      | [Install](../../../docs/install.md), [Commands](../../../docs/commands.md) |
-| Realised By | —                                                                          |
+| Field       | Value                                                                                                                                                                                                      |
+| ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ID          | ENG-008                                                                                                                                                                                                    |
+| Status      | Draft                                                                                                                                                                                                      |
+| Stakeholder | Spec author, maintainer                                                                                                                                                                                    |
+| Source      | [Install](../../../docs/install.md), [Commands](../../../docs/commands.md)                                                                                                                                 |
+| Realised By | [Workspace Diagnostics Reporting](../../model/requirements/workspace/WS-004-workspace-diagnostics-reporting.md), [Doctor Json Contract](../../model/requirements/workspace/WS-005-doctor-json-contract.md) |
 
 ## Summary
 

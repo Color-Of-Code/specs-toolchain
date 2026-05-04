@@ -1,12 +1,12 @@
 # Traceability Graph Validation
 
-| Field       | Value                                                                                                                                                                            |
-| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| ID          | ENG-003                                                                                                                                                                          |
-| Status      | Draft                                                                                                                                                                            |
-| Stakeholder | Project lead, architect                                                                                                                                                          |
-| Source      | [Overview](../../../docs/overview.md), [Concepts](../../../docs/concepts.md)                                                                                                     |
-| Realised By | [GRP-001](../../model/requirements/graph/GRP-001-traceability-graph-integrity-validation.md), [GRP-002](../../model/requirements/graph/GRP-002-graph-markdown-roundtrip-sync.md) |
+| Field       | Value                                                                                                                                                                                                                                   |
+| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ID          | ENG-003                                                                                                                                                                                                                                 |
+| Status      | Draft                                                                                                                                                                                                                                   |
+| Stakeholder | Project lead, architect                                                                                                                                                                                                                 |
+| Source      | [Overview](../../../docs/overview.md), [Concepts](../../../docs/concepts.md)                                                                                                                                                            |
+| Realised By | [Traceability Graph Integrity Validation](../../model/requirements/graph/GRP-001-traceability-graph-integrity-validation.md), [Graph Markdown Round-Trip Sync](../../model/requirements/graph/GRP-002-graph-markdown-roundtrip-sync.md) |
 
 ## Summary
 

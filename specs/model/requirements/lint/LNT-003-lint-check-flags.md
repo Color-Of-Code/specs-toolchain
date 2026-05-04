@@ -1,11 +1,11 @@
 # Lint Check Flags
 
-| Field          | Value                                                                                   |
-| -------------- | --------------------------------------------------------------------------------------- |
-| ID             | LNT-003                                                                                 |
-| Status         | Draft                                                                                   |
-| Realises       | [Style Compliance Linting](../../../product/engine/ENG-002-style-compliance-linting.md) |
-| Implemented By | —                                                                                       |
+| Field          | Value                                                                                               |
+| -------------- | --------------------------------------------------------------------------------------------------- |
+| ID             | LNT-003                                                                                             |
+| Status         | Draft                                                                                               |
+| Realises       | [Consistent Markdown Formatting](../../../product/engine/ENG-001-consistent-markdown-formatting.md) |
+| Implemented By | [Lint Flag Composition](../../use-cases/lint/LNT-003-flag-composition.md)                           |
 
 ## Requirement
 

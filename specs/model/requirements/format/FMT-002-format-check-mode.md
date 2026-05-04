@@ -5,7 +5,7 @@
 | ID             | FMT-002                                                                                             |
 | Status         | Draft                                                                                               |
 | Realises       | [Consistent Markdown Formatting](../../../product/engine/ENG-001-consistent-markdown-formatting.md) |
-| Implemented By | —                                                                                                   |
+| Implemented By | [Format CI Gate](../../use-cases/format/FMT-002-ci-gate.md)                                         |
 
 ## Requirement
 

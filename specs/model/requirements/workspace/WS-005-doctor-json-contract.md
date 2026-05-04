@@ -4,8 +4,8 @@
 | -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
 | ID             | WS-005                                                                                                                                             |
 | Status         | Draft                                                                                                                                              |
-| Realises       | [Repo Local Specs Host](../../../product/engine/ENG-009-repo-local-specs-host.md)                                                                  |
-| Implemented By | [JSON Diagnostics Integration](../../use-cases/doctor/DOC-002-json-diagnostics-integration.md), [Doctor Json](../../apis/workspace/doctor-json.md) |
+| Realises       | [Environment Diagnostics](../../../product/engine/ENG-008-environment-diagnostics.md)                                                              |
+| Implemented By | [JSON Diagnostics Integration](../../use-cases/doctor/DOC-002-json-diagnostics-integration.md)                                                     |
 
 ## Requirement
 

@@ -5,7 +5,7 @@
 | ID             | WS-002                                                                                                                                                            |
 | Status         | Draft                                                                                                                                                             |
 | Realises       | [Repo Local Specs Host](../../../product/engine/ENG-009-repo-local-specs-host.md)                                                                                 |
-| Implemented By | [Config Relative Framework Resolution](../../use-cases/host/HOST-002-config-relative-framework.md), [Specs Engine](../../components/engine/specs-engine.md)       |
+| Implemented By | [Specs Engine](../../components/engine/specs-engine.md), [Config Relative Framework Resolution](../../use-cases/host/HOST-002-config-relative-framework.md)       |
 
 ## Requirement
 

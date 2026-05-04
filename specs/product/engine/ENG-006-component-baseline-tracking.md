@@ -1,12 +1,12 @@
 # Component Baseline Tracking
 
-| Field       | Value                                                                                                                                                                          |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| ID          | ENG-006                                                                                                                                                                        |
-| Status      | Draft                                                                                                                                                                          |
-| Stakeholder | Architect                                                                                                                                                                      |
-| Source      | [Overview](../../../docs/overview.md), [Commands](../../../docs/commands.md)                                                                                                   |
-| Realised By | [BSL-001](../../model/requirements/baseline/BSL-001-component-baseline-drift-detection.md), [BSL-002](../../model/requirements/baseline/BSL-002-component-baseline-refresh.md) |
+| Field       | Value                                                                                                                                                                                                                        |
+| ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ID          | ENG-006                                                                                                                                                                                                                      |
+| Status      | Draft                                                                                                                                                                                                                        |
+| Stakeholder | Architect                                                                                                                                                                                                                    |
+| Source      | [Overview](../../../docs/overview.md), [Commands](../../../docs/commands.md)                                                                                                                                                 |
+| Realised By | [Component Baseline Drift Detection](../../model/requirements/baseline/BSL-001-component-baseline-drift-detection.md), [Component Baseline Refresh](../../model/requirements/baseline/BSL-002-component-baseline-refresh.md) |
 
 ## Summary
 

@@ -5,7 +5,7 @@
 | ID             | FMT-001                                                                                                 |
 | Status         | Draft                                                                                                   |
 | Realises       | [Consistent Markdown Formatting](../../../product/engine/ENG-001-consistent-markdown-formatting.md)     |
-| Implemented By | —                                                                                                       |
+| Implemented By | [In-Place Rewriting](../../use-cases/format/FMT-001-in-place-rewriting.md)                              |
 
 ## Requirement
 

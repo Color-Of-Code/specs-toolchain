@@ -1,11 +1,11 @@
 # Link Target Checking
 
-| Field          | Value                                                                                   |
-| -------------- | --------------------------------------------------------------------------------------- |
-| ID             | LNT-002                                                                                 |
-| Status         | Draft                                                                                   |
-| Realises       | [Style Compliance Linting](../../../product/engine/ENG-002-style-compliance-linting.md) |
-| Implemented By | —                                                                                       |
+| Field          | Value                                                                                    |
+| -------------- | ---------------------------------------------------------------------------------------- |
+| ID             | LNT-002                                                                                  |
+| Status         | Draft                                                                                    |
+| Realises       | —                                                                                        |
+| Implemented By | [Cross-Reference Validation](../../use-cases/lint/LNT-002-cross-reference-validation.md) |
 
 ## Requirement
 

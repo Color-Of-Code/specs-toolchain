@@ -4,8 +4,8 @@
 | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | ID             | WS-004                                                                                                                                                      |
 | Status         | Draft                                                                                                                                                       |
-| Realises       | [Repo Local Specs Host](../../../product/engine/ENG-009-repo-local-specs-host.md)                                                                           |
-| Implemented By | [Human Diagnostics Output](../../use-cases/doctor/DOC-001-human-diagnostics.md), [Workspace Diagnostics](../../services/workspace/workspace-diagnostics.md) |
+| Realises       | [Environment Diagnostics](../../../product/engine/ENG-008-environment-diagnostics.md)                                                                       |
+| Implemented By | [Human Diagnostics Output](../../use-cases/doctor/DOC-001-human-diagnostics.md)                                                                             |
 
 ## Requirement
 
