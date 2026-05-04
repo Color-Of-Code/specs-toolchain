@@ -119,7 +119,11 @@ func saveTraceabilityRelations(start string, edges []relationSaveEdge) error {
 	if err != nil {
 		return exitWith(1, "load graph %s: %v", cfg.GraphManifest, err)
 	}
-	relations, err := relationEntriesFromSaveEdges(edges, traceabilityAllowedNodeIDs(traceability))
+	allowed, err := traceabilityAllowedNodeIDs(cfg.ModelDir, cfg.ProductDir, traceability)
+	if err != nil {
+		return err
+	}
+	relations, err := relationEntriesFromSaveEdges(edges, allowed)
 	if err != nil {
 		return err
 	}
@@ -134,7 +138,7 @@ func saveTraceabilityRelations(start string, edges []relationSaveEdge) error {
 	return nil
 }
 
-func traceabilityAllowedNodeIDs(g *tracegraph.Graph) map[string]struct{} {
+func traceabilityAllowedNodeIDs(modelDir, productDir string, g *tracegraph.Graph) (map[string]struct{}, error) {
 	allowed := map[string]struct{}{}
 	for _, entries := range [][]tracegraph.RelationEntry{
 		g.Realizations,
@@ -153,7 +157,59 @@ func traceabilityAllowedNodeIDs(g *tracegraph.Graph) map[string]struct{} {
 	for _, baseline := range g.Baselines {
 		allowed[baseline.Component] = struct{}{}
 	}
-	return allowed
+	for _, root := range []struct {
+		dir    string
+		prefix string
+	}{
+		{productDir, "product"},
+		{filepath.Join(modelDir, "requirements"), "model/requirements"},
+		{filepath.Join(modelDir, "features"), "model/features"},
+		{filepath.Join(modelDir, "components"), "model/components"},
+		{filepath.Join(modelDir, "services"), "model/services"},
+		{filepath.Join(modelDir, "apis"), "model/apis"},
+	} {
+		if err := collectArtifactNodeIDs(allowed, root.dir, root.prefix); err != nil {
+			return nil, err
+		}
+	}
+	return allowed, nil
+}
+
+func collectArtifactNodeIDs(allowed map[string]struct{}, dir, prefix string) error {
+	if dir == "" {
+		return nil
+	}
+	info, err := os.Stat(dir)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil
+		}
+		return fmt.Errorf("stat %s: %w", dir, err)
+	}
+	if !info.IsDir() {
+		return nil
+	}
+	return filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if info == nil || info.IsDir() {
+			return nil
+		}
+		if !strings.HasSuffix(path, ".md") || filepath.Base(path) == "_index.md" {
+			return nil
+		}
+		rel, err := filepath.Rel(dir, path)
+		if err != nil {
+			return err
+		}
+		nodeID, err := tracegraph.NormalizeNodeID(filepath.ToSlash(filepath.Join(prefix, strings.TrimSuffix(rel, filepath.Ext(rel)))))
+		if err != nil {
+			return nil
+		}
+		allowed[nodeID] = struct{}{}
+		return nil
+	})
 }
 
 type relationSaveFamilies struct {

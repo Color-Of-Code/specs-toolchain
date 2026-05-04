@@ -6,6 +6,7 @@ import * as vscode from "vscode";
 import { runAndCapture, findSpecsFolder, findSpecsRoot, getOutput } from "./engine";
 
 let currentPanel: vscode.WebviewPanel | undefined;
+let suppressRefreshUntil = 0;
 
 interface VisualizeLayout {
   x: number;
@@ -60,7 +61,7 @@ export function registerVisualizePanel(context: vscode.ExtensionContext): void {
   if (folder) {
     const root = findSpecsRoot(folder) ?? folder.uri.fsPath;
     const debounced = debounce(() => {
-      if (currentPanel) {
+      if (currentPanel && Date.now() > suppressRefreshUntil) {
         refresh(context);
       }
     }, 500);
@@ -137,6 +138,7 @@ async function saveGraphPayload(
   const inputPath = path.join(tempDir, "relations.json");
   try {
     await fs.promises.writeFile(inputPath, JSON.stringify(payload), "utf8");
+    suppressRefreshUntil = Date.now() + 3000;
     const res = await runAndCapture(context, ["graph", subcommand, "--in", inputPath], cwd);
     if (res.exitCode !== 0) {
       const error = res.stderr || `graph ${subcommand} failed`;
@@ -359,6 +361,7 @@ ${fallbackInline ? "" : `<script nonce="${nonce}" src="${cytoscapeUri}"></script
         pendingRequests.set(requestId, { resolve, reject });
         vscode.postMessage({ type: 'save-relations', requestId, payload });
       }),
+      onConfirm: () => true,
       emptyMessage: 'No traceability data found.',
     });
     void ui;

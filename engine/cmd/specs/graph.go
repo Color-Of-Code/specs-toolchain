@@ -118,7 +118,11 @@ func cmdGraphSaveRelations(args []string) error {
 	if err != nil {
 		return exitWith(1, "decode relation payload: %v", err)
 	}
-	relations, err := relationEntriesFromSaveEdges(request.Edges, traceabilityAllowedNodeIDs(traceability))
+	allowed, err := traceabilityAllowedNodeIDs(cfg.ModelDir, cfg.ProductDir, traceability)
+	if err != nil {
+		return err
+	}
+	relations, err := relationEntriesFromSaveEdges(request.Edges, allowed)
 	if err != nil {
 		return exitWith(1, "save relations: %v", err)
 	}

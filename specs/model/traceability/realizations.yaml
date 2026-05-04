@@ -1,5 +1,8 @@
 kind: realization
 entries:
+    - source: product/engine/ENG-002-style-compliance-linting
+      targets:
+        - model/requirements/lint/LNT-001-style-rule-enforcement
     - source: product/engine/ENG-009-repo-local-specs-host
       targets:
         - model/requirements/workspace/WS-001-repo-local-specs-host

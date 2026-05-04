@@ -138,7 +138,10 @@
     return node.data("label") || node.id();
   }
 
-  function confirmRelationChange(action, relation) {
+  function confirmRelationChange(opts, action, relation) {
+    if (typeof opts.onConfirm === "function") {
+      return opts.onConfirm(action, relation);
+    }
     if (typeof window === "undefined" || typeof window.confirm !== "function") {
       return true;
     }
@@ -699,7 +702,7 @@
         setMetaStatus(options, "edge already exists");
         return;
       }
-      if (!confirmRelationChange("Add", nextEdgePreview)) {
+      if (!confirmRelationChange(options, "Add", nextEdgePreview)) {
         setMetaStatus(options, "edge creation cancelled");
         return;
       }
@@ -796,7 +799,7 @@
           sourceLabel: nodeDisplayLabel(resolveNode(edgeToRemove.data("source"))),
           targetLabel: nodeDisplayLabel(resolveNode(edgeToRemove.data("target"))),
         };
-        if (!confirmRelationChange("Remove", removalPreview)) {
+        if (!confirmRelationChange(options, "Remove", removalPreview)) {
           setMetaStatus(options, "edge removal cancelled");
           updateDetailsPanel();
           return;

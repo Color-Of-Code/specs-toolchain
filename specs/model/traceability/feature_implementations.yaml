@@ -1,5 +1,8 @@
 kind: feature_implementation
 entries:
+    - source: model/requirements/lint/LNT-001-style-rule-enforcement
+      targets:
+        - model/features/lint/LNT-003-flag-composition
     - source: model/requirements/workspace/WS-001-repo-local-specs-host
       targets:
         - model/features/host/HOST-001-host-layout
