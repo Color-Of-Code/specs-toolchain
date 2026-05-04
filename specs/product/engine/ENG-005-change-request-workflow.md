@@ -1,6 +1,5 @@
 ---
 id: ENG-005
-status: Draft
 stakeholder: Spec author, project lead
 source: "[Overview](../../../docs/overview.md), [Actors](../../../docs/actors.md)"
 realised_by:

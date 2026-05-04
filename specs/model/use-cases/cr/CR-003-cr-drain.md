@@ -1,6 +1,5 @@
 ---
 id: CR-003
-status: Draft
 requirements:
     - ../../requirements/cr/CR-003-change-request-drain.md
 ---

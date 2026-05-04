@@ -1,6 +1,5 @@
 ---
 id: FMT-002
-status: Draft
 requirements:
     - ../../requirements/format/FMT-002-format-check-mode.md
 ---

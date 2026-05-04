@@ -1,6 +1,5 @@
 ---
 id: LNT-003
-status: Draft
 realises:
     - ../../../product/engine/ENG-001-consistent-markdown-formatting.md
 implemented_by:

@@ -1,6 +1,5 @@
 ---
 id: CR-002
-status: Draft
 requirements:
     - ../../requirements/cr/CR-002-change-request-status-reporting.md
 ---

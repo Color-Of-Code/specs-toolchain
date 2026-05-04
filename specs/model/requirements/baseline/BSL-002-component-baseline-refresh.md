@@ -1,6 +1,5 @@
 ---
 id: BSL-002
-status: Draft
 realises:
     - ../../../product/engine/ENG-006-component-baseline-tracking.md
 implemented_by:

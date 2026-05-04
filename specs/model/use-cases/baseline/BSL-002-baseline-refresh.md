@@ -1,6 +1,5 @@
 ---
 id: BSL-002
-status: Draft
 requirements:
     - ../../requirements/baseline/BSL-002-component-baseline-refresh.md
 ---

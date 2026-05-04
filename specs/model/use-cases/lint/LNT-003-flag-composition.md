@@ -1,6 +1,5 @@
 ---
 id: LNT-003
-status: Draft
 requirements:
     - ../../requirements/lint/LNT-003-lint-check-flags.md
 ---

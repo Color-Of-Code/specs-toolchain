@@ -1,6 +1,5 @@
 ---
 id: VEXT-002
-status: Draft
 realises:
     - ../../../product/extension/EXT-002-palette-command-access.md
 implemented_by:

@@ -1,6 +1,5 @@
 ---
 id: VEXT-005
-status: Draft
 requirements:
     - ../../requirements/extension/VEXT-005-guided-scaffold-wizard.md
 ---

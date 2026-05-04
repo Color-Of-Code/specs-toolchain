@@ -1,6 +1,5 @@
 ---
 id: EXT-003
-status: Draft
 stakeholder: Product manager, architect
 source: "[Overview](../../../docs/overview.md), [Extension README](../../../extension/README.md)"
 realised_by:

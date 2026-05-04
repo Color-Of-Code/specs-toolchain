@@ -1,6 +1,5 @@
 ---
 id: EXT-005
-status: Draft
 stakeholder: Spec author, stakeholder
 source: "[Commands](../../../docs/commands.md), [Actors](../../../docs/actors.md)"
 realised_by:

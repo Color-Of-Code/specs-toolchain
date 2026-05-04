@@ -1,6 +1,5 @@
 ---
 id: VEXT-005
-status: Draft
 realises:
     - ../../../product/extension/EXT-005-guided-scaffold-wizard.md
 implemented_by:

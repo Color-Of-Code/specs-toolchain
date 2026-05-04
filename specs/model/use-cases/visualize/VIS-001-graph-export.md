@@ -1,6 +1,5 @@
 ---
 id: VIS-001
-status: Draft
 requirements:
     - ../../requirements/visualize/VIS-001-traceability-graph-export.md
 ---

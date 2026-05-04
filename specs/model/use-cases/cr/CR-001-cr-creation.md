@@ -1,6 +1,5 @@
 ---
 id: CR-001
-status: Draft
 requirements:
     - ../../requirements/cr/CR-001-change-request-creation.md
 ---

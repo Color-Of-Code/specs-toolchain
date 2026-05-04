@@ -1,6 +1,5 @@
 ---
 id: VEXT-006
-status: Draft
 requirements:
     - ../../requirements/extension/VEXT-006-guided-host-init-wizard.md
 ---

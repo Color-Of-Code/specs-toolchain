@@ -1,6 +1,5 @@
 ---
 id: VEXT-002
-status: Draft
 requirements:
     - ../../requirements/extension/VEXT-002-palette-command-dispatch.md
 ---

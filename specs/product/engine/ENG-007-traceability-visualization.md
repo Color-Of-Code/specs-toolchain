@@ -1,6 +1,5 @@
 ---
 id: ENG-007
-status: Draft
 stakeholder: Product manager, architect
 source: "[Overview](../../../docs/overview.md), [Commands](../../../docs/commands.md)"
 realised_by:

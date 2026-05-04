@@ -1,6 +1,5 @@
 ---
 id: VIS-001
-status: Draft
 realises:
     - ../../../product/engine/ENG-007-traceability-visualization.md
 implemented_by:

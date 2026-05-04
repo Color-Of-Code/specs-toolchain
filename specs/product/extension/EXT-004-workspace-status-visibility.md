@@ -1,6 +1,5 @@
 ---
 id: EXT-004
-status: Draft
 stakeholder: Spec author
 source: "[Extension README](../../../extension/README.md)"
 realised_by:

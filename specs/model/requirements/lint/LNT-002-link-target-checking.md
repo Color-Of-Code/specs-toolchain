@@ -1,6 +1,5 @@
 ---
 id: LNT-002
-status: Draft
 realises: []
 implemented_by:
     - ../../use-cases/lint/LNT-002-cross-reference-validation.md

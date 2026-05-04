@@ -1,6 +1,5 @@
 ---
 id: HOST-002
-status: Draft
 requirements:
     - ../../requirements/workspace/WS-002-config-relative-framework-directory.md
 ---

@@ -1,6 +1,5 @@
 ---
 id: ENG-009
-status: Draft
 stakeholder: specs-toolchain maintainer
 source: "[Development guide](../../../docs/development.md), [Configuration reference](../../../docs/configuration.md)"
 realised_by:

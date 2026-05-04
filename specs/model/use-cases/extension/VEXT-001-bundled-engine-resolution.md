@@ -1,6 +1,5 @@
 ---
 id: VEXT-001
-status: Draft
 requirements:
     - ../../requirements/extension/VEXT-001-bundled-engine-resolution-priority.md
 ---

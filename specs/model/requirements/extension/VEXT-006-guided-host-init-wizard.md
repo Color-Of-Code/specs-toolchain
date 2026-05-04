@@ -1,6 +1,5 @@
 ---
 id: VEXT-006
-status: Draft
 realises:
     - ../../../product/extension/EXT-006-guided-host-initialisation.md
 implemented_by:

@@ -1,6 +1,5 @@
 ---
 id: GRP-001
-status: Draft
 realises:
     - ../../../product/engine/ENG-003-traceability-graph-validation.md
 implemented_by:

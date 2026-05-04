@@ -1,6 +1,5 @@
 ---
 id: WS-005
-status: Draft
 realises:
     - ../../../product/engine/ENG-008-environment-diagnostics.md
 implemented_by:

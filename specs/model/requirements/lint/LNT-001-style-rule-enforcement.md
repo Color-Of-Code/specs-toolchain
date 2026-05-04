@@ -1,6 +1,5 @@
 ---
 id: LNT-001
-status: Draft
 realises:
     - ../../../product/engine/ENG-002-style-compliance-linting.md
 implemented_by:

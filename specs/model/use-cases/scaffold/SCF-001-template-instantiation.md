@@ -1,6 +1,5 @@
 ---
 id: SCF-001
-status: Draft
 requirements:
     - ../../requirements/scaffold/SCF-001-template-based-artifact-instantiation.md
 ---

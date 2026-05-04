@@ -1,6 +1,5 @@
 ---
 id: VIS-002
-status: Draft
 requirements:
     - ../../requirements/visualize/VIS-002-interactive-graph-server.md
 ---

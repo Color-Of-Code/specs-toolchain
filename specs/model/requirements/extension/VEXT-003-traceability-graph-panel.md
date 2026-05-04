@@ -1,6 +1,5 @@
 ---
 id: VEXT-003
-status: Draft
 realises:
     - ../../../product/extension/EXT-003-traceability-graph-panel.md
 implemented_by:

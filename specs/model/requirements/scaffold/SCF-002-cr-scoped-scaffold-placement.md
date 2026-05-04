@@ -1,6 +1,5 @@
 ---
 id: SCF-002
-status: Draft
 realises:
     - ../../../product/engine/ENG-004-artifact-scaffolding-from-templates.md
 implemented_by:

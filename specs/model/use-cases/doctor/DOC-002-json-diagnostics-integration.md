@@ -1,6 +1,5 @@
 ---
 id: DOC-002
-status: Draft
 requirements:
     - ../../requirements/workspace/WS-005-doctor-json-contract.md
 ---

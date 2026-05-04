@@ -1,6 +1,5 @@
 ---
 id: HOST-003
-status: Draft
 requirements:
     - ../../requirements/workspace/WS-003-repo-local-engine-integration.md
 ---

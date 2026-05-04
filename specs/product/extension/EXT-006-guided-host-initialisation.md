@@ -1,6 +1,5 @@
 ---
 id: EXT-006
-status: Draft
 stakeholder: VS Code user, project lead
 source: "[Install](../../../docs/install.md), [Commands](../../../docs/commands.md)"
 realised_by:

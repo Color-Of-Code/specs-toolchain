@@ -1,6 +1,5 @@
 ---
 id: VEXT-004
-status: Draft
 requirements:
     - ../../requirements/extension/VEXT-004-status-bar-workspace-indicator.md
 ---

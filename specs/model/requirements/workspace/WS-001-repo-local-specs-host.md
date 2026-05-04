@@ -1,6 +1,5 @@
 ---
 id: WS-001
-status: Draft
 realises:
     - ../../../product/engine/ENG-009-repo-local-specs-host.md
 implemented_by:

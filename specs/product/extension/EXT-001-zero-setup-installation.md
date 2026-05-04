@@ -1,6 +1,5 @@
 ---
 id: EXT-001
-status: Draft
 stakeholder: VS Code user, spec author
 source: "[Install](../../../docs/install.md), [Extension README](../../../extension/README.md)"
 realised_by:

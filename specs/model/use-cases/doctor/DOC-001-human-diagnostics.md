@@ -1,6 +1,5 @@
 ---
 id: DOC-001
-status: Draft
 requirements:
     - ../../requirements/workspace/WS-004-workspace-diagnostics-reporting.md
 ---

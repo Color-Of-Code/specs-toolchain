@@ -1,6 +1,5 @@
 ---
 id: ENG-003
-status: Draft
 stakeholder: Project lead, architect
 source: "[Overview](../../../docs/overview.md), [Concepts](../../../docs/concepts.md)"
 realised_by:

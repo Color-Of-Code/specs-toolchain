@@ -1,5 +1,4 @@
 ---
-status: Draft
 requirements:
     - ../../requirements/workspace/WS-002-config-relative-framework-directory.md
     - ../../requirements/workspace/WS-003-repo-local-engine-integration.md

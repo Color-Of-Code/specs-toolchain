@@ -1,6 +1,5 @@
 ---
 id: BSL-001
-status: Draft
 requirements:
     - ../../requirements/baseline/BSL-001-component-baseline-drift-detection.md
 ---

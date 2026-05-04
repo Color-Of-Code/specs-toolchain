@@ -1,6 +1,5 @@
 ---
 id: ENG-008
-status: Draft
 stakeholder: Spec author, maintainer
 source: "[Install](../../../docs/install.md), [Commands](../../../docs/commands.md)"
 realised_by:

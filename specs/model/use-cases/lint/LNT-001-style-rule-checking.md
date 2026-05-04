@@ -1,6 +1,5 @@
 ---
 id: LNT-001
-status: Draft
 requirements:
     - ../../requirements/lint/LNT-001-style-rule-enforcement.md
 ---

@@ -1,6 +1,5 @@
 ---
 id: VEXT-003
-status: Draft
 requirements:
     - ../../requirements/extension/VEXT-003-traceability-graph-panel.md
 ---

@@ -1,6 +1,5 @@
 ---
 id: VEXT-004
-status: Draft
 realises:
     - ../../../product/extension/EXT-004-workspace-status-visibility.md
 implemented_by:

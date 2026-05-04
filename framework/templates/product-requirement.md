@@ -1,5 +1,4 @@
 ---
-status: Draft
 stakeholder: ""
 source: ""
 realised_by: []

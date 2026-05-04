@@ -1,6 +1,5 @@
 ---
 id: HOST-001
-status: Draft
 requirements:
     - ../../requirements/workspace/WS-001-repo-local-specs-host.md
 ---

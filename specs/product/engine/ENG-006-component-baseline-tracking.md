@@ -1,6 +1,5 @@
 ---
 id: ENG-006
-status: Draft
 stakeholder: Architect
 source: "[Overview](../../../docs/overview.md), [Commands](../../../docs/commands.md)"
 realised_by:

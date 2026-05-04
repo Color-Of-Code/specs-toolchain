@@ -1,6 +1,5 @@
 ---
 id: FMT-001
-status: Draft
 requirements:
     - ../../requirements/format/FMT-001-format-in-place.md
 ---

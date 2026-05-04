@@ -1,6 +1,5 @@
 ---
 id: GRP-001
-status: Draft
 requirements:
     - ../../requirements/graph/GRP-001-traceability-graph-integrity-validation.md
 ---

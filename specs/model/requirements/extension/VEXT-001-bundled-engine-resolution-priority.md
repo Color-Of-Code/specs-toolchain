@@ -1,6 +1,5 @@
 ---
 id: VEXT-001
-status: Draft
 realises:
     - ../../../product/extension/EXT-001-zero-setup-installation.md
 implemented_by:

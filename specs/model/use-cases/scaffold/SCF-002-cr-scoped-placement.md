@@ -1,6 +1,5 @@
 ---
 id: SCF-002
-status: Draft
 requirements:
     - ../../requirements/scaffold/SCF-002-cr-scoped-scaffold-placement.md
 ---

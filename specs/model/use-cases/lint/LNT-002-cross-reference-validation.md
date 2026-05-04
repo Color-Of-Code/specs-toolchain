@@ -1,6 +1,5 @@
 ---
 id: LNT-002
-status: Draft
 requirements:
     - ../../requirements/lint/LNT-002-link-target-checking.md
 ---

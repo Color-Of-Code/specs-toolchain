@@ -1,6 +1,5 @@
 ---
 id: CR-003
-status: Draft
 realises:
     - ../../../product/engine/ENG-005-change-request-workflow.md
 implemented_by:
