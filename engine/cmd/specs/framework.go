@@ -1,12 +1,16 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"io/fs"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
+
+	"gopkg.in/yaml.v3"
 
 	"github.com/Color-Of-Code/specs-toolchain/engine/internal/cache"
 	"github.com/Color-Of-Code/specs-toolchain/engine/internal/config"
@@ -30,8 +34,10 @@ func cmdFramework(args []string) error {
 		return cmdFrameworkSeed(args[1:])
 	case "update":
 		return cmdFrameworkUpdate(args[1:])
+	case "skills":
+		return cmdFrameworkSkills(args[1:])
 	case "-h", "--help", "help":
-		fmt.Fprintln(os.Stderr, "Usage: specs framework <list|add|remove|seed|update> [flags]")
+		fmt.Fprintln(os.Stderr, "Usage: specs framework <list|add|remove|seed|update|skills> [flags]")
 		return nil
 	default:
 		return exitWith(2, "unknown subcommand: specs framework %s", args[0])
@@ -325,4 +331,128 @@ func cmdFrameworkSeed(args []string) error {
 	fmt.Println("  cd", dest)
 	fmt.Println("  git init && git add -A && git commit -m \"initial framework skeleton\"")
 	return nil
+}
+
+// SkillFrontmatter holds the YAML front-matter from a skill file under
+// framework/skills/*.md. Only the fields the extension needs are parsed.
+type SkillFrontmatter struct {
+	ID          string                 `yaml:"id"`
+	Name        string                 `yaml:"name"`
+	Description string                 `yaml:"description"`
+	Tags        []string               `yaml:"tags"`
+	InputSchema map[string]interface{} `yaml:"inputSchema"`
+	EngineArgs  map[string][]string    `yaml:"engineArgs"`
+}
+
+// SkillInfo is the JSON-serialisable record emitted by `specs framework skills list`.
+type SkillInfo struct {
+	ID          string                 `json:"id"`
+	Name        string                 `json:"name"`
+	Description string                 `json:"description"`
+	Tags        []string               `json:"tags"`
+	InputSchema map[string]interface{} `json:"inputSchema,omitempty"`
+	EngineArgs  map[string][]string    `json:"engineArgs,omitempty"`
+	File        string                 `json:"file"`
+}
+
+// cmdFrameworkSkills handles `specs framework skills list`.
+func cmdFrameworkSkills(args []string) error {
+	fs2 := flag.NewFlagSet("framework skills", flag.ContinueOnError)
+	fs2.Usage = func() { fmt.Fprintln(os.Stderr, "Usage: specs framework skills list") }
+	if err := fs2.Parse(args); err != nil {
+		return err
+	}
+	if len(fs2.Args()) == 0 || fs2.Args()[0] == "list" {
+		return cmdFrameworkSkillsList()
+	}
+	fs2.Usage()
+	return exitWith(2, "unknown subcommand: specs framework skills %s", fs2.Args()[0])
+}
+
+func cmdFrameworkSkillsList() error {
+	cfg, err := config.Load("")
+	if err != nil {
+		return err
+	}
+	if cfg.FrameworkDir == "" {
+		fmt.Println("[]")
+		return nil
+	}
+	skillsDir := filepath.Join(cfg.FrameworkDir, "skills")
+	entries, err := os.ReadDir(skillsDir)
+	if err != nil {
+		if os.IsNotExist(err) {
+			fmt.Println("[]")
+			return nil
+		}
+		return fmt.Errorf("read skills dir: %w", err)
+	}
+
+	var skills []SkillInfo
+	for _, e := range entries {
+		if e.IsDir() || !strings.HasSuffix(e.Name(), ".md") {
+			continue
+		}
+		filePath := filepath.Join(skillsDir, e.Name())
+		info, err := parseSkillFile(filePath)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "warning: skip %s: %v\n", e.Name(), err)
+			continue
+		}
+		info.File = filePath
+		skills = append(skills, *info)
+	}
+
+	enc := json.NewEncoder(os.Stdout)
+	enc.SetIndent("", "  ")
+	if skills == nil {
+		_, err = os.Stdout.WriteString("[]\n")
+		return err
+	}
+	return enc.Encode(skills)
+}
+
+// parseSkillFile reads a Markdown file with YAML front-matter delimited by ---
+// lines and returns the parsed SkillInfo.
+func parseSkillFile(path string) (*SkillInfo, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	frontmatter, err := extractFrontmatter(string(data))
+	if err != nil {
+		return nil, fmt.Errorf("frontmatter: %w", err)
+	}
+	var fm SkillFrontmatter
+	if err := yaml.Unmarshal([]byte(frontmatter), &fm); err != nil {
+		return nil, fmt.Errorf("parse frontmatter: %w", err)
+	}
+	if fm.ID == "" {
+		return nil, fmt.Errorf("missing required field: id")
+	}
+	return &SkillInfo{
+		ID:          fm.ID,
+		Name:        fm.Name,
+		Description: fm.Description,
+		Tags:        fm.Tags,
+		InputSchema: fm.InputSchema,
+		EngineArgs:  fm.EngineArgs,
+	}, nil
+}
+
+// extractFrontmatter returns the content between the first pair of "---" lines.
+func extractFrontmatter(content string) (string, error) {
+	lines := strings.SplitN(content, "\n", -1)
+	if len(lines) < 2 || strings.TrimSpace(lines[0]) != "---" {
+		return "", fmt.Errorf("no front-matter found")
+	}
+	var buf strings.Builder
+	for _, line := range lines[1:] {
+		if strings.TrimSpace(line) == "---" {
+			return buf.String(), nil
+		}
+		buf.WriteString(line)
+		buf.WriteByte('\n')
+	}
+	return "", fmt.Errorf("front-matter not closed with ---")
 }
