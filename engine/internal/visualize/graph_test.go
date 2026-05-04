@@ -96,24 +96,6 @@ func TestBuild_NilGraph(t *testing.T) {
 	}
 }
 
-func TestWriteDOT(t *testing.T) {
-	model, traceability := sampleModelGraph(t)
-	g, err := Build(model, "", traceability)
-	if err != nil {
-		t.Fatal(err)
-	}
-	var buf bytes.Buffer
-	if err := WriteDOT(&buf, g); err != nil {
-		t.Fatal(err)
-	}
-	out := buf.String()
-	for _, want := range []string{"digraph", "rankdir=LR", "subgraph cluster_requirement", "subgraph cluster_feature", "->"} {
-		if !strings.Contains(out, want) {
-			t.Errorf("DOT output missing %q\n---\n%s", want, out)
-		}
-	}
-}
-
 func TestWriteMermaid(t *testing.T) {
 	model, traceability := sampleModelGraph(t)
 	g, err := Build(model, "", traceability)

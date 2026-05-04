@@ -126,7 +126,6 @@ func cmdDoctor(args []string) error {
 	fmt.Println("External tools:")
 	reportTool("git", true)
 	reportTool("pnpm", false)
-	reportTool("dot", false)
 
 	if cfg.MinSpecsVersion != "" && Version != "dev" && Version < cfg.MinSpecsVersion {
 		return exitWith(1, "installed engine %s is older than min_specs_version %s", Version, cfg.MinSpecsVersion)

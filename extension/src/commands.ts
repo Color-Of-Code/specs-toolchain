@@ -29,8 +29,7 @@ export function registerCommands(context: vscode.ExtensionContext): void {
   reg("specs.bootstrap", () => runInitWizard(context));
 
   // Visualize (writes a file in model/ and opens it).
-  reg("specs.visualize.dot", () => visualize(context, "dot"));
-  reg("specs.visualize.mermaid", () => visualize(context, "mermaid"));
+	reg("specs.visualize.mermaid", () => visualize(context));
 
   // Scaffold a new model file.
   for (const kind of ["requirement", "feature", "component", "api", "service"] as const) {
@@ -173,24 +172,20 @@ async function baselineUpdate(context: vscode.ExtensionContext): Promise<void> {
   runInTerminal(context, args, cwd);
 }
 
-async function visualize(
-  context: vscode.ExtensionContext,
-  format: "dot" | "mermaid",
-): Promise<void> {
+async function visualize(context: vscode.ExtensionContext): Promise<void> {
   const folder = findSpecsFolder();
   if (!folder) {
     return;
   }
   const cwd = findSpecsRoot(folder) ?? folder.uri.fsPath;
 
-  const ext = format === "dot" ? "dot" : "md";
-  const outPath = `model/_visualize.${ext}`;
+	const outPath = "model/_visualize.md";
   const out = getOutput();
   out.appendLine(`Specs: visualize -> ${outPath}`);
 
   const res = await runAndCapture(
     context,
-    ["visualize", "traceability", "--format", format, "--out", outPath],
+		["visualize", "traceability", "--format", "mermaid", "--out", outPath],
     cwd,
   );
   if (res.exitCode !== 0) {

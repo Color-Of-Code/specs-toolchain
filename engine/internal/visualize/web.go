@@ -16,7 +16,6 @@ type TraceabilityPageData struct {
 	GraphURL         string
 	SaveRelationsURL string
 	SaveLayoutURL    string
-	DotURL           string
 	JSONURL          string
 	ArtifactURL      string
 	Stylesheet       string
@@ -55,7 +54,6 @@ var traceabilityPageTemplate = template.Must(template.New("traceability-page").P
   {{ if .SaveRelationsURL }}<button id="remove-edge" type="button">Remove Selected Edge</button>{{ end }}
   {{ if .SaveLayoutURL }}<button id="save-layout" type="button">Save Layout</button>{{ end }}
   <a class="toolbar-link" href="{{ .JSONURL }}">Graph JSON</a>
-  <a class="toolbar-link" href="{{ .DotURL }}">Graph DOT</a>
   <div class="meta" id="meta"></div>
 </div>
 <p class="hint">{{ .Hint }}</p>

@@ -92,17 +92,6 @@ func newTraceabilityUIHandler(start string) (http.Handler, error) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	})
-	mux.HandleFunc("/graph.dot", func(w http.ResponseWriter, _ *http.Request) {
-		_, graphView, err := loadTraceabilityVisualization(start)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		w.Header().Set("Content-Type", "text/vnd.graphviz; charset=utf-8")
-		if err := visualize.WriteDOT(w, graphView); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-	})
 	mux.HandleFunc("/artifact", func(w http.ResponseWriter, r *http.Request) {
 		cfg, _, err := loadTraceabilityVisualization(start)
 		if err != nil {
@@ -136,7 +125,6 @@ func newTraceabilityUIHandler(start string) (http.Handler, error) {
 			GraphURL:         "/graph.json",
 			SaveRelationsURL: "/relations",
 			SaveLayoutURL:    "/layout",
-			DotURL:           "/graph.dot",
 			JSONURL:          "/graph.json",
 			ArtifactURL:      "/artifact",
 			Stylesheet:       "/assets/traceability-view.css",

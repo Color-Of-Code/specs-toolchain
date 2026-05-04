@@ -47,7 +47,6 @@ func TestNewTraceabilityUIHandlerServesUIAndArtifacts(t *testing.T) {
 	}{
 		{path: "/", contentType: "text/html", contains: []string{"Specs: Traceability", "/graph.json", "/assets/traceability-view.js", "/layout", "/relations", "Save Layout", "Remove Selected Edge", "Add Edge", "relation-kind", "component_implementation", "id=\"details\"", "No selection"}},
 		{path: "/graph.json", contentType: "application/json", contains: []string{`"id": "product/alpha"`, `"source": "product/alpha"`}},
-		{path: "/graph.dot", contentType: "text/vnd.graphviz", contains: []string{"digraph traceability", "nproduct_alpha -> nmodel_requirements_alpha_requirement;"}},
 		{path: "/assets/traceability-view.js", contentType: "text/javascript", contains: []string{"window.TraceabilityUI", "cytoscape"}},
 		{path: "/artifact?path=model/features/alpha-feature.md", contentType: "text/html", contains: []string{"alpha-feature.md", "# Alpha Feature"}},
 	} {

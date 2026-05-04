@@ -67,7 +67,7 @@ specs cr drain    ──►  git mv into canonical model paths
   `specs baseline update` refreshes canonical baseline entries and regenerates
   component baseline fields.
 - **Visual traceability** — `specs visualize traceability` renders the
-  graph as DOT, Mermaid, or JSON.
+  graph as Mermaid or JSON.
 - **Diagnostics** — `specs doctor` prints engine version, resolved paths,
   framework mode, and version drift.
 

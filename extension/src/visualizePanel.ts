@@ -118,9 +118,7 @@ async function openOrRefresh(context: vscode.ExtensionContext): Promise<void> {
     currentPanel = undefined;
   });
   panel.webview.onDidReceiveMessage(async (msg: { type: string; requestId?: string; payload?: string | SaveLayoutPayload | SaveRelationsPayload }) => {
-    if (msg.type === "export-dot") {
-      await exportFile(context, "dot");
-    } else if (msg.type === "export-json") {
+    if (msg.type === "export-json") {
       await exportFile(context, "json");
     } else if (msg.type === "refresh") {
       await refresh(context);
@@ -198,17 +196,17 @@ async function refresh(context: vscode.ExtensionContext): Promise<void> {
 
 async function exportFile(
   context: vscode.ExtensionContext,
-  format: "dot" | "json",
+	format: "json",
 ): Promise<void> {
   const folder = findSpecsFolder();
   if (!folder) {
     return;
   }
   const cwd = findSpecsRoot(folder) ?? folder.uri.fsPath;
-  const ext = format === "dot" ? "dot" : "json";
+	const ext = "json";
   const target = await vscode.window.showSaveDialog({
     defaultUri: vscode.Uri.joinPath(folder.uri, `traceability.${ext}`),
-    filters: format === "dot" ? { "Graphviz DOT": ["dot"] } : { "Traceability JSON": ["json"] },
+		filters: { "Traceability JSON": ["json"] },
   });
   if (!target) {
     return;
@@ -319,7 +317,6 @@ ${fallbackBanner}
   <button id="remove-edge">Remove Selected Edge</button>
   <button id="save-layout">Save Layout</button>
   <button id="export-json">Export JSON</button>
-  <button id="export-dot">Export DOT</button>
   <div class="meta" id="meta">${graph.nodes.length} nodes / ${graph.edges.length} edges</div>
 </div>
 <p class="hint">Select a node or edge to inspect its details. Use the inspector to open markdown artifacts.</p>
@@ -351,7 +348,6 @@ ${fallbackInline ? "" : `<script nonce="${nonce}" src="${cytoscapeUri}"></script
   });
   document.getElementById('refresh').addEventListener('click', () => vscode.postMessage({ type: 'refresh' }));
   document.getElementById('export-json').addEventListener('click', () => vscode.postMessage({ type: 'export-json' }));
-  document.getElementById('export-dot').addEventListener('click', () => vscode.postMessage({ type: 'export-dot' }));
   if (typeof TraceabilityUI !== 'undefined') {
     const ui = TraceabilityUI.mount({
       graph,

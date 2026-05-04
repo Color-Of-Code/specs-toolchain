@@ -26,8 +26,9 @@ implementation chain without switching to a browser or external tool.
 
 ## Acceptance Signal
 
-The `Specs: Visualize (Mermaid)` and `Specs: Visualize (DOT)` palette
-commands generate output files in the model directory and open them in the
-editor. The extension's WebView panel renders the Cytoscape-based graph
-from the engine's JSON output. Clicking a node shows its relations. Saved
-layouts persist across editor restarts via the canonical graph YAML.
+The `Specs: Visualize (Mermaid)` palette command generates an output file in
+the model directory and opens it in the editor. The extension's WebView
+panel renders the Cytoscape-based graph from the engine's JSON output and
+can export the same canonical JSON payload. Clicking a node shows its
+relations. Saved layouts persist across editor restarts via the canonical
+graph YAML.

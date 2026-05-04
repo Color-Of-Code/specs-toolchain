@@ -32,19 +32,19 @@ func cmdVisualize(args []string) error {
 
 // cmdVisualizeTraceability emits the requirement <-> implementer graph.
 //
-//	--format dot|mermaid|json    output format (default: dot)
+//	--format mermaid|json    output format (default: mermaid)
 //	--out <path>                 file to write (default: stdout)
 //	--serve                      run a local web server instead of writing a file
 //	--listen <addr>              listen address for --serve (default: 127.0.0.1:8090)
 func cmdVisualizeTraceability(args []string) error {
 	fs := flag.NewFlagSet("visualize traceability", flag.ContinueOnError)
-	format := fs.String("format", "dot", "output format: dot | mermaid | json")
+	format := fs.String("format", "mermaid", "output format: mermaid | json")
 	outPath := fs.String("out", "", "write to file (use - or empty for stdout)")
 	serve := fs.Bool("serve", false, "run a local web server instead of writing a file")
 	listenAddr := fs.String("listen", "127.0.0.1:8090", "listen address for --serve")
 	fs.StringVar(outPath, "o", "", "shorthand for --out")
 	fs.Usage = func() {
-		fmt.Fprintln(os.Stderr, "Usage: specs visualize traceability [--format dot|mermaid|json] [--out <path>|-] [--serve] [--listen <addr>]")
+		fmt.Fprintln(os.Stderr, "Usage: specs visualize traceability [--format mermaid|json] [--out <path>|-] [--serve] [--listen <addr>]")
 		fs.PrintDefaults()
 	}
 	if err := fs.Parse(args); err != nil {
@@ -105,10 +105,6 @@ func writeTraceabilityOutput(g *visualize.Graph, format, outPath string) error {
 	}
 
 	switch format {
-	case "dot":
-		if err := visualize.WriteDOT(out, g); err != nil {
-			return err
-		}
 	case "mermaid":
 		if err := visualize.WriteMermaid(out, g); err != nil {
 			return err
@@ -118,7 +114,7 @@ func writeTraceabilityOutput(g *visualize.Graph, format, outPath string) error {
 			return err
 		}
 	default:
-		return exitWith(2, "unknown --format %q (want dot, mermaid, or json)", format)
+		return exitWith(2, "unknown --format %q (want mermaid or json)", format)
 	}
 	if outPath != "" && outPath != "-" {
 		fmt.Fprintf(os.Stderr, "wrote %s (%d node(s), %d edge(s))\n", outPath, len(g.Nodes), len(g.Edges))

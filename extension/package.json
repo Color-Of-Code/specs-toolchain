@@ -71,11 +71,6 @@
         "category": "Specs"
       },
       {
-        "command": "specs.visualize.dot",
-        "title": "Visualize: Generate DOT",
-        "category": "Specs"
-      },
-      {
         "command": "specs.visualize.mermaid",
         "title": "Visualize: Generate Mermaid",
         "category": "Specs"

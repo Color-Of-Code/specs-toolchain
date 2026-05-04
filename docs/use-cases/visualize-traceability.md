@@ -3,7 +3,7 @@
 ## Summary
 
 Render the product-requirement → requirement → feature/component/api/service
-graph as Graphviz DOT, Mermaid, or JSON derived from the canonical
+graph as Mermaid or JSON derived from the canonical
 traceability graph.
 
 ## Owner
@@ -19,7 +19,7 @@ into components.
 
 ## Entry point
 
-`specs visualize traceability [--format dot|mermaid|json] [--out <path>] [--serve] [--listen <addr>]`
+`specs visualize traceability [--format mermaid|json] [--out <path>] [--serve] [--listen <addr>]`
 
 Or VS Code palette: **Specs: Visualize traceability** (renders in a
 webview). For a browser-based view, run `specs visualize traceability --serve`
@@ -35,8 +35,8 @@ the shared UI persists the canonical relation update.
 ## Exit point
 
 A graph written to `--out` (or stdout) in the requested format, or a local
-web server hosting the same Cytoscape-based graph UI. DOT and Mermaid are
-suitable for review artifacts; JSON is suitable for downstream tooling and UI
+web server hosting the same Cytoscape-based graph UI. Mermaid is suitable for
+review artifacts; JSON is suitable for downstream tooling and UI
 consumers. The VS Code panel and the local server both read the canonical
 graph JSON. In browser mode, saved node positions become canonical graph
 layout entries; the VS Code preview writes the same canonical layout through

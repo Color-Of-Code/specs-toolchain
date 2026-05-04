@@ -15,15 +15,16 @@ graph.
 
 ## VS Code Surface
 
-- `Specs: Visualize (Mermaid)` and `Specs: Visualize (DOT)` generate output
-  files and open them in the editor.
+- `Specs: Visualize (Mermaid)` generates an output file and opens it in the
+  editor.
 - The WebView panel renders the Cytoscape graph from the JSON payload.
 - Clicking a node shows its ID, title, and outbound relations in an inspector
   pane.
 - Layout changes are posted back to `specs graph save-layout`.
+- The WebView panel can export the JSON payload used to render the graph.
 
 ## Validation
 
-Run `Specs: Visualize (DOT)` and confirm a `.dot` file is created and opened.
+Run `Specs: Visualize (Mermaid)` and confirm a `.md` file is created and opened.
 Open the WebView panel and confirm nodes from the canonical traceability graph
 are rendered. Select a node and confirm its metadata appears in the inspector.

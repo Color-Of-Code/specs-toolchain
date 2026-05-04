@@ -13,7 +13,7 @@ requested output format and write it to stdout or a file.
 
 ## Engine Surface
 
-- `specs visualize traceability --format <dot|mermaid|json>` renders the
+- `specs visualize traceability --format <mermaid|json>` renders the
   graph in the selected format.
 - `--out <path>` writes the output to a file instead of stdout.
 - The JSON format is the canonical payload consumed by the interactive UI
@@ -23,5 +23,5 @@ requested output format and write it to stdout or a file.
 ## Validation
 
 Run `specs visualize traceability --format json` and confirm the output is
-valid JSON containing node and edge data. Run with `--format dot` and confirm
-valid DOT syntax is produced.
+valid JSON containing node and edge data. Run with `--format mermaid` and
+confirm Mermaid flowchart syntax is produced.

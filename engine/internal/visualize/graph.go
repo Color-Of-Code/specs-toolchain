@@ -7,7 +7,7 @@
 //	product-requirement -> requirement
 //	requirement -> feature/component/api/service
 //
-// Output formats: DOT (graphviz), Mermaid (`flowchart`), and JSON.
+// Output formats: Mermaid (`flowchart`) and JSON.
 package visualize
 
 import (
@@ -174,31 +174,6 @@ func Build(modelDir, productDir string, g *tracegraph.Graph) (*Graph, error) {
 	return result, nil
 }
 
-// WriteDOT renders g in graphviz DOT format.
-func WriteDOT(out io.Writer, g *Graph) error {
-	fmt.Fprintln(out, "digraph traceability {")
-	fmt.Fprintln(out, "  rankdir=LR;")
-	fmt.Fprintln(out, "  node [shape=box, style=\"rounded,filled\", fontname=\"Helvetica\"];")
-	for _, kind := range []string{"product-requirement", "requirement", "feature", "component", "api", "service"} {
-		fmt.Fprintf(out, "  // %s nodes\n", kind)
-		fmt.Fprintf(out, "  subgraph cluster_%s {\n", strings.ReplaceAll(kind, "-", "_"))
-		fmt.Fprintf(out, "    label=%q; style=dashed;\n", clusterLabel(kind))
-		fmt.Fprintf(out, "    node [fillcolor=%q];\n", colorFor(kind))
-		for _, n := range g.Nodes {
-			if n.Kind != kind {
-				continue
-			}
-			fmt.Fprintf(out, "    %s [label=%q, tooltip=%q];\n", n.ID, n.Label, n.Path)
-		}
-		fmt.Fprintln(out, "  }")
-	}
-	for _, e := range g.Edges {
-		fmt.Fprintf(out, "  %s -> %s;\n", e.From, e.To)
-	}
-	fmt.Fprintln(out, "}")
-	return nil
-}
-
 // WriteMermaid renders g as a Mermaid flowchart.
 func WriteMermaid(out io.Writer, g *Graph) error {
 	fmt.Fprintln(out, "flowchart LR")
@@ -265,42 +240,6 @@ func WriteJSON(out io.Writer, g *Graph) error {
 	encoder := json.NewEncoder(out)
 	encoder.SetIndent("", "  ")
 	return encoder.Encode(payload)
-}
-
-func clusterLabel(kind string) string {
-	switch kind {
-	case "product-requirement":
-		return "Product requirements"
-	case "requirement":
-		return "Requirements"
-	case "feature":
-		return "Features"
-	case "component":
-		return "Components"
-	case "api":
-		return "APIs"
-	case "service":
-		return "Services"
-	}
-	return kind
-}
-
-func colorFor(kind string) string {
-	switch kind {
-	case "product-requirement":
-		return "#fce4ec"
-	case "requirement":
-		return "#e3f2fd"
-	case "feature":
-		return "#fff3e0"
-	case "component":
-		return "#e8f5e9"
-	case "api":
-		return "#f3e5f5"
-	case "service":
-		return "#fff8e1"
-	}
-	return "#ffffff"
 }
 
 func sanitiseID(rel string) string {
