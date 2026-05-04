@@ -1,9 +1,9 @@
-# Title
+---
+status: Draft
+requirements: []
+---
 
-| Field        | Value |
-| ------------ | ----- |
-| Status       | Draft |
-| Requirements | —     |
+# Title
 
 ## Workflow
 

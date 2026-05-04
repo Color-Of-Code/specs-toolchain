@@ -1,11 +1,13 @@
-# Change Request Drain to Canonical Paths
+---
+id: CR-003
+status: Draft
+realises:
+    - ../../../product/engine/ENG-005-change-request-workflow.md
+implemented_by:
+    - ../../use-cases/cr/CR-003-cr-drain.md
+---
 
-| Field          | Value                                                                                     |
-| -------------- | ----------------------------------------------------------------------------------------- |
-| ID             | CR-003                                                                                    |
-| Status         | Draft                                                                                     |
-| Realises       | [Change Request Workflow](../../../product/engine/ENG-005-change-request-workflow.md)     |
-| Implemented By | [Change Request Drain](../../use-cases/cr/CR-003-cr-drain.md)                             |
+# Change Request Drain to Canonical Paths
 
 ## Requirement
 

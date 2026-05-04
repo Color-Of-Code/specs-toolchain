@@ -1,11 +1,13 @@
-# Traceability Graph Panel
+---
+id: VEXT-003
+status: Draft
+realises:
+    - ../../../product/extension/EXT-003-traceability-graph-panel.md
+implemented_by:
+    - ../../use-cases/extension/VEXT-003-traceability-panel.md
+---
 
-| Field          | Value                                                                                      |
-| -------------- | ------------------------------------------------------------------------------------------ |
-| ID             | VEXT-003                                                                                   |
-| Status         | Draft                                                                                      |
-| Realises       | [Traceability Graph Panel](../../../product/extension/EXT-003-traceability-graph-panel.md) |
-| Implemented By | [Traceability Graph Panel](../../use-cases/extension/VEXT-003-traceability-panel.md)       |
+# Traceability Graph Panel
 
 ## Requirement
 

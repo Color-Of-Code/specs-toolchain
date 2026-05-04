@@ -1,10 +1,11 @@
-# Format CI Gate
+---
+id: FMT-002
+status: Draft
+requirements:
+    - ../../requirements/format/FMT-002-format-check-mode.md
+---
 
-| Field        | Value                                                                                   |
-| ------------ | --------------------------------------------------------------------------------------- |
-| ID           | FMT-002                                                                                 |
-| Status       | Draft                                                                                   |
-| Requirements | [Format Check Mode](../../requirements/format/FMT-002-format-check-mode.md)             |
+# Format CI Gate
 
 ## Workflow
 

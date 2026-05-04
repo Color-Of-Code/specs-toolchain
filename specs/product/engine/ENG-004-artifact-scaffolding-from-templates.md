@@ -1,12 +1,14 @@
-# Artifact Scaffolding From Templates
+---
+id: ENG-004
+status: Draft
+stakeholder: Spec author, stakeholder
+source: "[Commands](../../../docs/commands.md), [Actors](../../../docs/actors.md)"
+realised_by:
+    - ../../model/requirements/scaffold/SCF-001-template-based-artifact-instantiation.md
+    - ../../model/requirements/scaffold/SCF-002-cr-scoped-scaffold-placement.md
+---
 
-| Field       | Value                                                                                                                                                                                                                                              |
-| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| ID          | ENG-004                                                                                                                                                                                                                                            |
-| Status      | Draft                                                                                                                                                                                                                                              |
-| Stakeholder | Spec author, stakeholder                                                                                                                                                                                                                           |
-| Source      | [Commands](../../../docs/commands.md), [Actors](../../../docs/actors.md)                                                                                                                                                                           |
-| Realised By | [Template-Based Artifact Instantiation](../../model/requirements/scaffold/SCF-001-template-based-artifact-instantiation.md), [Change-Request Scoped Scaffold Placement](../../model/requirements/scaffold/SCF-002-cr-scoped-scaffold-placement.md) |
+# Artifact Scaffolding From Templates
 
 ## Summary
 

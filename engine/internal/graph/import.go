@@ -13,7 +13,6 @@ import (
 
 var (
 	inlineLinkRe      = regexp.MustCompile(`\]\(([^)]+)\)`)
-	sectionHeaderRe   = regexp.MustCompile(`(?m)^##\s+(.+?)\s*$`)
 	baselineRowLinkRe = regexp.MustCompile(`^\|\s*\[`)
 )
 
@@ -263,81 +262,37 @@ func linkedNodeIDs(path, modelDir, productDir, field string) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	body := string(data)
+	fmBytes, _, ok := splitFrontmatter(data)
+	if !ok {
+		// No frontmatter means no relational fields.
+		return nil, nil
+	}
+	key, ok := fmFieldKeys[field]
+	if !ok {
+		return nil, nil
+	}
+	relPaths, err := frontmatterStringList(fmBytes, key)
+	if err != nil {
+		return nil, fmt.Errorf("%s: field %q: %w", path, field, err)
+	}
 	seen := map[string]struct{}{}
-	values := []string{extractFieldValue(body, field), extractSectionBody(body, field)}
-	for _, value := range values {
-		for _, target := range inlineLinkTargets(value) {
-			abs, err := resolveMarkdownTarget(path, target)
-			if err != nil {
-				return nil, err
-			}
-			nodeID, err := nodeIDForMarkdownPath(abs, modelDir, productDir)
-			if err != nil {
-				return nil, err
-			}
-			seen[nodeID] = struct{}{}
+	for _, relPath := range relPaths {
+		abs, err := resolveMarkdownTarget(path, relPath)
+		if err != nil {
+			return nil, err
 		}
+		nodeID, err := nodeIDForMarkdownPath(abs, modelDir, productDir)
+		if err != nil {
+			return nil, err
+		}
+		seen[nodeID] = struct{}{}
 	}
 	out := make([]string, 0, len(seen))
-	for target := range seen {
-		out = append(out, target)
+	for id := range seen {
+		out = append(out, id)
 	}
 	sort.Strings(out)
 	return out, nil
-}
-
-func extractFieldValue(body, field string) string {
-	for _, line := range strings.Split(body, "\n") {
-		trimmed := strings.TrimSpace(line)
-		if !strings.HasPrefix(trimmed, "|") {
-			continue
-		}
-		parts := strings.Split(trimmed, "|")
-		if len(parts) < 4 {
-			continue
-		}
-		key := strings.TrimSpace(parts[1])
-		if !strings.EqualFold(key, field) {
-			continue
-		}
-		return strings.TrimSpace(parts[2])
-	}
-	return ""
-}
-
-func extractSectionBody(body, field string) string {
-	matches := sectionHeaderRe.FindAllStringSubmatchIndex(body, -1)
-	for index, match := range matches {
-		title := strings.TrimSpace(body[match[2]:match[3]])
-		if !strings.EqualFold(title, field) {
-			continue
-		}
-		end := len(body)
-		if index+1 < len(matches) {
-			end = matches[index+1][0]
-		}
-		return body[match[1]:end]
-	}
-	return ""
-}
-
-func inlineLinkTargets(body string) []string {
-	var targets []string
-	for _, match := range inlineLinkRe.FindAllStringSubmatch(body, -1) {
-		target := strings.TrimSpace(match[1])
-		if target == "" {
-			continue
-		}
-		if i := strings.IndexAny(target, "#?"); i >= 0 {
-			target = target[:i]
-		}
-		if target == "" || strings.HasPrefix(target, "http://") || strings.HasPrefix(target, "https://") || strings.HasPrefix(target, "mailto:") {
-			continue
-		}
-		targets = append(targets, target)
-	}
-	return targets
 }
 
 func resolveMarkdownTarget(fromPath, target string) (string, error) {
@@ -412,11 +367,11 @@ func importBaselinesMarkdown(path, modelDir, productDir string) ([]BaselineEntry
 		if len(cells) < 6 {
 			continue
 		}
-		componentLinks := inlineLinkTargets(cells[1])
-		if len(componentLinks) == 0 {
+		componentLinks := firstMarkdownLink(cells[1])
+		if componentLinks == "" {
 			continue
 		}
-		componentPath, err := resolveMarkdownTarget(path, componentLinks[0])
+		componentPath, err := resolveMarkdownTarget(path, componentLinks)
 		if err != nil {
 			return nil, err
 		}
@@ -440,4 +395,18 @@ func importBaselinesMarkdown(path, modelDir, productDir string) ([]BaselineEntry
 	}
 	sort.Slice(entries, func(i, j int) bool { return entries[i].Component < entries[j].Component })
 	return entries, nil
+}
+
+// firstMarkdownLink returns the href of the first [label](href) inline link in s,
+// stripping any fragment or query suffix. Returns "" if none is found.
+func firstMarkdownLink(s string) string {
+	m := inlineLinkRe.FindStringSubmatch(s)
+	if len(m) < 2 {
+		return ""
+	}
+	target := strings.TrimSpace(m[1])
+	if i := strings.IndexAny(target, "#?"); i >= 0 {
+		target = target[:i]
+	}
+	return target
 }

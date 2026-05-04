@@ -1,12 +1,14 @@
-# Traceability Graph Validation
+---
+id: ENG-003
+status: Draft
+stakeholder: Project lead, architect
+source: "[Overview](../../../docs/overview.md), [Concepts](../../../docs/concepts.md)"
+realised_by:
+    - ../../model/requirements/graph/GRP-001-traceability-graph-integrity-validation.md
+    - ../../model/requirements/graph/GRP-002-graph-markdown-roundtrip-sync.md
+---
 
-| Field       | Value                                                                                                                                                                                                                                   |
-| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| ID          | ENG-003                                                                                                                                                                                                                                 |
-| Status      | Draft                                                                                                                                                                                                                                   |
-| Stakeholder | Project lead, architect                                                                                                                                                                                                                 |
-| Source      | [Overview](../../../docs/overview.md), [Concepts](../../../docs/concepts.md)                                                                                                                                                            |
-| Realised By | [Traceability Graph Integrity Validation](../../model/requirements/graph/GRP-001-traceability-graph-integrity-validation.md), [Graph Markdown Round-Trip Sync](../../model/requirements/graph/GRP-002-graph-markdown-roundtrip-sync.md) |
+# Traceability Graph Validation
 
 ## Summary
 

@@ -1,11 +1,13 @@
-# Template-Based Artifact Instantiation
+---
+id: SCF-001
+status: Draft
+realises:
+    - ../../../product/engine/ENG-004-artifact-scaffolding-from-templates.md
+implemented_by:
+    - ../../use-cases/scaffold/SCF-001-template-instantiation.md
+---
 
-| Field          | Value                                                                                                         |
-| -------------- | ------------------------------------------------------------------------------------------------------------- |
-| ID             | SCF-001                                                                                                       |
-| Status         | Draft                                                                                                         |
-| Realises       | [Artifact Scaffolding From Templates](../../../product/engine/ENG-004-artifact-scaffolding-from-templates.md) |
-| Implemented By | [Template Instantiation](../../use-cases/scaffold/SCF-001-template-instantiation.md)                          |
+# Template-Based Artifact Instantiation
 
 ## Requirement
 

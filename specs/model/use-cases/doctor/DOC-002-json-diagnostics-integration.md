@@ -1,10 +1,11 @@
-# JSON Diagnostics Integration
+---
+id: DOC-002
+status: Draft
+requirements:
+    - ../../requirements/workspace/WS-005-doctor-json-contract.md
+---
 
-| Field        | Value                                                                               |
-| ------------ | ----------------------------------------------------------------------------------- |
-| ID           | DOC-002                                                                             |
-| Status       | Draft                                                                               |
-| Requirements | [Doctor Json Contract](../../requirements/workspace/WS-005-doctor-json-contract.md) |
+# JSON Diagnostics Integration
 
 ## Workflow
 

@@ -1,10 +1,11 @@
-# Status Bar Indicator
+---
+id: VEXT-004
+status: Draft
+requirements:
+    - ../../requirements/extension/VEXT-004-status-bar-workspace-indicator.md
+---
 
-| Field        | Value                                                                                                     |
-| ------------ | --------------------------------------------------------------------------------------------------------- |
-| ID           | VEXT-004                                                                                                  |
-| Status       | Draft                                                                                                     |
-| Requirements | [Status Bar Workspace Indicator](../../requirements/extension/VEXT-004-status-bar-workspace-indicator.md) |
+# Status Bar Indicator
 
 ## Workflow
 

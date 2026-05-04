@@ -1,12 +1,13 @@
-# Style Compliance Linting
+---
+id: ENG-002
+status: Draft
+stakeholder: Spec author, project lead
+source: "[Overview](../../../docs/overview.md)"
+realised_by:
+    - ../../model/requirements/lint/LNT-001-style-rule-enforcement.md
+---
 
-| Field       | Value                                                                                     |
-| ----------- | ----------------------------------------------------------------------------------------- |
-| ID          | ENG-002                                                                                   |
-| Status      | Draft                                                                                     |
-| Stakeholder | Spec author, project lead                                                                 |
-| Source      | [Overview](../../../docs/overview.md)                                                     |
-| Realised By | [Style Rule Enforcement](../../model/requirements/lint/LNT-001-style-rule-enforcement.md) |
+# Style Compliance Linting
 
 ## Summary
 

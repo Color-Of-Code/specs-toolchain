@@ -1,10 +1,11 @@
-# Human Diagnostics Output
+---
+id: DOC-001
+status: Draft
+requirements:
+    - ../../requirements/workspace/WS-004-workspace-diagnostics-reporting.md
+---
 
-| Field        | Value                                                                                                     |
-| ------------ | --------------------------------------------------------------------------------------------------------- |
-| ID           | DOC-001                                                                                                   |
-| Status       | Draft                                                                                                     |
-| Requirements | [Workspace Diagnostics Reporting](../../requirements/workspace/WS-004-workspace-diagnostics-reporting.md) |
+# Human Diagnostics Output
 
 ## Workflow
 

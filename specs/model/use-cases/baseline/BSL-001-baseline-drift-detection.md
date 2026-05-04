@@ -1,10 +1,11 @@
-# Baseline Drift Detection
+---
+id: BSL-001
+status: Draft
+requirements:
+    - ../../requirements/baseline/BSL-001-component-baseline-drift-detection.md
+---
 
-| Field        | Value                                                                                                           |
-| ------------ | --------------------------------------------------------------------------------------------------------------- |
-| ID           | BSL-001                                                                                                         |
-| Status       | Draft                                                                                                           |
-| Requirements | [Component Baseline Drift Detection](../../requirements/baseline/BSL-001-component-baseline-drift-detection.md) |
+# Baseline Drift Detection
 
 ## Workflow
 

@@ -1,11 +1,13 @@
-# Workspace Diagnostics Reporting
+---
+id: WS-004
+status: Draft
+realises:
+    - ../../../product/engine/ENG-008-environment-diagnostics.md
+implemented_by:
+    - ../../use-cases/doctor/DOC-001-human-diagnostics.md
+---
 
-| Field          | Value                                                                                                                                                       |
-| -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| ID             | WS-004                                                                                                                                                      |
-| Status         | Draft                                                                                                                                                       |
-| Realises       | [Environment Diagnostics](../../../product/engine/ENG-008-environment-diagnostics.md)                                                                       |
-| Implemented By | [Human Diagnostics Output](../../use-cases/doctor/DOC-001-human-diagnostics.md)                                                                             |
+# Workspace Diagnostics Reporting
 
 ## Requirement
 

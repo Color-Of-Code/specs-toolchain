@@ -1,10 +1,11 @@
-# Change Request Drain
+---
+id: CR-003
+status: Draft
+requirements:
+    - ../../requirements/cr/CR-003-change-request-drain.md
+---
 
-| Field        | Value                                                                                           |
-| ------------ | ----------------------------------------------------------------------------------------------- |
-| ID           | CR-003                                                                                          |
-| Status       | Draft                                                                                           |
-| Requirements | [Change Request Drain to Canonical Paths](../../requirements/cr/CR-003-change-request-drain.md) |
+# Change Request Drain
 
 ## Workflow
 

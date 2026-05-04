@@ -1,11 +1,13 @@
-# Interactive Traceability Graph Server
+---
+id: VIS-002
+status: Draft
+realises:
+    - ../../../product/engine/ENG-007-traceability-visualization.md
+implemented_by:
+    - ../../use-cases/visualize/VIS-002-interactive-graph-server.md
+---
 
-| Field          | Value                                                                                         |
-| -------------- | --------------------------------------------------------------------------------------------- |
-| ID             | VIS-002                                                                                       |
-| Status         | Draft                                                                                         |
-| Realises       | [Traceability Visualization](../../../product/engine/ENG-007-traceability-visualization.md)   |
-| Implemented By | [Interactive Graph Server](../../use-cases/visualize/VIS-002-interactive-graph-server.md)     |
+# Interactive Traceability Graph Server
 
 ## Requirement
 

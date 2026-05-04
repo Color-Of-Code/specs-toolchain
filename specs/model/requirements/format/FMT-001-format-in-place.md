@@ -1,11 +1,13 @@
-# Format In Place
+---
+id: FMT-001
+status: Draft
+realises:
+    - ../../../product/engine/ENG-001-consistent-markdown-formatting.md
+implemented_by:
+    - ../../use-cases/format/FMT-001-in-place-rewriting.md
+---
 
-| Field          | Value                                                                                                   |
-| -------------- | ------------------------------------------------------------------------------------------------------- |
-| ID             | FMT-001                                                                                                 |
-| Status         | Draft                                                                                                   |
-| Realises       | [Consistent Markdown Formatting](../../../product/engine/ENG-001-consistent-markdown-formatting.md)     |
-| Implemented By | [In-Place Rewriting](../../use-cases/format/FMT-001-in-place-rewriting.md)                              |
+# Format In Place
 
 ## Requirement
 

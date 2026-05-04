@@ -1,11 +1,13 @@
-# Change Request Status Reporting
+---
+id: CR-002
+status: Draft
+realises:
+    - ../../../product/engine/ENG-005-change-request-workflow.md
+implemented_by:
+    - ../../use-cases/cr/CR-002-cr-status.md
+---
 
-| Field          | Value                                                                                     |
-| -------------- | ----------------------------------------------------------------------------------------- |
-| ID             | CR-002                                                                                    |
-| Status         | Draft                                                                                     |
-| Realises       | [Change Request Workflow](../../../product/engine/ENG-005-change-request-workflow.md)     |
-| Implemented By | [Change Request Status](../../use-cases/cr/CR-002-cr-status.md)                           |
+# Change Request Status Reporting
 
 ## Requirement
 

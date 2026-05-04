@@ -1,10 +1,11 @@
-# Config Relative Framework Resolution
+---
+id: HOST-002
+status: Draft
+requirements:
+    - ../../requirements/workspace/WS-002-config-relative-framework-directory.md
+---
 
-| Field        | Value                                                                                                             |
-| ------------ | ----------------------------------------------------------------------------------------------------------------- |
-| ID           | HOST-002                                                                                                          |
-| Status       | Draft                                                                                                             |
-| Requirements | [Config Relative Framework Directory](../../requirements/workspace/WS-002-config-relative-framework-directory.md) |
+# Config Relative Framework Resolution
 
 ## Workflow
 

@@ -1,11 +1,13 @@
-# Doctor Json Contract
+---
+id: WS-005
+status: Draft
+realises:
+    - ../../../product/engine/ENG-008-environment-diagnostics.md
+implemented_by:
+    - ../../use-cases/doctor/DOC-002-json-diagnostics-integration.md
+---
 
-| Field          | Value                                                                                                                                              |
-| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| ID             | WS-005                                                                                                                                             |
-| Status         | Draft                                                                                                                                              |
-| Realises       | [Environment Diagnostics](../../../product/engine/ENG-008-environment-diagnostics.md)                                                              |
-| Implemented By | [JSON Diagnostics Integration](../../use-cases/doctor/DOC-002-json-diagnostics-integration.md)                                                     |
+# Doctor Json Contract
 
 ## Requirement
 

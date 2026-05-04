@@ -22,37 +22,38 @@ func TestGenerateMarkdownUpdatesArtifactFields(t *testing.T) {
 		}
 	}
 	writeGenerateFile(t, filepath.Join(productDir, "alpha.md"), strings.Join([]string{
-		"# Alpha",
+		"---",
+		"status: Draft",
+		"realised_by: []",
+		"---",
 		"",
-		"| Field | Value |",
-		"| ----- | ----- |",
-		"| Status | Draft |",
-		"| Realised By | — |",
+		"# Alpha",
 	}, "\n"))
 	writeGenerateFile(t, filepath.Join(modelDir, "requirements", "alpha-requirement.md"), strings.Join([]string{
-		"# Alpha Requirement",
+		"---",
+		"status: Draft",
+		"realises: []",
+		"implemented_by: []",
+		"---",
 		"",
-		"| Field | Value |",
-		"| ----- | ----- |",
-		"| Status | Draft |",
-		"| Implemented By | — |",
+		"# Alpha Requirement",
 	}, "\n"))
 	writeGenerateFile(t, filepath.Join(modelDir, "use-cases", "alpha-feature.md"), strings.Join([]string{
-		"# Alpha Feature",
+		"---",
+		"status: Draft",
+		"requirements: []",
+		"---",
 		"",
-		"| Field | Value |",
-		"| ----- | ----- |",
-		"| Status | Draft |",
-		"| Requirements | — |",
+		"# Alpha Feature",
 	}, "\n"))
 	writeGenerateFile(t, filepath.Join(modelDir, "components", "alpha-component.md"), strings.Join([]string{
-		"# Alpha Component",
+		"---",
+		"status: Draft",
+		"requirements: []",
+		"baseline: ~",
+		"---",
 		"",
-		"| Field | Value |",
-		"| ----- | ----- |",
-		"| Status | Draft |",
-		"| Requirements | — |",
-		"| Baseline | — |",
+		"# Alpha Component",
 	}, "\n"))
 
 	g := &Graph{
@@ -72,15 +73,15 @@ func TestGenerateMarkdownUpdatesArtifactFields(t *testing.T) {
 
 	requirementBody := readGenerateFile(t, filepath.Join(modelDir, "requirements", "alpha-requirement.md"))
 	for _, want := range []string{
-		"| Realises | [Alpha](../../product/alpha.md) |",
-		"[Alpha Component](../components/alpha-component.md), [Alpha Feature](../use-cases/alpha-feature.md)",
+		"realises:\n    - ../../product/alpha.md",
+		"implemented_by:",
 	} {
 		if !strings.Contains(requirementBody, want) {
 			t.Fatalf("requirement body missing %q:\n%s", want, requirementBody)
 		}
 	}
 	componentBody := readGenerateFile(t, filepath.Join(modelDir, "components", "alpha-component.md"))
-	if !strings.Contains(componentBody, "| Baseline | `host-repo:/@0123456789abcdef0123456789abcdef01234567` |") {
+	if !strings.Contains(componentBody, "baseline: host-repo:/@0123456789abcdef0123456789abcdef01234567") {
 		t.Fatalf("component baseline missing generated value:\n%s", componentBody)
 	}
 }

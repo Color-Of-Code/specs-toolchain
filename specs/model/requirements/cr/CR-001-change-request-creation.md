@@ -1,11 +1,13 @@
-# Change Request Creation
+---
+id: CR-001
+status: Draft
+realises:
+    - ../../../product/engine/ENG-005-change-request-workflow.md
+implemented_by:
+    - ../../use-cases/cr/CR-001-cr-creation.md
+---
 
-| Field          | Value                                                                                     |
-| -------------- | ----------------------------------------------------------------------------------------- |
-| ID             | CR-001                                                                                    |
-| Status         | Draft                                                                                     |
-| Realises       | [Change Request Workflow](../../../product/engine/ENG-005-change-request-workflow.md)     |
-| Implemented By | [Change Request Creation](../../use-cases/cr/CR-001-cr-creation.md)                       |
+# Change Request Creation
 
 ## Requirement
 

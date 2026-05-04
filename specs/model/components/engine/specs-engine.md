@@ -1,10 +1,12 @@
-# Specs Engine
+---
+status: Draft
+requirements:
+    - ../../requirements/workspace/WS-002-config-relative-framework-directory.md
+    - ../../requirements/workspace/WS-003-repo-local-engine-integration.md
+baseline: ~
+---
 
-| Field        | Value                                                                                                                                                                                                                    |
-| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Status       | Draft                                                                                                                                                                                                                    |
-| Requirements | [Config Relative Framework Directory](../../requirements/workspace/WS-002-config-relative-framework-directory.md), [Repo Local Engine Integration](../../requirements/workspace/WS-003-repo-local-engine-integration.md) |
-| Baseline     | —                                                                                                                                                                                                                        |
+# Specs Engine
 
 ## Responsibilities
 

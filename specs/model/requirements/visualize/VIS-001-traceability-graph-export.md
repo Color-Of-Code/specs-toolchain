@@ -1,11 +1,13 @@
-# Traceability Graph Export
+---
+id: VIS-001
+status: Draft
+realises:
+    - ../../../product/engine/ENG-007-traceability-visualization.md
+implemented_by:
+    - ../../use-cases/visualize/VIS-001-graph-export.md
+---
 
-| Field          | Value                                                                                         |
-| -------------- | --------------------------------------------------------------------------------------------- |
-| ID             | VIS-001                                                                                       |
-| Status         | Draft                                                                                         |
-| Realises       | [Traceability Visualization](../../../product/engine/ENG-007-traceability-visualization.md)   |
-| Implemented By | [Graph Export](../../use-cases/visualize/VIS-001-graph-export.md)                             |
+# Traceability Graph Export
 
 ## Requirement
 

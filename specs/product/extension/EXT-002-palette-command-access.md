@@ -1,12 +1,13 @@
-# Palette Command Access
+---
+id: EXT-002
+status: Draft
+stakeholder: VS Code user, spec author
+source: "[Commands](../../../docs/commands.md), [Extension README](../../../extension/README.md)"
+realised_by:
+    - ../../model/requirements/extension/VEXT-002-palette-command-dispatch.md
+---
 
-| Field       | Value                                                                                               |
-| ----------- | --------------------------------------------------------------------------------------------------- |
-| ID          | EXT-002                                                                                             |
-| Status      | Draft                                                                                               |
-| Stakeholder | VS Code user, spec author                                                                           |
-| Source      | [Commands](../../../docs/commands.md), [Extension README](../../../extension/README.md)             |
-| Realised By | [Palette Command Dispatch](../../model/requirements/extension/VEXT-002-palette-command-dispatch.md) |
+# Palette Command Access
 
 ## Summary
 

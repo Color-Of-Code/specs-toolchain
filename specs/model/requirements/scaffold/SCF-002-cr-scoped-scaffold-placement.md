@@ -1,11 +1,13 @@
-# Change-Request Scoped Scaffold Placement
+---
+id: SCF-002
+status: Draft
+realises:
+    - ../../../product/engine/ENG-004-artifact-scaffolding-from-templates.md
+implemented_by:
+    - ../../use-cases/scaffold/SCF-002-cr-scoped-placement.md
+---
 
-| Field          | Value                                                                                                         |
-| -------------- | ------------------------------------------------------------------------------------------------------------- |
-| ID             | SCF-002                                                                                                       |
-| Status         | Draft                                                                                                         |
-| Realises       | [Artifact Scaffolding From Templates](../../../product/engine/ENG-004-artifact-scaffolding-from-templates.md) |
-| Implemented By | [CR-Scoped Placement](../../use-cases/scaffold/SCF-002-cr-scoped-placement.md)                                |
+# Change-Request Scoped Scaffold Placement
 
 ## Requirement
 

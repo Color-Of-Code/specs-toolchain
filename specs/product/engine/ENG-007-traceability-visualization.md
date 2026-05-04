@@ -1,12 +1,14 @@
-# Traceability Visualization
+---
+id: ENG-007
+status: Draft
+stakeholder: Product manager, architect
+source: "[Overview](../../../docs/overview.md), [Commands](../../../docs/commands.md)"
+realised_by:
+    - ../../model/requirements/visualize/VIS-001-traceability-graph-export.md
+    - ../../model/requirements/visualize/VIS-002-interactive-graph-server.md
+---
 
-| Field       | Value                                                                                                                                                                                                                 |
-| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| ID          | ENG-007                                                                                                                                                                                                               |
-| Status      | Draft                                                                                                                                                                                                                 |
-| Stakeholder | Product manager, architect                                                                                                                                                                                            |
-| Source      | [Overview](../../../docs/overview.md), [Commands](../../../docs/commands.md)                                                                                                                                          |
-| Realised By | [Traceability Graph Export](../../model/requirements/visualize/VIS-001-traceability-graph-export.md), [Interactive Traceability Graph Server](../../model/requirements/visualize/VIS-002-interactive-graph-server.md) |
+# Traceability Visualization
 
 ## Summary
 

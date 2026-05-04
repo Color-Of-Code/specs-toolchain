@@ -1,11 +1,13 @@
-# Graph Markdown Round-Trip Sync
+---
+id: GRP-002
+status: Draft
+realises:
+    - ../../../product/engine/ENG-003-traceability-graph-validation.md
+implemented_by:
+    - ../../use-cases/graph/GRP-002-graph-markdown-roundtrip.md
+---
 
-| Field          | Value                                                                                               |
-| -------------- | --------------------------------------------------------------------------------------------------- |
-| ID             | GRP-002                                                                                             |
-| Status         | Draft                                                                                               |
-| Realises       | [Traceability Graph Validation](../../../product/engine/ENG-003-traceability-graph-validation.md)   |
-| Implemented By | [Graph Markdown Roundtrip](../../use-cases/graph/GRP-002-graph-markdown-roundtrip.md)               |
+# Graph Markdown Round-Trip Sync
 
 ## Requirement
 

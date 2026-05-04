@@ -1,11 +1,13 @@
-# Repo Local Specs Host
+---
+id: WS-001
+status: Draft
+realises:
+    - ../../../product/engine/ENG-009-repo-local-specs-host.md
+implemented_by:
+    - ../../use-cases/host/HOST-001-host-layout.md
+---
 
-| Field          | Value                                                                                                                                                                                                                                                                                                                                     |
-| -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| ID             | WS-001                                                                                                                                                                                                                                                                                                                                    |
-| Status         | Draft                                                                                                                                                                                                                                                                                                                                     |
-| Realises       | [Repo Local Specs Host](../../../product/engine/ENG-009-repo-local-specs-host.md)                                                                                                                                                                                                                                                         |
-| Implemented By | [Host Layout](../../use-cases/host/HOST-001-host-layout.md)                                                                                                                                                                                                                                                                               |
+# Repo Local Specs Host
 
 ## Requirement
 

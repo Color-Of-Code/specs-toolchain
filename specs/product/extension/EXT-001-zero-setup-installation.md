@@ -1,12 +1,13 @@
-# Zero-Setup Installation
+---
+id: EXT-001
+status: Draft
+stakeholder: VS Code user, spec author
+source: "[Install](../../../docs/install.md), [Extension README](../../../extension/README.md)"
+realised_by:
+    - ../../model/requirements/extension/VEXT-001-bundled-engine-resolution-priority.md
+---
 
-| Field       | Value                                                                                                                   |
-| ----------- | ----------------------------------------------------------------------------------------------------------------------- |
-| ID          | EXT-001                                                                                                                 |
-| Status      | Draft                                                                                                                   |
-| Stakeholder | VS Code user, spec author                                                                                               |
-| Source      | [Install](../../../docs/install.md), [Extension README](../../../extension/README.md)                                   |
-| Realised By | [Bundled Engine Resolution Priority](../../model/requirements/extension/VEXT-001-bundled-engine-resolution-priority.md) |
+# Zero-Setup Installation
 
 ## Summary
 

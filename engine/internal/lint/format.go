@@ -28,7 +28,17 @@ func Format(data []byte) []byte {
 	data = bytes.ReplaceAll(data, []byte("\r\n"), []byte("\n"))
 	data = bytes.ReplaceAll(data, []byte("\r"), []byte("\n"))
 
-	lines := strings.Split(string(data), "\n")
+	// Extract YAML frontmatter so it is not processed as markdown.
+	var fm []byte
+	content := data
+	if bytes.HasPrefix(data, []byte("---\n")) {
+		if idx := bytes.Index(data[4:], []byte("\n---\n")); idx >= 0 {
+			fm = data[:4+idx+5]      // "---\n" + yaml + "\n---\n"
+			content = data[4+idx+5:] // body after closing delimiter
+		}
+	}
+
+	lines := strings.Split(string(content), "\n")
 
 	// Trim trailing whitespace from each line.
 	for i, line := range lines {
@@ -48,6 +58,9 @@ func Format(data []byte) []byte {
 	result := strings.Join(lines, "\n")
 	result = strings.TrimRight(result, "\n") + "\n"
 
+	if fm != nil {
+		return append(fm, []byte(result)...)
+	}
 	return []byte(result)
 }
 

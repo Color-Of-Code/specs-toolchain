@@ -1,12 +1,13 @@
-# Guided Host Initialisation
+---
+id: EXT-006
+status: Draft
+stakeholder: VS Code user, project lead
+source: "[Install](../../../docs/install.md), [Commands](../../../docs/commands.md)"
+realised_by:
+    - ../../model/requirements/extension/VEXT-006-guided-host-init-wizard.md
+---
 
-| Field       | Value                                                                                             |
-| ----------- | ------------------------------------------------------------------------------------------------- |
-| ID          | EXT-006                                                                                           |
-| Status      | Draft                                                                                             |
-| Stakeholder | VS Code user, project lead                                                                        |
-| Source      | [Install](../../../docs/install.md), [Commands](../../../docs/commands.md)                        |
-| Realised By | [Guided Host Init Wizard](../../model/requirements/extension/VEXT-006-guided-host-init-wizard.md) |
+# Guided Host Initialisation
 
 ## Summary
 

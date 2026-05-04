@@ -1,11 +1,11 @@
-# Title
+---
+status: Draft
+stakeholder: ""
+source: ""
+realised_by: []
+---
 
-| Field        | Value |
-| ------------ | ----- |
-| Status       | Draft |
-| Stakeholder  | —     |
-| Source       | —     |
-| Realised By  | —     |
+# Title
 
 ## Summary
 

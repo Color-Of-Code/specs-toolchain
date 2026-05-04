@@ -1,11 +1,13 @@
-# Guided Host Init Wizard
+---
+id: VEXT-006
+status: Draft
+realises:
+    - ../../../product/extension/EXT-006-guided-host-initialisation.md
+implemented_by:
+    - ../../use-cases/extension/VEXT-006-init-wizard.md
+---
 
-| Field          | Value                                                                                          |
-| -------------- | ---------------------------------------------------------------------------------------------- |
-| ID             | VEXT-006                                                                                       |
-| Status         | Draft                                                                                          |
-| Realises       | [Guided Host Initialisation](../../../product/extension/EXT-006-guided-host-initialisation.md) |
-| Implemented By | [Init Wizard](../../use-cases/extension/VEXT-006-init-wizard.md)                               |
+# Guided Host Init Wizard
 
 ## Requirement
 

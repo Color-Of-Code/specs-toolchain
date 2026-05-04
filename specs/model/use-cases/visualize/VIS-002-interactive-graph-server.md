@@ -1,10 +1,11 @@
-# Interactive Graph Server
+---
+id: VIS-002
+status: Draft
+requirements:
+    - ../../requirements/visualize/VIS-002-interactive-graph-server.md
+---
 
-| Field        | Value                                                                                                     |
-| ------------ | --------------------------------------------------------------------------------------------------------- |
-| ID           | VIS-002                                                                                                   |
-| Status       | Draft                                                                                                     |
-| Requirements | [Interactive Traceability Graph Server](../../requirements/visualize/VIS-002-interactive-graph-server.md) |
+# Interactive Graph Server
 
 ## Workflow
 

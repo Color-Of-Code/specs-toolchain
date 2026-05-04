@@ -1,11 +1,13 @@
-# Palette Command Dispatch
+---
+id: VEXT-002
+status: Draft
+realises:
+    - ../../../product/extension/EXT-002-palette-command-access.md
+implemented_by:
+    - ../../use-cases/extension/VEXT-002-palette-command-dispatch.md
+---
 
-| Field          | Value                                                                                      |
-| -------------- | ------------------------------------------------------------------------------------------ |
-| ID             | VEXT-002                                                                                   |
-| Status         | Draft                                                                                      |
-| Realises       | [Palette Command Access](../../../product/extension/EXT-002-palette-command-access.md)     |
-| Implemented By | [Palette Command Dispatch](../../use-cases/extension/VEXT-002-palette-command-dispatch.md) |
+# Palette Command Dispatch
 
 ## Requirement
 

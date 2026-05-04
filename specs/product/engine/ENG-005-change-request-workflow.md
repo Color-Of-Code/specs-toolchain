@@ -1,12 +1,15 @@
-# Change Request Workflow
+---
+id: ENG-005
+status: Draft
+stakeholder: Spec author, project lead
+source: "[Overview](../../../docs/overview.md), [Actors](../../../docs/actors.md)"
+realised_by:
+    - ../../model/requirements/cr/CR-001-change-request-creation.md
+    - ../../model/requirements/cr/CR-002-change-request-status-reporting.md
+    - ../../model/requirements/cr/CR-003-change-request-drain.md
+---
 
-| Field       | Value                                                                                                                                                                                                                                                                                                     |
-| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| ID          | ENG-005                                                                                                                                                                                                                                                                                                   |
-| Status      | Draft                                                                                                                                                                                                                                                                                                     |
-| Stakeholder | Spec author, project lead                                                                                                                                                                                                                                                                                 |
-| Source      | [Overview](../../../docs/overview.md), [Actors](../../../docs/actors.md)                                                                                                                                                                                                                                  |
-| Realised By | [Change Request Creation](../../model/requirements/cr/CR-001-change-request-creation.md), [Change Request Status Reporting](../../model/requirements/cr/CR-002-change-request-status-reporting.md), [Change Request Drain to Canonical Paths](../../model/requirements/cr/CR-003-change-request-drain.md) |
+# Change Request Workflow
 
 ## Summary
 

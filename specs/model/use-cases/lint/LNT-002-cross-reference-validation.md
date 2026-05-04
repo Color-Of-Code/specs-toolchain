@@ -1,10 +1,11 @@
-# Cross-Reference Validation
+---
+id: LNT-002
+status: Draft
+requirements:
+    - ../../requirements/lint/LNT-002-link-target-checking.md
+---
 
-| Field        | Value                                                                                  |
-| ------------ | -------------------------------------------------------------------------------------- |
-| ID           | LNT-002                                                                                |
-| Status       | Draft                                                                                  |
-| Requirements | [Link Target Checking](../../requirements/lint/LNT-002-link-target-checking.md)        |
+# Cross-Reference Validation
 
 ## Workflow
 

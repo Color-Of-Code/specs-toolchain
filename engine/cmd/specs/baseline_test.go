@@ -34,13 +34,13 @@ func TestCmdBaselineUpdateWritesCanonicalGraph(t *testing.T) {
 	}
 	componentPath := filepath.Join(specsDir, "model", "components", "alpha-component.md")
 	componentBody := strings.Join([]string{
-		"# Alpha Component",
+		"---",
+		"status: Draft",
+		"requirements: []",
+		"baseline: ~",
+		"---",
 		"",
-		"| Field | Value |",
-		"| ----- | ----- |",
-		"| Status | Draft |",
-		"| Requirements | — |",
-		"| Baseline | — |",
+		"# Alpha Component",
 	}, "\n")
 	if err := os.WriteFile(componentPath, []byte(componentBody), 0o644); err != nil {
 		t.Fatal(err)
@@ -84,7 +84,7 @@ func TestCmdBaselineUpdateWritesCanonicalGraph(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !strings.Contains(string(updatedComponent), "`host-repo:/@"+actualCommit+"`") {
+	if !strings.Contains(string(updatedComponent), "baseline: host-repo:/@"+actualCommit) {
 		t.Fatalf("component baseline field not regenerated:\n%s", string(updatedComponent))
 	}
 }
@@ -111,13 +111,13 @@ func TestCmdBaselineUpdateDryRunDoesNotWriteGraph(t *testing.T) {
 	}
 	componentPath := filepath.Join(specsDir, "model", "components", "alpha-component.md")
 	componentBody := strings.Join([]string{
-		"# Alpha Component",
+		"---",
+		"status: Draft",
+		"requirements: []",
+		"baseline: ~",
+		"---",
 		"",
-		"| Field | Value |",
-		"| ----- | ----- |",
-		"| Status | Draft |",
-		"| Requirements | — |",
-		"| Baseline | — |",
+		"# Alpha Component",
 	}, "\n")
 	if err := os.WriteFile(componentPath, []byte(componentBody), 0o644); err != nil {
 		t.Fatal(err)

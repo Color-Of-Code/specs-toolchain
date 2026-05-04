@@ -1,10 +1,11 @@
-# Traceability Graph Panel
+---
+id: VEXT-003
+status: Draft
+requirements:
+    - ../../requirements/extension/VEXT-003-traceability-graph-panel.md
+---
 
-| Field        | Value                                                                                         |
-| ------------ | --------------------------------------------------------------------------------------------- |
-| ID           | VEXT-003                                                                                      |
-| Status       | Draft                                                                                         |
-| Requirements | [Traceability Graph Panel](../../requirements/extension/VEXT-003-traceability-graph-panel.md) |
+# Traceability Graph Panel
 
 ## Workflow
 

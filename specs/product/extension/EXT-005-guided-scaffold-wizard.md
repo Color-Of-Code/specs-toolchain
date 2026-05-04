@@ -1,12 +1,13 @@
-# Guided Scaffold Wizard
+---
+id: EXT-005
+status: Draft
+stakeholder: Spec author, stakeholder
+source: "[Commands](../../../docs/commands.md), [Actors](../../../docs/actors.md)"
+realised_by:
+    - ../../model/requirements/extension/VEXT-005-guided-scaffold-wizard.md
+---
 
-| Field       | Value                                                                                           |
-| ----------- | ----------------------------------------------------------------------------------------------- |
-| ID          | EXT-005                                                                                         |
-| Status      | Draft                                                                                           |
-| Stakeholder | Spec author, stakeholder                                                                        |
-| Source      | [Commands](../../../docs/commands.md), [Actors](../../../docs/actors.md)                        |
-| Realised By | [Guided Scaffold Wizard](../../model/requirements/extension/VEXT-005-guided-scaffold-wizard.md) |
+# Guided Scaffold Wizard
 
 ## Summary
 

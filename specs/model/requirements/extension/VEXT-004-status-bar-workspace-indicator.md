@@ -1,11 +1,13 @@
-# Status Bar Workspace Indicator
+---
+id: VEXT-004
+status: Draft
+realises:
+    - ../../../product/extension/EXT-004-workspace-status-visibility.md
+implemented_by:
+    - ../../use-cases/extension/VEXT-004-status-bar-indicator.md
+---
 
-| Field          | Value                                                                                            |
-| -------------- | ------------------------------------------------------------------------------------------------ |
-| ID             | VEXT-004                                                                                         |
-| Status         | Draft                                                                                            |
-| Realises       | [Workspace Status Visibility](../../../product/extension/EXT-004-workspace-status-visibility.md) |
-| Implemented By | [Status Bar Indicator](../../use-cases/extension/VEXT-004-status-bar-indicator.md)               |
+# Status Bar Workspace Indicator
 
 ## Requirement
 

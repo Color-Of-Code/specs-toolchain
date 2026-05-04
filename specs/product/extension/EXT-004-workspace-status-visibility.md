@@ -1,12 +1,13 @@
-# Workspace Status Visibility
+---
+id: EXT-004
+status: Draft
+stakeholder: Spec author
+source: "[Extension README](../../../extension/README.md)"
+realised_by:
+    - ../../model/requirements/extension/VEXT-004-status-bar-workspace-indicator.md
+---
 
-| Field       | Value                                                                                                           |
-| ----------- | --------------------------------------------------------------------------------------------------------------- |
-| ID          | EXT-004                                                                                                         |
-| Status      | Draft                                                                                                           |
-| Stakeholder | Spec author                                                                                                     |
-| Source      | [Extension README](../../../extension/README.md)                                                                |
-| Realised By | [Status Bar Workspace Indicator](../../model/requirements/extension/VEXT-004-status-bar-workspace-indicator.md) |
+# Workspace Status Visibility
 
 ## Summary
 

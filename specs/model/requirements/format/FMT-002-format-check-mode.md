@@ -1,11 +1,13 @@
-# Format Check Mode
+---
+id: FMT-002
+status: Draft
+realises:
+    - ../../../product/engine/ENG-001-consistent-markdown-formatting.md
+implemented_by:
+    - ../../use-cases/format/FMT-002-ci-gate.md
+---
 
-| Field          | Value                                                                                               |
-| -------------- | --------------------------------------------------------------------------------------------------- |
-| ID             | FMT-002                                                                                             |
-| Status         | Draft                                                                                               |
-| Realises       | [Consistent Markdown Formatting](../../../product/engine/ENG-001-consistent-markdown-formatting.md) |
-| Implemented By | [Format CI Gate](../../use-cases/format/FMT-002-ci-gate.md)                                         |
+# Format Check Mode
 
 ## Requirement
 

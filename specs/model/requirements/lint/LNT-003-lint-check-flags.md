@@ -1,11 +1,13 @@
-# Lint Check Flags
+---
+id: LNT-003
+status: Draft
+realises:
+    - ../../../product/engine/ENG-001-consistent-markdown-formatting.md
+implemented_by:
+    - ../../use-cases/lint/LNT-003-flag-composition.md
+---
 
-| Field          | Value                                                                                               |
-| -------------- | --------------------------------------------------------------------------------------------------- |
-| ID             | LNT-003                                                                                             |
-| Status         | Draft                                                                                               |
-| Realises       | [Consistent Markdown Formatting](../../../product/engine/ENG-001-consistent-markdown-formatting.md) |
-| Implemented By | [Lint Flag Composition](../../use-cases/lint/LNT-003-flag-composition.md)                           |
+# Lint Check Flags
 
 ## Requirement
 

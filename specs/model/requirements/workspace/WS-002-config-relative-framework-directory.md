@@ -1,11 +1,14 @@
-# Config Relative Framework Directory
+---
+id: WS-002
+status: Draft
+realises:
+    - ../../../product/engine/ENG-009-repo-local-specs-host.md
+implemented_by:
+    - ../../components/engine/specs-engine.md
+    - ../../use-cases/host/HOST-002-config-relative-framework.md
+---
 
-| Field          | Value                                                                                                                                                             |
-| -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| ID             | WS-002                                                                                                                                                            |
-| Status         | Draft                                                                                                                                                             |
-| Realises       | [Repo Local Specs Host](../../../product/engine/ENG-009-repo-local-specs-host.md)                                                                                 |
-| Implemented By | [Specs Engine](../../components/engine/specs-engine.md), [Config Relative Framework Resolution](../../use-cases/host/HOST-002-config-relative-framework.md)       |
+# Config Relative Framework Directory
 
 ## Requirement
 

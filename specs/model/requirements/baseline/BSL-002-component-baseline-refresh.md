@@ -1,11 +1,13 @@
-# Component Baseline Refresh
+---
+id: BSL-002
+status: Draft
+realises:
+    - ../../../product/engine/ENG-006-component-baseline-tracking.md
+implemented_by:
+    - ../../use-cases/baseline/BSL-002-baseline-refresh.md
+---
 
-| Field          | Value                                                                                         |
-| -------------- | --------------------------------------------------------------------------------------------- |
-| ID             | BSL-002                                                                                       |
-| Status         | Draft                                                                                         |
-| Realises       | [Component Baseline Tracking](../../../product/engine/ENG-006-component-baseline-tracking.md) |
-| Implemented By | [Baseline Refresh](../../use-cases/baseline/BSL-002-baseline-refresh.md)                      |
+# Component Baseline Refresh
 
 ## Requirement
 

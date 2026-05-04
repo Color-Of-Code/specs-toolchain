@@ -1,11 +1,15 @@
-# Repo Local Engine Integration
+---
+id: WS-003
+status: Draft
+realises:
+    - ../../../product/engine/ENG-009-repo-local-specs-host.md
+implemented_by:
+    - ../../components/engine/specs-engine.md
+    - ../../components/extension/vscode-extension.md
+    - ../../use-cases/host/HOST-003-engine-build-workflow.md
+---
 
-| Field          | Value                                                                                                                                                                                                                                                                     |
-| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| ID             | WS-003                                                                                                                                                                                                                                                                    |
-| Status         | Draft                                                                                                                                                                                                                                                                     |
-| Realises       | [Repo Local Specs Host](../../../product/engine/ENG-009-repo-local-specs-host.md)                                                                                                                                                                                         |
-| Implemented By | [Specs Engine](../../components/engine/specs-engine.md), [Vscode Extension](../../components/extension/vscode-extension.md), [Engine Build Workflow](../../use-cases/host/HOST-003-engine-build-workflow.md)                                                              |
+# Repo Local Engine Integration
 
 ## Requirement
 

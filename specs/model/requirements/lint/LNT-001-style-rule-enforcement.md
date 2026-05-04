@@ -1,11 +1,13 @@
-# Style Rule Enforcement
+---
+id: LNT-001
+status: Draft
+realises:
+    - ../../../product/engine/ENG-002-style-compliance-linting.md
+implemented_by:
+    - ../../use-cases/lint/LNT-001-style-rule-checking.md
+---
 
-| Field          | Value                                                                                   |
-| -------------- | --------------------------------------------------------------------------------------- |
-| ID             | LNT-001                                                                                 |
-| Status         | Draft                                                                                   |
-| Realises       | [Style Compliance Linting](../../../product/engine/ENG-002-style-compliance-linting.md) |
-| Implemented By | [Style Rule Checking](../../use-cases/lint/LNT-001-style-rule-checking.md)              |
+# Style Rule Enforcement
 
 ## Requirement
 

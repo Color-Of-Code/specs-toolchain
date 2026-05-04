@@ -1,12 +1,15 @@
-# Repo Local Specs Host
+---
+id: ENG-009
+status: Draft
+stakeholder: specs-toolchain maintainer
+source: "[Development guide](../../../docs/development.md), [Configuration reference](../../../docs/configuration.md)"
+realised_by:
+    - ../../model/requirements/workspace/WS-001-repo-local-specs-host.md
+    - ../../model/requirements/workspace/WS-002-config-relative-framework-directory.md
+    - ../../model/requirements/workspace/WS-003-repo-local-engine-integration.md
+---
 
-| Field        | Value                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| ID           | ENG-009                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| Status       | Draft                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| Stakeholder  | specs-toolchain maintainer                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| Source       | [Development guide](../../../docs/development.md), [Configuration reference](../../../docs/configuration.md)                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| Realised By  | [Repo Local Specs Host](../../model/requirements/workspace/WS-001-repo-local-specs-host.md), [Config Relative Framework Directory](../../model/requirements/workspace/WS-002-config-relative-framework-directory.md), [Repo Local Engine Integration](../../model/requirements/workspace/WS-003-repo-local-engine-integration.md)                                                                                                                                                                                                             |
+# Repo Local Specs Host
 
 ## Summary
 

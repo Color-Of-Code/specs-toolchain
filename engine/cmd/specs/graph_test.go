@@ -220,8 +220,8 @@ func TestCmdGraphGenerateMarkdownUpdatesFiles(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !strings.Contains(string(requirementBody), "| Realises | [Alpha](../../product/alpha.md) |") {
-		t.Fatalf("missing generated Realises row:\n%s", string(requirementBody))
+	if !strings.Contains(string(requirementBody), "realises:\n    - ../../product/alpha.md") {
+		t.Fatalf("missing generated realises field:\n%s", string(requirementBody))
 	}
 }
 
@@ -466,31 +466,37 @@ func writeGraphImportFixture(t *testing.T, specsDir string) {
 	t.Helper()
 	files := map[string]string{
 		filepath.Join(specsDir, "product", "alpha.md"): strings.Join([]string{
-			"# Alpha",
+			"---",
+			"realised_by:",
+			"    - ../model/requirements/alpha-requirement.md",
+			"---",
 			"",
-			"| Field | Value |",
-			"| ----- | ----- |",
-			"| Realised By | [Alpha Requirement](../model/requirements/alpha-requirement.md) |",
+			"# Alpha",
 		}, "\n"),
 		filepath.Join(specsDir, "model", "requirements", "alpha-requirement.md"): strings.Join([]string{
-			"# Alpha Requirement",
+			"---",
+			"implemented_by:",
+			"    - ../use-cases/alpha-feature.md",
+			"    - ../components/alpha-component.md",
+			"---",
 			"",
-			"| Field | Value |",
-			"| ----- | ----- |",
-			"| Implemented By | [Alpha Feature](../use-cases/alpha-feature.md), [Alpha Component](../components/alpha-component.md) |",
+			"# Alpha Requirement",
 		}, "\n"),
 		filepath.Join(specsDir, "model", "use-cases", "alpha-feature.md"): strings.Join([]string{
-			"# Alpha Feature",
+			"---",
+			"requirements:",
+			"    - ../requirements/alpha-requirement.md",
+			"---",
 			"",
-			"## Requirements",
-			"- [Alpha Requirement](../requirements/alpha-requirement.md)",
+			"# Alpha Feature",
 		}, "\n"),
 		filepath.Join(specsDir, "model", "components", "alpha-component.md"): strings.Join([]string{
-			"# Alpha Component",
+			"---",
+			"requirements:",
+			"    - ../requirements/alpha-requirement.md",
+			"---",
 			"",
-			"| Field | Value |",
-			"| ----- | ----- |",
-			"| Requirements | [Alpha Requirement](../requirements/alpha-requirement.md) |",
+			"# Alpha Component",
 		}, "\n"),
 		filepath.Join(specsDir, "model", "baselines", "repo-baseline.md"): strings.Join([]string{
 			"# Baselines",
@@ -512,37 +518,38 @@ func writeGraphGenerateFixture(t *testing.T, specsDir string) {
 	t.Helper()
 	files := map[string]string{
 		filepath.Join(specsDir, "product", "alpha.md"): strings.Join([]string{
-			"# Alpha",
+			"---",
+			"status: Draft",
+			"realised_by: []",
+			"---",
 			"",
-			"| Field | Value |",
-			"| ----- | ----- |",
-			"| Status | Draft |",
-			"| Realised By | — |",
+			"# Alpha",
 		}, "\n"),
 		filepath.Join(specsDir, "model", "requirements", "alpha-requirement.md"): strings.Join([]string{
-			"# Alpha Requirement",
+			"---",
+			"status: Draft",
+			"realises: []",
+			"implemented_by: []",
+			"---",
 			"",
-			"| Field | Value |",
-			"| ----- | ----- |",
-			"| Status | Draft |",
-			"| Implemented By | — |",
+			"# Alpha Requirement",
 		}, "\n"),
 		filepath.Join(specsDir, "model", "use-cases", "alpha-feature.md"): strings.Join([]string{
-			"# Alpha Feature",
+			"---",
+			"status: Draft",
+			"requirements: []",
+			"---",
 			"",
-			"| Field | Value |",
-			"| ----- | ----- |",
-			"| Status | Draft |",
-			"| Requirements | — |",
+			"# Alpha Feature",
 		}, "\n"),
 		filepath.Join(specsDir, "model", "components", "alpha-component.md"): strings.Join([]string{
-			"# Alpha Component",
+			"---",
+			"status: Draft",
+			"requirements: []",
+			"baseline: ~",
+			"---",
 			"",
-			"| Field | Value |",
-			"| ----- | ----- |",
-			"| Status | Draft |",
-			"| Requirements | — |",
-			"| Baseline | — |",
+			"# Alpha Component",
 		}, "\n"),
 	}
 	for path, content := range files {

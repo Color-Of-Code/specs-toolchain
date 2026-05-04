@@ -1,10 +1,11 @@
-# Style Rule Checking
+---
+id: LNT-001
+status: Draft
+requirements:
+    - ../../requirements/lint/LNT-001-style-rule-enforcement.md
+---
 
-| Field        | Value                                                                                    |
-| ------------ | ---------------------------------------------------------------------------------------- |
-| ID           | LNT-001                                                                                  |
-| Status       | Draft                                                                                    |
-| Requirements | [Style Rule Enforcement](../../requirements/lint/LNT-001-style-rule-enforcement.md)      |
+# Style Rule Checking
 
 ## Workflow
 

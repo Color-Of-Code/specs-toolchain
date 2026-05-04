@@ -1,10 +1,10 @@
-# Title
+---
+status: Draft
+requirements: []
+baseline: ~
+---
 
-| Field        | Value |
-| ------------ | ----- |
-| Status       | Draft |
-| Requirements | —     |
-| Baseline     | —     |
+# Title
 
 ## Responsibilities
 

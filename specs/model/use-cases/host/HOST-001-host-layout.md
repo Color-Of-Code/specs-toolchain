@@ -1,10 +1,11 @@
-# Host Layout
+---
+id: HOST-001
+status: Draft
+requirements:
+    - ../../requirements/workspace/WS-001-repo-local-specs-host.md
+---
 
-| Field        | Value                                                                                 |
-| ------------ | ------------------------------------------------------------------------------------- |
-| ID           | HOST-001                                                                              |
-| Status       | Draft                                                                                 |
-| Requirements | [Repo Local Specs Host](../../requirements/workspace/WS-001-repo-local-specs-host.md) |
+# Host Layout
 
 ## Workflow
 

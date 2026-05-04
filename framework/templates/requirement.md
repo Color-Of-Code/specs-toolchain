@@ -1,10 +1,10 @@
-# Title
+---
+status: Draft
+realises: []
+implemented_by: []
+---
 
-| Field          | Value |
-| -------------- | ----- |
-| Status         | Draft |
-| Realises       | —     |
-| Implemented By | —     |
+# Title
 
 ## Requirement
 

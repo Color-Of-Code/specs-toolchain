@@ -1,10 +1,11 @@
-# Vscode Extension
+---
+status: Draft
+requirements:
+    - ../../requirements/workspace/WS-003-repo-local-engine-integration.md
+baseline: ~
+---
 
-| Field        | Value                                                                                                 |
-| ------------ | ----------------------------------------------------------------------------------------------------- |
-| Status       | Draft                                                                                                 |
-| Requirements | [Repo Local Engine Integration](../../requirements/workspace/WS-003-repo-local-engine-integration.md) |
-| Baseline     | —                                                                                                     |
+# Vscode Extension
 
 ## Responsibilities
 

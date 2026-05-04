@@ -1,10 +1,11 @@
-# Lint Flag Composition
+---
+id: LNT-003
+status: Draft
+requirements:
+    - ../../requirements/lint/LNT-003-lint-check-flags.md
+---
 
-| Field        | Value                                                                          |
-| ------------ | ------------------------------------------------------------------------------ |
-| ID           | LNT-003                                                                        |
-| Status       | Draft                                                                          |
-| Requirements | [Lint Check Flags](../../requirements/lint/LNT-003-lint-check-flags.md)        |
+# Lint Flag Composition
 
 ## Workflow
 

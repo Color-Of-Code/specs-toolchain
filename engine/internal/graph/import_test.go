@@ -24,32 +24,39 @@ func TestImportMarkdownAndWriteRoundTrip(t *testing.T) {
 		}
 	}
 	writeImportFile(t, filepath.Join(productDir, "alpha.md"), strings.Join([]string{
-		"# Alpha",
+		"---",
+		"realised_by:",
+		"    - ../model/requirements/alpha-requirement.md",
+		"---",
 		"",
-		"| Field | Value |",
-		"| ----- | ----- |",
-		"| Realised By | [Alpha Requirement](../model/requirements/alpha-requirement.md) |",
+		"# Alpha",
 	}, "\n"))
 	writeImportFile(t, filepath.Join(modelDir, "requirements", "alpha-requirement.md"), strings.Join([]string{
-		"# Alpha Requirement",
+		"---",
+		"realises:",
+		"    - ../../product/alpha.md",
+		"implemented_by:",
+		"    - ../use-cases/alpha-feature.md",
+		"    - ../components/alpha-component.md",
+		"---",
 		"",
-		"| Field | Value |",
-		"| ----- | ----- |",
-		"| Realises | [Alpha](../../product/alpha.md) |",
-		"| Implemented By | [Alpha Feature](../use-cases/alpha-feature.md), [Alpha Component](../components/alpha-component.md) |",
+		"# Alpha Requirement",
 	}, "\n"))
 	writeImportFile(t, filepath.Join(modelDir, "use-cases", "alpha-feature.md"), strings.Join([]string{
-		"# Alpha Feature",
+		"---",
+		"requirements:",
+		"    - ../requirements/alpha-requirement.md",
+		"---",
 		"",
-		"## Requirements",
-		"- [Alpha Requirement](../requirements/alpha-requirement.md)",
+		"# Alpha Feature",
 	}, "\n"))
 	writeImportFile(t, filepath.Join(modelDir, "components", "alpha-component.md"), strings.Join([]string{
-		"# Alpha Component",
+		"---",
+		"requirements:",
+		"    - ../requirements/alpha-requirement.md",
+		"---",
 		"",
-		"| Field | Value |",
-		"| ----- | ----- |",
-		"| Requirements | [Alpha Requirement](../requirements/alpha-requirement.md) |",
+		"# Alpha Component",
 	}, "\n"))
 	writeImportFile(t, baselineFile, strings.Join([]string{
 		"# Baselines",

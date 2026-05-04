@@ -1,12 +1,13 @@
-# Traceability Graph Panel
+---
+id: EXT-003
+status: Draft
+stakeholder: Product manager, architect
+source: "[Overview](../../../docs/overview.md), [Extension README](../../../extension/README.md)"
+realised_by:
+    - ../../model/requirements/extension/VEXT-003-traceability-graph-panel.md
+---
 
-| Field       | Value                                                                                               |
-| ----------- | --------------------------------------------------------------------------------------------------- |
-| ID          | EXT-003                                                                                             |
-| Status      | Draft                                                                                               |
-| Stakeholder | Product manager, architect                                                                          |
-| Source      | [Overview](../../../docs/overview.md), [Extension README](../../../extension/README.md)             |
-| Realised By | [Traceability Graph Panel](../../model/requirements/extension/VEXT-003-traceability-graph-panel.md) |
+# Traceability Graph Panel
 
 ## Summary
 

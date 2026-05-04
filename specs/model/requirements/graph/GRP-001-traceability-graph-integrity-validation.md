@@ -1,11 +1,13 @@
-# Traceability Graph Integrity Validation
+---
+id: GRP-001
+status: Draft
+realises:
+    - ../../../product/engine/ENG-003-traceability-graph-validation.md
+implemented_by:
+    - ../../use-cases/graph/GRP-001-graph-validation.md
+---
 
-| Field          | Value                                                                                               |
-| -------------- | --------------------------------------------------------------------------------------------------- |
-| ID             | GRP-001                                                                                             |
-| Status         | Draft                                                                                               |
-| Realises       | [Traceability Graph Validation](../../../product/engine/ENG-003-traceability-graph-validation.md)   |
-| Implemented By | [Graph Validation](../../use-cases/graph/GRP-001-graph-validation.md)                               |
+# Traceability Graph Integrity Validation
 
 ## Requirement
 

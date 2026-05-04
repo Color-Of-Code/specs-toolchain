@@ -1,11 +1,13 @@
-# Guided Scaffold Wizard
+---
+id: VEXT-005
+status: Draft
+realises:
+    - ../../../product/extension/EXT-005-guided-scaffold-wizard.md
+implemented_by:
+    - ../../use-cases/extension/VEXT-005-scaffold-wizard.md
+---
 
-| Field          | Value                                                                                  |
-| -------------- | -------------------------------------------------------------------------------------- |
-| ID             | VEXT-005                                                                               |
-| Status         | Draft                                                                                  |
-| Realises       | [Guided Scaffold Wizard](../../../product/extension/EXT-005-guided-scaffold-wizard.md) |
-| Implemented By | [Scaffold Wizard](../../use-cases/extension/VEXT-005-scaffold-wizard.md)               |
+# Guided Scaffold Wizard
 
 ## Requirement
 

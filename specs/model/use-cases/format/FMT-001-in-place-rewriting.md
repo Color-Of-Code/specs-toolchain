@@ -1,10 +1,11 @@
-# In-Place Rewriting
+---
+id: FMT-001
+status: Draft
+requirements:
+    - ../../requirements/format/FMT-001-format-in-place.md
+---
 
-| Field        | Value                                                                                 |
-| ------------ | ------------------------------------------------------------------------------------- |
-| ID           | FMT-001                                                                               |
-| Status       | Draft                                                                                 |
-| Requirements | [Format In Place](../../requirements/format/FMT-001-format-in-place.md)               |
+# In-Place Rewriting
 
 ## Workflow
 
