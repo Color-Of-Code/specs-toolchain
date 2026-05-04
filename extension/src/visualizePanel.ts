@@ -33,17 +33,6 @@ interface VisualizeGraph {
   edges: VisualizeEdge[];
 }
 
-interface SaveLayoutNode {
-  id: string;
-  x: number;
-  y: number;
-  locked?: boolean;
-}
-
-interface SaveLayoutPayload {
-  nodes: SaveLayoutNode[];
-}
-
 interface SaveRelationsEdge {
   source: string;
   target: string;
@@ -117,15 +106,13 @@ async function openOrRefresh(context: vscode.ExtensionContext): Promise<void> {
   panel.onDidDispose(() => {
     currentPanel = undefined;
   });
-  panel.webview.onDidReceiveMessage(async (msg: { type: string; requestId?: string; payload?: string | SaveLayoutPayload | SaveRelationsPayload }) => {
+  panel.webview.onDidReceiveMessage(async (msg: { type: string; requestId?: string; payload?: string | SaveRelationsPayload }) => {
     if (msg.type === "export-json") {
       await exportFile(context, "json");
     } else if (msg.type === "refresh") {
       await refresh(context);
     } else if (msg.type === "open-path" && msg.payload) {
       await openArtifact(context, msg.payload as string);
-    } else if (msg.type === "save-layout" && msg.requestId && msg.payload) {
-      await saveGraphPayload(context, panel, msg.requestId, msg.payload as SaveLayoutPayload, "save-layout");
     } else if (msg.type === "save-relations" && msg.requestId && msg.payload) {
       await saveGraphPayload(context, panel, msg.requestId, msg.payload as SaveRelationsPayload, "save-relations");
     }
@@ -137,17 +124,17 @@ async function saveGraphPayload(
   context: vscode.ExtensionContext,
   panel: vscode.WebviewPanel,
   requestId: string,
-  payload: SaveLayoutPayload | SaveRelationsPayload,
-  subcommand: "save-layout" | "save-relations",
+  payload: SaveRelationsPayload,
+  subcommand: "save-relations",
 ): Promise<void> {
   const folder = findSpecsFolder();
   if (!folder) {
-    await panel.webview.postMessage({ type: "save-layout-result", requestId, ok: false, error: "Specs: no workspace folder is open." });
+    await panel.webview.postMessage({ type: "save-relations-result", requestId, ok: false, error: "Specs: no workspace folder is open." });
     return;
   }
   const cwd = findSpecsRoot(folder) ?? folder.uri.fsPath;
-  const tempDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), "specs-layout-"));
-  const inputPath = path.join(tempDir, "layout.json");
+  const tempDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), "specs-relations-"));
+  const inputPath = path.join(tempDir, "relations.json");
   try {
     await fs.promises.writeFile(inputPath, JSON.stringify(payload), "utf8");
     const res = await runAndCapture(context, ["graph", subcommand, "--in", inputPath], cwd);
@@ -305,6 +292,12 @@ ${fallbackBanner}
 <div class="toolbar">
   <button id="refresh">Refresh</button>
   <button id="fit">Fit</button>
+  <select id="layout-mode" aria-label="Layout mode">
+    <option value="layered">Layered</option>
+    <option value="organic">Organic</option>
+    <option value="grid">Grid</option>
+  </select>
+  <button id="relayout">Relayout</button>
   <input type="search" id="filter" placeholder="Filter nodes…" aria-label="Filter nodes">
   <select id="relation-kind" aria-label="Relation kind">
     <option value="realization">Realization</option>
@@ -315,7 +308,6 @@ ${fallbackBanner}
   </select>
   <button id="add-edge">Add Edge</button>
   <button id="remove-edge">Remove Selected Edge</button>
-  <button id="save-layout">Save Layout</button>
   <button id="export-json">Export JSON</button>
   <div class="meta" id="meta">${graph.nodes.length} nodes / ${graph.edges.length} edges</div>
 </div>
@@ -332,7 +324,7 @@ ${fallbackInline ? "" : `<script nonce="${nonce}" src="${cytoscapeUri}"></script
   const pendingRequests = new Map();
   window.addEventListener('message', (event) => {
     const message = event.data;
-    if (!message || !message.requestId || (message.type !== 'save-layout-result' && message.type !== 'save-relations-result')) {
+    if (!message || !message.requestId || message.type !== 'save-relations-result') {
       return;
     }
     const pending = pendingRequests.get(message.requestId);
@@ -344,7 +336,7 @@ ${fallbackInline ? "" : `<script nonce="${nonce}" src="${cytoscapeUri}"></script
       pending.resolve();
       return;
     }
-    pending.reject(new Error(message.error || 'save layout failed'));
+    pending.reject(new Error(message.error || 'save relations failed'));
   });
   document.getElementById('refresh').addEventListener('click', () => vscode.postMessage({ type: 'refresh' }));
   document.getElementById('export-json').addEventListener('click', () => vscode.postMessage({ type: 'export-json' }));
@@ -353,19 +345,15 @@ ${fallbackInline ? "" : `<script nonce="${nonce}" src="${cytoscapeUri}"></script
       graph,
       container: document.getElementById('graph'),
       fitButton: document.getElementById('fit'),
+      layoutSelect: document.getElementById('layout-mode'),
+      relayoutButton: document.getElementById('relayout'),
       filterInput: document.getElementById('filter'),
       addEdgeButton: document.getElementById('add-edge'),
       relationKindSelect: document.getElementById('relation-kind'),
       removeEdgeButton: document.getElementById('remove-edge'),
-      saveButton: document.getElementById('save-layout'),
       metaElement: document.getElementById('meta'),
       detailsElement: document.getElementById('details'),
       onOpenPath: (path) => vscode.postMessage({ type: 'open-path', payload: path }),
-      onSaveLayout: (payload) => new Promise((resolve, reject) => {
-        const requestId = String(++nextSaveRequestId);
-        pendingRequests.set(requestId, { resolve, reject });
-        vscode.postMessage({ type: 'save-layout', requestId, payload });
-      }),
       onSaveRelations: (payload) => new Promise((resolve, reject) => {
         const requestId = String(++nextSaveRequestId);
         pendingRequests.set(requestId, { resolve, reject });

@@ -10,8 +10,8 @@
 
 Invoke `specs visualize traceability --format json`, load the JSON payload
 into a Cytoscape WebView panel inside VS Code, and allow the user to browse
-nodes, inspect relations, and save node layout positions back to the canonical
-graph.
+nodes, inspect relations, and relayout the graph between layered, organic, and
+grid arrangements.
 
 ## VS Code Surface
 
@@ -20,7 +20,8 @@ graph.
 - The WebView panel renders the Cytoscape graph from the JSON payload.
 - Clicking a node shows its ID, title, and outbound relations in an inspector
   pane.
-- Layout changes are posted back to `specs graph save-layout`.
+- The panel defaults to a layered layout and can relayout the graph as
+  organic or grid.
 - The WebView panel can export the JSON payload used to render the graph.
 
 ## Validation

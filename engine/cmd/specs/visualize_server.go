@@ -15,19 +15,8 @@ import (
 	"github.com/Color-Of-Code/specs-toolchain/engine/internal/visualize"
 )
 
-type layoutSaveRequest struct {
-	Nodes []layoutSaveNode `json:"nodes"`
-}
-
 type relationSaveRequest struct {
 	Edges []relationSaveEdge `json:"edges"`
-}
-
-type layoutSaveNode struct {
-	ID     string  `json:"id"`
-	X      float64 `json:"x"`
-	Y      float64 `json:"y"`
-	Locked bool    `json:"locked,omitempty"`
 }
 
 type relationSaveEdge struct {
@@ -57,25 +46,6 @@ func newTraceabilityUIHandler(start string) (http.Handler, error) {
 			return
 		}
 		if err := saveTraceabilityRelations(start, req.Edges); err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-		w.WriteHeader(http.StatusNoContent)
-	})
-	mux.HandleFunc("/layout", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodPost {
-			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
-			return
-		}
-		defer r.Body.Close()
-		var req layoutSaveRequest
-		decoder := json.NewDecoder(r.Body)
-		decoder.DisallowUnknownFields()
-		if err := decoder.Decode(&req); err != nil {
-			http.Error(w, fmt.Sprintf("decode layout request: %v", err), http.StatusBadRequest)
-			return
-		}
-		if err := saveTraceabilityLayout(start, req.Nodes); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
@@ -121,10 +91,9 @@ func newTraceabilityUIHandler(start string) (http.Handler, error) {
 		var page bytes.Buffer
 		if err := visualize.WriteTraceabilityPage(&page, visualize.TraceabilityPageData{
 			Title:            "Specs: Traceability",
-			Hint:             "Click a node to inspect the underlying markdown artifact. Drag nodes, then save layout back into the canonical YAML.",
+			Hint:             "Click a node to inspect the underlying markdown artifact. Use the layout controls to switch between layered, organic, and grid arrangements.",
 			GraphURL:         "/graph.json",
 			SaveRelationsURL: "/relations",
-			SaveLayoutURL:    "/layout",
 			JSONURL:          "/graph.json",
 			ArtifactURL:      "/artifact",
 			Stylesheet:       "/assets/traceability-view.css",
@@ -139,26 +108,6 @@ func newTraceabilityUIHandler(start string) (http.Handler, error) {
 		_, _ = w.Write(page.Bytes())
 	})
 	return mux, nil
-}
-
-func saveTraceabilityLayout(start string, nodes []layoutSaveNode) error {
-	cfg, err := config.Load(start)
-	if err != nil {
-		return err
-	}
-	traceability, err := tracegraph.Load(cfg.GraphManifest)
-	if err != nil {
-		return exitWith(1, "load graph %s: %v", cfg.GraphManifest, err)
-	}
-	layouts, err := layoutEntriesFromSaveNodes(nodes, traceabilityAllowedNodeIDs(traceability))
-	if err != nil {
-		return err
-	}
-	traceability.Layout = layouts
-	if err := tracegraph.Write(cfg.GraphManifest, traceability); err != nil {
-		return fmt.Errorf("write graph %s: %w", cfg.GraphManifest, err)
-	}
-	return nil
 }
 
 func saveTraceabilityRelations(start string, edges []relationSaveEdge) error {
@@ -205,29 +154,6 @@ func traceabilityAllowedNodeIDs(g *tracegraph.Graph) map[string]struct{} {
 		allowed[baseline.Component] = struct{}{}
 	}
 	return allowed
-}
-
-func layoutEntriesFromSaveNodes(nodes []layoutSaveNode, allowed map[string]struct{}) ([]tracegraph.LayoutEntry, error) {
-	layouts := make([]tracegraph.LayoutEntry, 0, len(nodes))
-	seen := make(map[string]struct{}, len(nodes))
-	for index, current := range nodes {
-		normalizedID, err := tracegraph.NormalizeNodeID(current.ID)
-		if err != nil {
-			return nil, fmt.Errorf("layout node %d id: %w", index, err)
-		}
-		if _, ok := allowed[normalizedID]; !ok {
-			return nil, fmt.Errorf("layout node %d id %q is not in the traceability graph", index, normalizedID)
-		}
-		if _, exists := seen[normalizedID]; exists {
-			return nil, fmt.Errorf("layout node %d duplicates id %q", index, normalizedID)
-		}
-		seen[normalizedID] = struct{}{}
-		layouts = append(layouts, tracegraph.LayoutEntry{ID: normalizedID, X: current.X, Y: current.Y, Locked: current.Locked})
-	}
-	sort.Slice(layouts, func(i, j int) bool {
-		return layouts[i].ID < layouts[j].ID
-	})
-	return layouts, nil
 }
 
 type relationSaveFamilies struct {

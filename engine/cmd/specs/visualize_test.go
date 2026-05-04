@@ -45,7 +45,7 @@ func TestNewTraceabilityUIHandlerServesUIAndArtifacts(t *testing.T) {
 		contentType string
 		contains    []string
 	}{
-		{path: "/", contentType: "text/html", contains: []string{"Specs: Traceability", "/graph.json", "/assets/traceability-view.js", "/layout", "/relations", "Save Layout", "Remove Selected Edge", "Add Edge", "relation-kind", "component_implementation", "id=\"details\"", "No selection"}},
+		{path: "/", contentType: "text/html", contains: []string{"Specs: Traceability", "/graph.json", "/assets/traceability-view.js", "/relations", "layout-mode", "Relayout", "Remove Selected Edge", "Add Edge", "relation-kind", "component_implementation", "id=\"details\"", "No selection"}},
 		{path: "/graph.json", contentType: "application/json", contains: []string{`"id": "product/alpha"`, `"source": "product/alpha"`}},
 		{path: "/assets/traceability-view.js", contentType: "text/javascript", contains: []string{"window.TraceabilityUI", "cytoscape"}},
 		{path: "/artifact?path=model/features/alpha-feature.md", contentType: "text/html", contains: []string{"alpha-feature.md", "# Alpha Feature"}},
@@ -69,92 +69,6 @@ func TestNewTraceabilityUIHandlerServesUIAndArtifacts(t *testing.T) {
 			if !strings.Contains(string(body), want) {
 				t.Fatalf("GET %s body missing %q\n%s", tc.path, want, string(body))
 			}
-		}
-	}
-}
-
-func TestNewTraceabilityUIHandlerSavesLayout(t *testing.T) {
-	dir := t.TempDir()
-	specsDir := filepath.Join(dir, "specs")
-	for _, path := range []string{
-		filepath.Join(specsDir, "model", "traceability"),
-		filepath.Join(specsDir, "product"),
-		filepath.Join(specsDir, "model", "requirements"),
-		filepath.Join(specsDir, "model", "features"),
-		filepath.Join(specsDir, "model", "components"),
-	} {
-		if err := os.MkdirAll(path, 0o755); err != nil {
-			t.Fatal(err)
-		}
-	}
-	if err := config.Save(filepath.Join(specsDir, config.FileName), &config.File{}); err != nil {
-		t.Fatal(err)
-	}
-	writeGraphFixture(t, specsDir)
-
-	handler, err := newTraceabilityUIHandler(specsDir)
-	if err != nil {
-		t.Fatalf("newTraceabilityUIHandler() error = %v", err)
-	}
-	server := httptest.NewServer(handler)
-	defer server.Close()
-
-	payload := `{"nodes":[{"id":"product/alpha","x":11.5,"y":22.25},{"id":"model/features/alpha-feature","x":33,"y":44,"locked":true}]}`
-	resp, err := http.Post(server.URL+"/layout", "application/json", strings.NewReader(payload))
-	if err != nil {
-		t.Fatalf("POST /layout: %v", err)
-	}
-	body, err := io.ReadAll(resp.Body)
-	resp.Body.Close()
-	if err != nil {
-		t.Fatalf("read POST /layout body: %v", err)
-	}
-	if resp.StatusCode != http.StatusNoContent {
-		t.Fatalf("POST /layout status = %d, want 204\n%s", resp.StatusCode, string(body))
-	}
-
-	layoutData, err := os.ReadFile(filepath.Join(specsDir, "model", "traceability", "layout.yaml"))
-	if err != nil {
-		t.Fatalf("read layout.yaml: %v", err)
-	}
-	for _, want := range []string{
-		"kind: layout",
-		"- id: model/features/alpha-feature",
-		"  x: 33",
-		"  \"y\": 44",
-		"  locked: true",
-		"- id: product/alpha",
-		"  x: 11.5",
-		"  \"y\": 22.25",
-	} {
-		if !strings.Contains(string(layoutData), want) {
-			t.Fatalf("layout.yaml missing %q\n%s", want, string(layoutData))
-		}
-	}
-
-	resp, err = http.Get(server.URL + "/graph.json")
-	if err != nil {
-		t.Fatalf("GET /graph.json after save: %v", err)
-	}
-	body, err = io.ReadAll(resp.Body)
-	resp.Body.Close()
-	if err != nil {
-		t.Fatalf("read GET /graph.json after save: %v", err)
-	}
-	if resp.StatusCode != http.StatusOK {
-		t.Fatalf("GET /graph.json after save status = %d, want 200\n%s", resp.StatusCode, string(body))
-	}
-	for _, want := range []string{
-		`"id": "product/alpha"`,
-		`"x": 11.5`,
-		`"y": 22.25`,
-		`"id": "model/features/alpha-feature"`,
-		`"x": 33`,
-		`"y": 44`,
-		`"locked": true`,
-	} {
-		if !strings.Contains(string(body), want) {
-			t.Fatalf("graph.json missing %q\n%s", want, string(body))
 		}
 	}
 }

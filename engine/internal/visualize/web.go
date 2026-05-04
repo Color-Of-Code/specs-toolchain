@@ -15,7 +15,6 @@ type TraceabilityPageData struct {
 	Hint             string
 	GraphURL         string
 	SaveRelationsURL string
-	SaveLayoutURL    string
 	JSONURL          string
 	ArtifactURL      string
 	Stylesheet       string
@@ -42,6 +41,12 @@ var traceabilityPageTemplate = template.Must(template.New("traceability-page").P
 <div class="toolbar">
   <button id="refresh" type="button">Refresh</button>
   <button id="fit" type="button">Fit</button>
+  <select id="layout-mode" aria-label="Layout mode">
+    <option value="layered">Layered</option>
+    <option value="organic">Organic</option>
+    <option value="grid">Grid</option>
+  </select>
+  <button id="relayout" type="button">Relayout</button>
   <input type="search" id="filter" placeholder="Filter nodes…" aria-label="Filter nodes">
   {{ if .SaveRelationsURL }}<select id="relation-kind" aria-label="Relation kind">
     <option value="realization">Realization</option>
@@ -52,7 +57,6 @@ var traceabilityPageTemplate = template.Must(template.New("traceability-page").P
   </select>{{ end }}
   {{ if .SaveRelationsURL }}<button id="add-edge" type="button">Add Edge</button>{{ end }}
   {{ if .SaveRelationsURL }}<button id="remove-edge" type="button">Remove Selected Edge</button>{{ end }}
-  {{ if .SaveLayoutURL }}<button id="save-layout" type="button">Save Layout</button>{{ end }}
   <a class="toolbar-link" href="{{ .JSONURL }}">Graph JSON</a>
   <div class="meta" id="meta"></div>
 </div>
@@ -68,15 +72,15 @@ var traceabilityPageTemplate = template.Must(template.New("traceability-page").P
   TraceabilityUI.mount({
     graphUrl: {{ printf "%q" .GraphURL }},
     saveRelationsUrl: {{ printf "%q" .SaveRelationsURL }},
-    saveLayoutUrl: {{ printf "%q" .SaveLayoutURL }},
     artifactBaseUrl: {{ printf "%q" .ArtifactURL }},
     container: document.getElementById('graph'),
     fitButton: document.getElementById('fit'),
+    layoutSelect: document.getElementById('layout-mode'),
+    relayoutButton: document.getElementById('relayout'),
     filterInput: document.getElementById('filter'),
     addEdgeButton: document.getElementById('add-edge'),
     relationKindSelect: document.getElementById('relation-kind'),
     removeEdgeButton: document.getElementById('remove-edge'),
-    saveButton: document.getElementById('save-layout'),
     metaElement: document.getElementById('meta'),
     detailsElement: document.getElementById('details'),
     emptyMessage: {{ printf "%q" .EmptyMessage }},

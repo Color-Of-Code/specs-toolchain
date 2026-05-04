@@ -36,6 +36,15 @@
     },
   };
 
+  const kindOrder = {
+    "product-requirement": 0,
+    requirement: 1,
+    feature: 2,
+    api: 3,
+    component: 4,
+    service: 5,
+  };
+
   function shapeForKind(kind) {
     switch (kind) {
       case "product-requirement":
@@ -67,6 +76,10 @@
     return relationSpecs[kind] || relationSpecs.realization;
   }
 
+  function kindRank(kind) {
+    return Object.prototype.hasOwnProperty.call(kindOrder, kind) ? kindOrder[kind] : Number.MAX_SAFE_INTEGER;
+  }
+
   function escapeHTML(value) {
     return String(value == null ? "" : value).replace(/[&<>"']/g, (char) => {
       switch (char) {
@@ -87,19 +100,24 @@
   }
 
   function detailsMarkup(eyebrow, title, rows, note) {
+    const renderedRows = detailsRowsMarkup(rows);
+    const noteMarkup = note ? `<p class="details-note">${escapeHTML(note)}</p>` : "";
+    return `<article class="details-panel"><p class="details-eyebrow">${escapeHTML(eyebrow)}</p><h2 class="details-title">${escapeHTML(title)}</h2>${renderedRows}${noteMarkup}</article>`;
+  }
+
+  function detailsRowsMarkup(rows) {
     const renderedRows = (rows || [])
       .filter((row) => row && row.value != null && row.value !== "")
       .map((row) => `<div><dt>${escapeHTML(row.label)}</dt><dd>${escapeHTML(row.value)}</dd></div>`)
       .join("");
-    const noteMarkup = note ? `<p class="details-note">${escapeHTML(note)}</p>` : "";
-    return `<article class="details-panel"><p class="details-eyebrow">${escapeHTML(eyebrow)}</p><h2 class="details-title">${escapeHTML(title)}</h2>${renderedRows ? `<dl class="details-list">${renderedRows}</dl>` : ""}${noteMarkup}</article>`;
+    return renderedRows ? `<dl class="details-list">${renderedRows}</dl>` : "";
   }
 
-  function detailsActionButton(label, path) {
+  function detailsIconButton(label, path) {
     if (!path) {
       return "";
     }
-    return `<div class="details-actions"><button type="button" class="details-open-button" data-open-path="${escapeHTML(path)}">${escapeHTML(label)}</button></div>`;
+    return `<button type="button" class="details-open-button details-icon-button" data-open-path="${escapeHTML(path)}" aria-label="${escapeHTML(label)}" title="${escapeHTML(label)}"><span class="details-visually-hidden">${escapeHTML(label)}</span></button>`;
   }
 
   function setDetails(options, markup) {
@@ -151,8 +169,6 @@
     return [
       ...(graph.nodes || []).map((node) => ({
         data: { id: node.id, label: node.label, path: node.path, kind: node.kind, summary: node.summary || "" },
-        position: node.layout ? { x: node.layout.x, y: node.layout.y } : undefined,
-        locked: Boolean(node.layout && node.layout.locked),
       })),
       ...(graph.edges || []).map((edge, index) => ({
         data: { id: `e${index}`, source: edge.source, target: edge.target, kind: edge.kind },
@@ -168,8 +184,82 @@
     return Math.round(value * 100) / 100;
   }
 
-  function hasLayout(graph) {
-    return (graph.nodes || []).length > 0 && (graph.nodes || []).every((node) => Boolean(node.layout));
+  function compareNodeOrder(left, right) {
+    const kindDiff = kindRank(left.data("kind")) - kindRank(right.data("kind"));
+    if (kindDiff !== 0) {
+      return kindDiff;
+    }
+    const labelDiff = nodeDisplayLabel(left).localeCompare(nodeDisplayLabel(right));
+    if (labelDiff !== 0) {
+      return labelDiff;
+    }
+    return String(left.id()).localeCompare(String(right.id()));
+  }
+
+  function defaultRoots(graph) {
+    const nodes = graph.nodes || [];
+    for (const kind of ["product-requirement", "requirement", "feature", "api", "component", "service"]) {
+      const roots = nodes.filter((node) => node.kind === kind).map((node) => node.id);
+      if (roots.length) {
+        return roots;
+      }
+    }
+    return undefined;
+  }
+
+  function layoutLabel(name) {
+    switch (name) {
+      case "layered":
+        return "layered";
+      case "organic":
+        return "organic";
+      case "grid":
+        return "grid";
+      default:
+        return String(name || "layout");
+    }
+  }
+
+  function layoutOptions(graph, name) {
+    switch (name) {
+      case "organic":
+        return {
+          name: "cose",
+          fit: true,
+          padding: 40,
+          animate: false,
+          nodeRepulsion: 160000,
+          idealEdgeLength: 150,
+          edgeElasticity: 90,
+          gravity: 30,
+          nestingFactor: 0.8,
+        };
+      case "grid":
+        return {
+          name: "grid",
+          fit: true,
+          padding: 40,
+          avoidOverlap: true,
+          sort: compareNodeOrder,
+        };
+      case "layered":
+      default:
+        return {
+          name: "breadthfirst",
+          directed: true,
+          direction: "downward",
+          roots: defaultRoots(graph),
+          fit: true,
+          padding: 40,
+          spacingFactor: 1.2,
+          avoidOverlap: true,
+          depthSort: compareNodeOrder,
+        };
+    }
+  }
+
+  function activeLayoutName(options) {
+    return options.layoutSelect && options.layoutSelect.value ? options.layoutSelect.value : "layered";
   }
 
   function defaultOpenPath(options, path) {
@@ -193,9 +283,7 @@
     return cytoscape({
       container: options.container,
       elements: buildElements(graph),
-      layout: hasLayout(graph)
-        ? { name: "preset", padding: 32, fit: true }
-        : { name: "breadthfirst", directed: true, padding: 40, spacingFactor: 1.15, avoidOverlap: true },
+      layout: layoutOptions(graph, activeLayoutName(options)),
       style: [
         {
           selector: "node",
@@ -292,38 +380,6 @@
     options.metaElement.textContent = summary ? `${summary} • ${message}` : message;
   }
 
-  function collectLayout(cy) {
-    return cy.nodes().map((node) => {
-      const position = node.position();
-      return {
-        id: node.id(),
-        x: roundCoord(position.x),
-        y: roundCoord(position.y),
-        locked: Boolean(node.locked()),
-      };
-    }).sort((left, right) => left.id.localeCompare(right.id));
-  }
-
-  async function persistLayout(options, cy) {
-    const payload = { nodes: collectLayout(cy) };
-    if (typeof options.onSaveLayout === "function") {
-      await options.onSaveLayout(payload);
-      return;
-    }
-    if (!options.saveLayoutUrl) {
-      return;
-    }
-    const response = await fetch(options.saveLayoutUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    if (!response.ok) {
-      const message = await response.text();
-      throw new Error(message || `layout request failed: ${response.status}`);
-    }
-  }
-
   function collectRelations(cy, omitEdgeId, appendEdges) {
     return cy.edges().toArray()
       .filter((edge) => edge.id() !== omitEdgeId)
@@ -379,11 +435,21 @@
     let selectedNode;
     let createEdgeMode = false;
     let edgeSourceNode;
+    let currentGraph = emptyGraph();
     const openPath = typeof options.onOpenPath === "function"
       ? options.onOpenPath
       : (path) => defaultOpenPath(options, path);
-    const canSaveLayout = Boolean(options.saveLayoutUrl || typeof options.onSaveLayout === "function");
     const canSaveRelations = Boolean(options.saveRelationsUrl || typeof options.onSaveRelations === "function");
+
+    function runLayout(layoutName, statusMessage) {
+      if (!cy) {
+        return;
+      }
+      cy.layout(layoutOptions(currentGraph, layoutName)).run();
+      if (statusMessage) {
+        setMetaStatus(options, statusMessage);
+      }
+    }
 
     function currentRelationKind() {
       return options.relationKindSelect && options.relationKindSelect.value
@@ -430,13 +496,13 @@
       }
       const position = node.position();
       const summary = node.data("summary");
-      return `${detailsMarkup("Node", node.data("label") || node.id(), [
-        { label: "Kind", value: displayKind(node.data("kind")) },
-        { label: "ID", value: shortID(node.id()) },
+      const kind = displayKind(node.data("kind"));
+      const inspectorID = shortID(node.id());
+      const renderedRows = detailsRowsMarkup([
         { label: "Path", value: node.data("path") },
-        { label: "Position", value: `${roundCoord(position.x)}, ${roundCoord(position.y)}` },
-        { label: "Locked", value: node.locked() ? "yes" : "no" },
-      ], summary || undefined)}${detailsActionButton("Open artifact", node.data("path"))}`;
+      ]);
+      const summaryMarkup = summary ? `<p class="details-summary">${escapeHTML(summary)}</p>` : "";
+      return `<article class="details-panel details-panel-node"><div class="details-header"><div class="details-header-top"><p class="details-node-meta"><span class="details-eyebrow">NODE</span><span class="details-node-kind">${escapeHTML(kind)}</span><span class="details-node-separator">:</span><span class="details-node-id">${escapeHTML(inspectorID)}</span></p>${detailsIconButton("Open artifact", node.data("path"))}</div><h2 class="details-title">${escapeHTML(node.data("label") || node.id())}</h2>${summaryMarkup}</div>${renderedRows}</article>`;
     }
 
     function resolveNode(nodeID) {
@@ -684,35 +750,16 @@
       });
     }
 
-    if (options.filterInput) {
-      options.filterInput.addEventListener("input", () => {
-        applyFilter(options.filterInput.value);
+    if (options.relayoutButton) {
+      options.relayoutButton.addEventListener("click", () => {
+        const layoutName = activeLayoutName(options);
+        runLayout(layoutName, `${layoutLabel(layoutName)} layout applied`);
       });
     }
 
-    if (options.saveButton) {
-      options.saveButton.disabled = !canSaveLayout;
-      options.saveButton.addEventListener("click", async () => {
-        if (!cy || !canSaveLayout) {
-          return;
-        }
-        const originalLabel = options.saveButton.textContent;
-        options.saveButton.disabled = true;
-        options.saveButton.textContent = "Saving...";
-        try {
-          await persistLayout(options, cy);
-          options.saveButton.textContent = "Saved";
-          setMetaStatus(options, "layout saved");
-        } catch (error) {
-          console.error(error);
-          options.saveButton.textContent = "Save Failed";
-          setMetaStatus(options, "layout save failed");
-        } finally {
-          window.setTimeout(() => {
-            options.saveButton.disabled = !canSaveLayout;
-            options.saveButton.textContent = originalLabel;
-          }, 1200);
-        }
+    if (options.filterInput) {
+      options.filterInput.addEventListener("input", () => {
+        applyFilter(options.filterInput.value);
       });
     }
 
@@ -765,7 +812,11 @@
         if (!(target instanceof HTMLElement)) {
           return;
         }
-        const path = target.dataset.openPath;
+        const action = target.closest("[data-open-path]");
+        if (!(action instanceof HTMLElement)) {
+          return;
+        }
+        const path = action.dataset.openPath;
         if (!path) {
           return;
         }
@@ -775,6 +826,7 @@
 
     resolveGraph(options)
       .then((graph) => {
+        currentGraph = graph;
         cy = renderGraph(options, graph) || undefined;
         if (cy) {
           updateMetaSummary(options, cy.nodes().length, cy.edges().length);

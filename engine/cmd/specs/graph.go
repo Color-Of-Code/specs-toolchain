@@ -53,11 +53,6 @@ type graphCacheJSON struct {
 	DryRun        bool   `json:"dry_run"`
 }
 
-type graphSaveLayoutJSON struct {
-	ManifestPath string `json:"manifest_path"`
-	LayoutCount  int    `json:"layout_count"`
-}
-
 type graphSaveRelationsJSON struct {
 	ManifestPath string `json:"manifest_path"`
 	EdgeCount    int    `json:"edge_count"`
@@ -65,7 +60,7 @@ type graphSaveRelationsJSON struct {
 
 func cmdGraph(args []string) error {
 	if len(args) == 0 {
-		fmt.Fprintln(os.Stderr, "Usage: specs graph <validate|import-markdown|generate-markdown|rebuild-cache|save-layout|save-relations>")
+		fmt.Fprintln(os.Stderr, "Usage: specs graph <validate|import-markdown|generate-markdown|rebuild-cache|save-relations>")
 		return exitWith(2, "missing subcommand")
 	}
 	switch args[0] {
@@ -77,12 +72,10 @@ func cmdGraph(args []string) error {
 		return cmdGraphGenerateMarkdown(args[1:])
 	case "rebuild-cache":
 		return cmdGraphRebuildCache(args[1:])
-	case "save-layout":
-		return cmdGraphSaveLayout(args[1:])
 	case "save-relations":
 		return cmdGraphSaveRelations(args[1:])
 	case "-h", "--help", "help":
-		fmt.Fprintln(os.Stderr, "Usage: specs graph <validate|import-markdown|generate-markdown|rebuild-cache|save-layout|save-relations> [flags]")
+		fmt.Fprintln(os.Stderr, "Usage: specs graph <validate|import-markdown|generate-markdown|rebuild-cache|save-relations> [flags]")
 		return nil
 	default:
 		return exitWith(2, "unknown subcommand: specs graph %s", args[0])
@@ -117,7 +110,7 @@ func cmdGraphSaveRelations(args []string) error {
 	if err != nil {
 		return exitWith(1, "load graph %s: %v", path, err)
 	}
-	payloadData, err := readLayoutPayload(*inputPath)
+	payloadData, err := readGraphPayload(*inputPath)
 	if err != nil {
 		return err
 	}
@@ -147,62 +140,6 @@ func cmdGraphSaveRelations(args []string) error {
 	fmt.Printf("edges:           %d\n", summary.EdgeCount)
 	return nil
 }
-
-func cmdGraphSaveLayout(args []string) error {
-	fs := flag.NewFlagSet("graph save-layout", flag.ContinueOnError)
-	manifestPath := fs.String("manifest", "", "path to graph manifest to update (default: graph_manifest from .specs.yaml)")
-	inputPath := fs.String("in", "-", "path to JSON layout payload (default: stdin)")
-	jsonOut := fs.Bool("json", false, "emit machine-readable save summary")
-	fs.Usage = func() {
-		fmt.Fprintln(os.Stderr, "Usage: specs graph save-layout [--manifest <path>] [--in <path>|-] [--json]")
-		fs.PrintDefaults()
-	}
-	if err := fs.Parse(args); err != nil {
-		return err
-	}
-	if len(fs.Args()) != 0 {
-		return exitWith(2, "unexpected arguments: %v", fs.Args())
-	}
-
-	cfg, err := config.Load("")
-	if err != nil {
-		return err
-	}
-	path, err := resolveGraphManifestPath(cfg, *manifestPath)
-	if err != nil {
-		return err
-	}
-	traceability, err := graph.Load(path)
-	if err != nil {
-		return exitWith(1, "load graph %s: %v", path, err)
-	}
-	payloadData, err := readLayoutPayload(*inputPath)
-	if err != nil {
-		return err
-	}
-	request, err := decodeLayoutSaveRequest(payloadData)
-	if err != nil {
-		return exitWith(1, "decode layout payload: %v", err)
-	}
-	layouts, err := layoutEntriesFromSaveNodes(request.Nodes, traceabilityAllowedNodeIDs(traceability))
-	if err != nil {
-		return exitWith(1, "save layout: %v", err)
-	}
-	traceability.Layout = layouts
-	if err := graph.Write(path, traceability); err != nil {
-		return exitWith(1, "write graph: %v", err)
-	}
-	summary := graphSaveLayoutJSON{ManifestPath: path, LayoutCount: len(layouts)}
-	if *jsonOut {
-		enc := json.NewEncoder(os.Stdout)
-		enc.SetIndent("", "  ")
-		return enc.Encode(summary)
-	}
-	fmt.Printf("saved layout:    %s\n", summary.ManifestPath)
-	fmt.Printf("layout nodes:    %d\n", summary.LayoutCount)
-	return nil
-}
-
 func cmdGraphRebuildCache(args []string) error {
 	fs := flag.NewFlagSet("graph rebuild-cache", flag.ContinueOnError)
 	manifestPath := fs.String("manifest", "", "path to graph manifest to read (default: graph_manifest from .specs.yaml)")
@@ -477,29 +414,19 @@ func resolveGraphCachePath(cfg *config.Resolved, override string) (string, error
 	return path, nil
 }
 
-func readLayoutPayload(inputPath string) ([]byte, error) {
+func readGraphPayload(inputPath string) ([]byte, error) {
 	if inputPath == "-" {
 		data, err := io.ReadAll(os.Stdin)
 		if err != nil {
-			return nil, exitWith(1, "read layout payload from stdin: %v", err)
+			return nil, exitWith(1, "read graph payload from stdin: %v", err)
 		}
 		return data, nil
 	}
 	data, err := os.ReadFile(inputPath)
 	if err != nil {
-		return nil, exitWith(1, "read layout payload %s: %v", inputPath, err)
+		return nil, exitWith(1, "read graph payload %s: %v", inputPath, err)
 	}
 	return data, nil
-}
-
-func decodeLayoutSaveRequest(data []byte) (*layoutSaveRequest, error) {
-	var request layoutSaveRequest
-	decoder := json.NewDecoder(bytes.NewReader(data))
-	decoder.DisallowUnknownFields()
-	if err := decoder.Decode(&request); err != nil {
-		return nil, err
-	}
-	return &request, nil
 }
 
 func decodeRelationSaveRequest(data []byte) (*relationSaveRequest, error) {

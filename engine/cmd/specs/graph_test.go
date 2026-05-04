@@ -283,60 +283,6 @@ func TestCmdGraphRebuildCacheWritesSQLite(t *testing.T) {
 	}
 }
 
-func TestCmdGraphSaveLayoutWritesCanonicalLayout(t *testing.T) {
-	dir := t.TempDir()
-	specsDir := filepath.Join(dir, "specs")
-	for _, path := range []string{
-		filepath.Join(specsDir, "model", "traceability"),
-		filepath.Join(specsDir, "product"),
-		filepath.Join(specsDir, "model", "requirements"),
-		filepath.Join(specsDir, "model", "features"),
-		filepath.Join(specsDir, "model", "components"),
-	} {
-		if err := os.MkdirAll(path, 0o755); err != nil {
-			t.Fatal(err)
-		}
-	}
-	if err := config.Save(filepath.Join(specsDir, config.FileName), &config.File{}); err != nil {
-		t.Fatal(err)
-	}
-	writeGraphFixture(t, specsDir)
-	inputPath := filepath.Join(dir, "layout.json")
-	if err := os.WriteFile(inputPath, []byte(`{"nodes":[{"id":"model/features/alpha-feature","x":33,"y":44,"locked":true},{"id":"product/alpha","x":11.5,"y":22.25}]}`), 0o644); err != nil {
-		t.Fatal(err)
-	}
-
-	cwd, err := os.Getwd()
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer func() {
-		if err := os.Chdir(cwd); err != nil {
-			t.Fatalf("restore cwd: %v", err)
-		}
-	}()
-	if err := os.Chdir(specsDir); err != nil {
-		t.Fatal(err)
-	}
-
-	if err := cmdGraphSaveLayout([]string{"--in", inputPath}); err != nil {
-		t.Fatalf("cmdGraphSaveLayout() error = %v", err)
-	}
-	reloaded, err := graph.Load(filepath.Join(specsDir, "model", "traceability", "graph.yaml"))
-	if err != nil {
-		t.Fatalf("graph.Load() error = %v", err)
-	}
-	if len(reloaded.Layout) != 2 {
-		t.Fatalf("len(Layout) = %d, want 2", len(reloaded.Layout))
-	}
-	if reloaded.Layout[0].ID != "model/features/alpha-feature" || reloaded.Layout[0].X != 33 || reloaded.Layout[0].Y != 44 || !reloaded.Layout[0].Locked {
-		t.Fatalf("unexpected first layout entry: %+v", reloaded.Layout[0])
-	}
-	if reloaded.Layout[1].ID != "product/alpha" || reloaded.Layout[1].X != 11.5 || reloaded.Layout[1].Y != 22.25 || reloaded.Layout[1].Locked {
-		t.Fatalf("unexpected second layout entry: %+v", reloaded.Layout[1])
-	}
-}
-
 func TestCmdGraphSaveRelationsWritesCanonicalRelations(t *testing.T) {
 	dir := t.TempDir()
 	specsDir := filepath.Join(dir, "specs")

@@ -23,14 +23,14 @@ into components.
 
 Or VS Code palette: **Specs: Visualize traceability** (renders in a
 webview). For a browser-based view, run `specs visualize traceability --serve`
-and open the printed local URL. The browser UI can persist dragged node
-positions back into canonical `layout.yaml`. The VS Code preview exposes the
-same save-layout action. Both UIs can also add a new traceability edge by
-choosing a relation kind and two nodes, or remove the currently selected
-traceability edge, then persist the updated canonical relations. The shared
-UI also shows an inline inspector for the active node, relation, or pending
-add-edge selection. Edge additions and removals require confirmation before
-the shared UI persists the canonical relation update.
+and open the printed local URL. The shared UI defaults to a layered view with
+product requirements above requirements, then features and implementers, and
+can be relaid out as organic or grid. Both UIs can also add a new
+traceability edge by choosing a relation kind and two nodes, or remove the
+currently selected traceability edge, then persist the updated canonical
+relations. The shared UI also shows an inline inspector for the active node,
+relation, or pending add-edge selection. Edge additions and removals require
+confirmation before the shared UI persists the canonical relation update.
 
 ## Exit point
 
@@ -38,9 +38,7 @@ A graph written to `--out` (or stdout) in the requested format, or a local
 web server hosting the same Cytoscape-based graph UI. Mermaid is suitable for
 review artifacts; JSON is suitable for downstream tooling and UI
 consumers. The VS Code panel and the local server both read the canonical
-graph JSON. In browser mode, saved node positions become canonical graph
-layout entries; the VS Code preview writes the same canonical layout through
-the engine. Added or removed edges update the canonical relation part files
+graph JSON. Added or removed edges update the canonical relation part files
 through the same engine-backed path.
 
 ## Iteration
