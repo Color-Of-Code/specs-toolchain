@@ -852,8 +852,12 @@
               const rect = container.getBoundingClientRect();
               const cx = rect.left + (bb.x1 + bb.x2) / 2;
               const cy2 = rect.top + bb.y1 - 4;
-              handle.style.left = `${cx - 10}px`;
-              handle.style.top = `${cy2 - 10}px`;
+              const size = Math.round(Math.max(8, Math.min(20, 20 * cy.zoom())));
+              const half = size / 2;
+              handle.style.width = `${size}px`;
+              handle.style.height = `${size}px`;
+              handle.style.left = `${cx - half}px`;
+              handle.style.top = `${cy2 - half}px`;
               handle.style.display = "flex";
             }
 
@@ -878,7 +882,8 @@
             handle.addEventListener("mouseleave", scheduleHideHandle);
 
             handle.addEventListener("mousedown", (event) => {
-              const nodeUnder = findNodeAtViewport(event.clientX, event.clientY + 14);
+              const handleSize = Math.round(Math.max(8, Math.min(20, 20 * cy.zoom())));
+              const nodeUnder = findNodeAtViewport(event.clientX, event.clientY + handleSize * 0.7);
               if (!nodeUnder) {
                 return;
               }
