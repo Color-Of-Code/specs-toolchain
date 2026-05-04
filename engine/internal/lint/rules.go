@@ -7,6 +7,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/Color-Of-Code/specs-toolchain/engine/internal/utils"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/text"
@@ -34,7 +35,7 @@ func CheckFileStyle(path string, cfg *StyleRules) []Violation {
 
 	// Strip YAML frontmatter before checking so it is not misinterpreted as
 	// setext headings or paragraphs. Track the offset for accurate line numbers.
-	content, lineOffset := stripFrontmatter(data)
+	_, content, lineOffset := utils.ExtractFrontmatter(data)
 
 	var violations []Violation
 	violations = append(violations, checkLineRules(path, content, cfg)...)
@@ -46,20 +47,6 @@ func CheckFileStyle(path string, cfg *StyleRules) []Violation {
 	}
 
 	return violations
-}
-
-// stripFrontmatter removes the YAML frontmatter block from data (if present)
-// and returns the remaining body together with the number of newlines consumed.
-func stripFrontmatter(data []byte) (body []byte, lineOffset int) {
-	if !bytes.HasPrefix(data, []byte("---\n")) {
-		return data, 0
-	}
-	idx := bytes.Index(data[4:], []byte("\n---\n"))
-	if idx < 0 {
-		return data, 0
-	}
-	fmEnd := 4 + idx + 5
-	return data[fmEnd:], bytes.Count(data[:fmEnd], []byte("\n"))
 }
 
 // checkLineRules performs line-by-line checks that are simpler than full AST parsing.

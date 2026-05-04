@@ -5,6 +5,8 @@ import (
 	"os"
 	"strings"
 	"unicode/utf8"
+
+	"github.com/Color-Of-Code/specs-toolchain/engine/internal/utils"
 )
 
 // FormatFile reads a markdown file and returns the formatted content.
@@ -29,14 +31,7 @@ func Format(data []byte) []byte {
 	data = bytes.ReplaceAll(data, []byte("\r"), []byte("\n"))
 
 	// Extract YAML frontmatter so it is not processed as markdown.
-	var fm []byte
-	content := data
-	if bytes.HasPrefix(data, []byte("---\n")) {
-		if idx := bytes.Index(data[4:], []byte("\n---\n")); idx >= 0 {
-			fm = data[:4+idx+5]      // "---\n" + yaml + "\n---\n"
-			content = data[4+idx+5:] // body after closing delimiter
-		}
-	}
+	fm, content, _ := utils.ExtractFrontmatter(data)
 
 	lines := strings.Split(string(content), "\n")
 
