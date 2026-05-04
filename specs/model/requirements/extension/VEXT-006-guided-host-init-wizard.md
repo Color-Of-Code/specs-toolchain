@@ -11,8 +11,8 @@
 
 The `Specs: Init Host` palette command (`specs.bootstrap`) shall open a
 multi-step wizard that collects the framework name or URL, model layout
-preference, and optional VS Code tasks generation using `showInputBox` or
-`showQuickPick` prompts with inline validation. When `.specs.yaml` already
+preference, and optional VS Code tasks generation using validated step-by-step
+prompts. When `.specs.yaml` already
 exists in the workspace the wizard shall warn the user before proceeding.
 The wizard shall be cancellable at any step without modifying the workspace.
 On completion the wizard shall invoke `specs init` in the integrated

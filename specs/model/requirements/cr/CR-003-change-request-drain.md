@@ -11,15 +11,17 @@
 
 `specs cr drain --id <NNN>` shall resolve the matching `CR-NNN-*` directory,
 map each artifact to its canonical model destination based on its subtree
-type, and move each file using `git mv`. The command shall prompt for
+type, and move each file using a version-control-aware rename that preserves
+history. The command shall prompt for
 confirmation before each move unless `--yes` is given. `--dry-run` shall
-print the planned `git mv` operations without executing them. The CR
+print the planned move operations without executing them. The CR
 directory shall be left in place after the drain.
 
 ## Rationale
 
-Using `git mv` preserves history during the promotion of a change request
-to the canonical model. Per-file confirmation prevents accidental overwrites
+Renaming files with history preservation during the promotion of a change
+request to the canonical model prevents losing authorship and context.
+Per-file confirmation prevents accidental overwrites
 of existing canonical artifacts during an interactive drain.
 
 ## Verification
@@ -28,4 +30,4 @@ of existing canonical artifacts during an interactive drain.
 - Run `specs cr drain --id 1 --dry-run` and confirm the planned move is
   printed with the correct canonical destination.
 - Run without `--dry-run`, confirm the file is moved to the canonical model
-  path via `git mv`, and confirm the CR directory remains.
+  path with history preserved, and confirm the CR directory remains.

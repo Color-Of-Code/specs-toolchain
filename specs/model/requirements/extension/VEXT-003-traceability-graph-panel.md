@@ -10,11 +10,11 @@
 ## Requirement
 
 The extension shall invoke `specs visualize traceability --format json` and
-load the JSON payload into a Cytoscape WebView panel. The panel shall render
-the graph with layered, organic, and grid layout options. Selecting a node
+render the graph in an in-editor panel. The panel shall display the graph
+with layered, organic, and grid layout options. Selecting a node
 shall display its ID, title, and outbound relations in an inspector pane. The
 `Specs: Visualize (Mermaid)` palette command shall generate an output file and
-open it in the editor. The panel shall also allow exporting the canonical JSON
+open it in the editor. The panel shall also allow exporting the canonical graph
 payload.
 
 ## Rationale
@@ -27,7 +27,7 @@ without requiring the author to open individual markdown files.
 
 - Run `Specs: Visualize (Mermaid)` and confirm a Mermaid file is created and
   opened in the editor.
-- Open the WebView panel and confirm nodes from the canonical traceability
+- Open the in-editor panel and confirm nodes from the canonical traceability
   graph are rendered.
 - Select a node and confirm its metadata and outbound relations appear in the
   inspector.

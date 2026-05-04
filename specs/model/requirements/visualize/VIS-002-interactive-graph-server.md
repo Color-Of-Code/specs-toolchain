@@ -10,15 +10,15 @@
 ## Requirement
 
 `specs visualize traceability --serve` shall start a local HTTP server that
-serves a Cytoscape-based traceability UI. `--listen <addr>` shall override
+serves an interactive traceability UI. `--listen <addr>` shall override
 the default bind address. The UI shall load the JSON payload from the graph
-export, render it with Cytoscape, and expose layered, organic, and grid
-layout options via a shared toolbar.
+export, render it as an interactive node-edge graph, and expose layered,
+organic, and grid layout options via a shared toolbar.
 
 ## Rationale
 
 A self-contained local server removes the need for any external publishing
-step. Cytoscape layout options support different review contexts: layered for
+step. Multiple layout options support different review contexts: layered for
 top-down requirement chains, organic for spatial exploration, and grid for
 uniform overviews.
 

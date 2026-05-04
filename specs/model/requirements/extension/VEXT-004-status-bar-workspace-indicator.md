@@ -13,8 +13,8 @@ The extension shall display a persistent status bar item that reflects the
 engine-resolved state of the open workspace. The item shall show the detected
 specs root path when a host is found, and a warning indicator when the engine
 is missing or configuration is broken. The item shall be updated by
-`FileSystemWatcher` events on `.specs.yaml` and by `onDidChangeWindowState`
-events — not by polling. The item shall be hidden when no workspace folder is
+file change events on `.specs.yaml` and by window focus change events —
+not by polling. The item shall be hidden when no workspace folder is
 open. Clicking the item shall open the doctor output or the init wizard as
 appropriate.
 
