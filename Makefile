@@ -34,3 +34,4 @@ package-extension:
 
 deploy-dev: build-engine build-extension
 	cd extension && pnpm run symlink
+	ln -sf "$(CURDIR)/bin/specs" extension/bin/specs
