@@ -25,14 +25,6 @@ func TestLoadValidGraph(t *testing.T) {
 		"    file: component_implementations.yaml",
 		"    kind: component_implementation",
 		"    required: true",
-		"  - name: service_implementations",
-		"    file: service_implementations.yaml",
-		"    kind: service_implementation",
-		"    required: true",
-		"  - name: api_implementations",
-		"    file: api_implementations.yaml",
-		"    kind: api_implementation",
-		"    required: true",
 		"  - name: baselines",
 		"    file: baselines.yaml",
 		"    kind: baseline",
@@ -57,8 +49,6 @@ func TestLoadValidGraph(t *testing.T) {
 		"      - model/features/alpha-feature",
 	}, "\n"))
 	writeGraphFile(t, dir, "component_implementations.yaml", "kind: component_implementation\nentries: []\n")
-	writeGraphFile(t, dir, "service_implementations.yaml", "kind: service_implementation\nentries: []\n")
-	writeGraphFile(t, dir, "api_implementations.yaml", "kind: api_implementation\nentries: []\n")
 	writeGraphFile(t, dir, "baselines.yaml", strings.Join([]string{
 		"kind: baseline",
 		"entries:",
@@ -105,14 +95,6 @@ func TestLoadRejectsOutOfOrderParts(t *testing.T) {
 		"    file: component_implementations.yaml",
 		"    kind: component_implementation",
 		"    required: true",
-		"  - name: service_implementations",
-		"    file: service_implementations.yaml",
-		"    kind: service_implementation",
-		"    required: true",
-		"  - name: api_implementations",
-		"    file: api_implementations.yaml",
-		"    kind: api_implementation",
-		"    required: true",
 		"generation:",
 		"  markdown_relationship_fields: true",
 		"  markdown_baseline_fields: true",
@@ -142,14 +124,6 @@ func TestLoadRejectsNonCanonicalNodeIDs(t *testing.T) {
 		"    file: component_implementations.yaml",
 		"    kind: component_implementation",
 		"    required: true",
-		"  - name: service_implementations",
-		"    file: service_implementations.yaml",
-		"    kind: service_implementation",
-		"    required: true",
-		"  - name: api_implementations",
-		"    file: api_implementations.yaml",
-		"    kind: api_implementation",
-		"    required: true",
 		"generation:",
 		"  markdown_relationship_fields: true",
 		"  markdown_baseline_fields: true",
@@ -164,8 +138,6 @@ func TestLoadRejectsNonCanonicalNodeIDs(t *testing.T) {
 	}, "\n"))
 	writeGraphFile(t, dir, "feature_implementations.yaml", "kind: feature_implementation\nentries: []\n")
 	writeGraphFile(t, dir, "component_implementations.yaml", "kind: component_implementation\nentries: []\n")
-	writeGraphFile(t, dir, "service_implementations.yaml", "kind: service_implementation\nentries: []\n")
-	writeGraphFile(t, dir, "api_implementations.yaml", "kind: api_implementation\nentries: []\n")
 
 	if _, err := Load(filepath.Join(dir, "graph.yaml")); err == nil || !strings.Contains(err.Error(), "must be normalized") {
 		t.Fatalf("Load() error = %v, want normalization error", err)

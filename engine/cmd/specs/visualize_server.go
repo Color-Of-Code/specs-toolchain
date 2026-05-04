@@ -130,8 +130,6 @@ func saveTraceabilityRelations(start string, edges []relationSaveEdge) error {
 	traceability.Realizations = relations.realizations
 	traceability.FeatureImplementations = relations.featureImplementations
 	traceability.ComponentImplementations = relations.componentImplementations
-	traceability.ServiceImplementations = relations.serviceImplementations
-	traceability.APIImplementations = relations.apiImplementations
 	if err := tracegraph.Write(cfg.GraphManifest, traceability); err != nil {
 		return fmt.Errorf("write graph %s: %w", cfg.GraphManifest, err)
 	}
@@ -144,8 +142,6 @@ func traceabilityAllowedNodeIDs(modelDir, productDir string, g *tracegraph.Graph
 		g.Realizations,
 		g.FeatureImplementations,
 		g.ComponentImplementations,
-		g.ServiceImplementations,
-		g.APIImplementations,
 	} {
 		for _, entry := range entries {
 			allowed[entry.Source] = struct{}{}
@@ -165,8 +161,6 @@ func traceabilityAllowedNodeIDs(modelDir, productDir string, g *tracegraph.Graph
 		{filepath.Join(modelDir, "requirements"), "model/requirements"},
 		{filepath.Join(modelDir, "features"), "model/features"},
 		{filepath.Join(modelDir, "components"), "model/components"},
-		{filepath.Join(modelDir, "services"), "model/services"},
-		{filepath.Join(modelDir, "apis"), "model/apis"},
 	} {
 		if err := collectArtifactNodeIDs(allowed, root.dir, root.prefix); err != nil {
 			return nil, err
@@ -216,16 +210,12 @@ type relationSaveFamilies struct {
 	realizations             []tracegraph.RelationEntry
 	featureImplementations   []tracegraph.RelationEntry
 	componentImplementations []tracegraph.RelationEntry
-	serviceImplementations   []tracegraph.RelationEntry
-	apiImplementations       []tracegraph.RelationEntry
 }
 
 func relationEntriesFromSaveEdges(edges []relationSaveEdge, allowed map[string]struct{}) (*relationSaveFamilies, error) {
 	realizations := map[string]map[string]struct{}{}
 	featureImplementations := map[string]map[string]struct{}{}
 	componentImplementations := map[string]map[string]struct{}{}
-	serviceImplementations := map[string]map[string]struct{}{}
-	apiImplementations := map[string]map[string]struct{}{}
 	seen := map[string]struct{}{}
 	for index, current := range edges {
 		normalizedSource, err := tracegraph.NormalizeNodeID(current.Source)
@@ -264,18 +254,12 @@ func relationEntriesFromSaveEdges(edges []relationSaveEdge, allowed map[string]s
 			addRelationTarget(featureImplementations, normalizedSource, normalizedTarget)
 		case string(tracegraph.PartKindComponentImplementation):
 			addRelationTarget(componentImplementations, normalizedSource, normalizedTarget)
-		case string(tracegraph.PartKindServiceImplementation):
-			addRelationTarget(serviceImplementations, normalizedSource, normalizedTarget)
-		case string(tracegraph.PartKindAPIImplementation):
-			addRelationTarget(apiImplementations, normalizedSource, normalizedTarget)
 		}
 	}
 	return &relationSaveFamilies{
 		realizations:             relationEntriesFromTargetMap(realizations),
 		featureImplementations:   relationEntriesFromTargetMap(featureImplementations),
 		componentImplementations: relationEntriesFromTargetMap(componentImplementations),
-		serviceImplementations:   relationEntriesFromTargetMap(serviceImplementations),
-		apiImplementations:       relationEntriesFromTargetMap(apiImplementations),
 	}, nil
 }
 
@@ -287,10 +271,6 @@ func relationKindsForSave(kind string) (string, string, bool) {
 		return "requirement", "feature", true
 	case string(tracegraph.PartKindComponentImplementation):
 		return "requirement", "component", true
-	case string(tracegraph.PartKindServiceImplementation):
-		return "requirement", "service", true
-	case string(tracegraph.PartKindAPIImplementation):
-		return "requirement", "api", true
 	default:
 		return "", "", false
 	}

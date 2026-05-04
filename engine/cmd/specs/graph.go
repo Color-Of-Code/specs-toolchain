@@ -19,8 +19,6 @@ type graphValidateJSON struct {
 	RealizationEdgeCount         int    `json:"realization_edge_count"`
 	FeatureImplementationEdges   int    `json:"feature_implementation_edge_count"`
 	ComponentImplementationEdges int    `json:"component_implementation_edge_count"`
-	ServiceImplementationEdges   int    `json:"service_implementation_edge_count"`
-	APIImplementationEdges       int    `json:"api_implementation_edge_count"`
 	BaselineCount                int    `json:"baseline_count"`
 	LayoutNodeCount              int    `json:"layout_node_count"`
 	RepoCount                    int    `json:"repo_count"`
@@ -31,8 +29,6 @@ type graphImportJSON struct {
 	RealizationEdgeCount         int    `json:"realization_edge_count"`
 	FeatureImplementationEdges   int    `json:"feature_implementation_edge_count"`
 	ComponentImplementationEdges int    `json:"component_implementation_edge_count"`
-	ServiceImplementationEdges   int    `json:"service_implementation_edge_count"`
-	APIImplementationEdges       int    `json:"api_implementation_edge_count"`
 	BaselineCount                int    `json:"baseline_count"`
 	DryRun                       bool   `json:"dry_run"`
 }
@@ -129,12 +125,10 @@ func cmdGraphSaveRelations(args []string) error {
 	traceability.Realizations = relations.realizations
 	traceability.FeatureImplementations = relations.featureImplementations
 	traceability.ComponentImplementations = relations.componentImplementations
-	traceability.ServiceImplementations = relations.serviceImplementations
-	traceability.APIImplementations = relations.apiImplementations
 	if err := graph.Write(path, traceability); err != nil {
 		return exitWith(1, "write graph: %v", err)
 	}
-	summary := graphSaveRelationsJSON{ManifestPath: path, EdgeCount: relationEdgeCount(traceability.Realizations) + relationEdgeCount(traceability.FeatureImplementations) + relationEdgeCount(traceability.ComponentImplementations) + relationEdgeCount(traceability.ServiceImplementations) + relationEdgeCount(traceability.APIImplementations)}
+	summary := graphSaveRelationsJSON{ManifestPath: path, EdgeCount: relationEdgeCount(traceability.Realizations) + relationEdgeCount(traceability.FeatureImplementations) + relationEdgeCount(traceability.ComponentImplementations)}
 	if *jsonOut {
 		enc := json.NewEncoder(os.Stdout)
 		enc.SetIndent("", "  ")
@@ -296,8 +290,6 @@ func cmdGraphImportMarkdown(args []string) error {
 		RealizationEdgeCount:         relationEdgeCount(g.Realizations),
 		FeatureImplementationEdges:   relationEdgeCount(g.FeatureImplementations),
 		ComponentImplementationEdges: relationEdgeCount(g.ComponentImplementations),
-		ServiceImplementationEdges:   relationEdgeCount(g.ServiceImplementations),
-		APIImplementationEdges:       relationEdgeCount(g.APIImplementations),
 		BaselineCount:                len(g.Baselines),
 		DryRun:                       *dryRun,
 	}
@@ -316,8 +308,7 @@ func cmdGraphImportMarkdown(args []string) error {
 		fmt.Printf("realizations:     %d edge(s)\n", summary.RealizationEdgeCount)
 		fmt.Printf("features:         %d edge(s)\n", summary.FeatureImplementationEdges)
 		fmt.Printf("components:       %d edge(s)\n", summary.ComponentImplementationEdges)
-		fmt.Printf("services:         %d edge(s)\n", summary.ServiceImplementationEdges)
-		fmt.Printf("apis:             %d edge(s)\n", summary.APIImplementationEdges)
+
 		fmt.Printf("baselines:        %d\n", summary.BaselineCount)
 	}
 	if *dryRun {
@@ -370,8 +361,6 @@ func cmdGraphValidate(args []string) error {
 		RealizationEdgeCount:         relationEdgeCount(g.Realizations),
 		FeatureImplementationEdges:   relationEdgeCount(g.FeatureImplementations),
 		ComponentImplementationEdges: relationEdgeCount(g.ComponentImplementations),
-		ServiceImplementationEdges:   relationEdgeCount(g.ServiceImplementations),
-		APIImplementationEdges:       relationEdgeCount(g.APIImplementations),
 		BaselineCount:                len(g.Baselines),
 		LayoutNodeCount:              len(g.Layout),
 		RepoCount:                    len(cfg.Repos),
@@ -388,8 +377,6 @@ func cmdGraphValidate(args []string) error {
 	fmt.Printf("realizations:     %d edge(s)\n", summary.RealizationEdgeCount)
 	fmt.Printf("features:         %d edge(s)\n", summary.FeatureImplementationEdges)
 	fmt.Printf("components:       %d edge(s)\n", summary.ComponentImplementationEdges)
-	fmt.Printf("services:         %d edge(s)\n", summary.ServiceImplementationEdges)
-	fmt.Printf("apis:             %d edge(s)\n", summary.APIImplementationEdges)
 	fmt.Printf("baselines:        %d\n", summary.BaselineCount)
 	fmt.Printf("layout nodes:     %d\n", summary.LayoutNodeCount)
 	fmt.Printf("repos checked:    %d\n", summary.RepoCount)

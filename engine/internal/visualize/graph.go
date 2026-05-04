@@ -163,8 +163,6 @@ func Build(modelDir, productDir string, g *tracegraph.Graph) (*Graph, error) {
 	appendEdges(string(tracegraph.PartKindRealization), g.Realizations)
 	appendEdges(string(tracegraph.PartKindFeatureImplementation), g.FeatureImplementations)
 	appendEdges(string(tracegraph.PartKindComponentImplementation), g.ComponentImplementations)
-	appendEdges(string(tracegraph.PartKindServiceImplementation), g.ServiceImplementations)
-	appendEdges(string(tracegraph.PartKindAPIImplementation), g.APIImplementations)
 	sort.Slice(result.Edges, func(i, j int) bool {
 		if result.Edges[i].From != result.Edges[j].From {
 			return result.Edges[i].From < result.Edges[j].From

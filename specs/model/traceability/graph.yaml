@@ -13,14 +13,6 @@ parts:
       file: component_implementations.yaml
       kind: component_implementation
       required: true
-    - name: service_implementations
-      file: service_implementations.yaml
-      kind: service_implementation
-      required: true
-    - name: api_implementations
-      file: api_implementations.yaml
-      kind: api_implementation
-      required: true
 generation:
     markdown_relationship_fields: true
     markdown_baseline_fields: true

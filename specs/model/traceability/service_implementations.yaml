@@ -1,5 +1,0 @@
-kind: service_implementation
-entries:
-    - source: model/requirements/workspace/WS-004-workspace-diagnostics-reporting
-      targets:
-        - model/services/workspace/workspace-diagnostics

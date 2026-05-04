@@ -15,8 +15,6 @@ func TestGenerateMarkdownUpdatesArtifactFields(t *testing.T) {
 		filepath.Join(modelDir, "requirements"),
 		filepath.Join(modelDir, "features"),
 		filepath.Join(modelDir, "components"),
-		filepath.Join(modelDir, "services"),
-		filepath.Join(modelDir, "apis"),
 		productDir,
 	} {
 		if err := os.MkdirAll(dir, 0o755); err != nil {
@@ -56,29 +54,11 @@ func TestGenerateMarkdownUpdatesArtifactFields(t *testing.T) {
 		"| Requirements | — |",
 		"| Baseline | — |",
 	}, "\n"))
-	writeGenerateFile(t, filepath.Join(modelDir, "services", "alpha-service.md"), strings.Join([]string{
-		"# Alpha Service",
-		"",
-		"| Field | Value |",
-		"| ----- | ----- |",
-		"| Status | Draft |",
-		"| Requirements | — |",
-	}, "\n"))
-	writeGenerateFile(t, filepath.Join(modelDir, "apis", "alpha-api.md"), strings.Join([]string{
-		"# Alpha API",
-		"",
-		"| Field | Value |",
-		"| ----- | ----- |",
-		"| Status | Draft |",
-		"| Requirements | — |",
-	}, "\n"))
 
 	g := &Graph{
 		Realizations:             []RelationEntry{{Source: "product/alpha", Targets: []string{"model/requirements/alpha-requirement"}}},
 		FeatureImplementations:   []RelationEntry{{Source: "model/requirements/alpha-requirement", Targets: []string{"model/features/alpha-feature"}}},
 		ComponentImplementations: []RelationEntry{{Source: "model/requirements/alpha-requirement", Targets: []string{"model/components/alpha-component"}}},
-		ServiceImplementations:   []RelationEntry{{Source: "model/requirements/alpha-requirement", Targets: []string{"model/services/alpha-service"}}},
-		APIImplementations:       []RelationEntry{{Source: "model/requirements/alpha-requirement", Targets: []string{"model/apis/alpha-api"}}},
 		Baselines:                []BaselineEntry{{Component: "model/components/alpha-component", Repo: "host-repo", Path: "/", Commit: "0123456789abcdef0123456789abcdef01234567"}},
 	}
 
@@ -86,14 +66,14 @@ func TestGenerateMarkdownUpdatesArtifactFields(t *testing.T) {
 	if err != nil {
 		t.Fatalf("GenerateMarkdown() error = %v", err)
 	}
-	if len(result.UpdatedFiles) != 6 {
-		t.Fatalf("len(UpdatedFiles) = %d, want 6", len(result.UpdatedFiles))
+	if len(result.UpdatedFiles) != 4 {
+		t.Fatalf("len(UpdatedFiles) = %d, want 4", len(result.UpdatedFiles))
 	}
 
 	requirementBody := readGenerateFile(t, filepath.Join(modelDir, "requirements", "alpha-requirement.md"))
 	for _, want := range []string{
 		"| Realises | [Alpha](../../product/alpha.md) |",
-		"[Alpha API](../apis/alpha-api.md), [Alpha Component](../components/alpha-component.md), [Alpha Feature](../features/alpha-feature.md), [Alpha Service](../services/alpha-service.md)",
+		"[Alpha Component](../components/alpha-component.md), [Alpha Feature](../features/alpha-feature.md)",
 	} {
 		if !strings.Contains(requirementBody, want) {
 			t.Fatalf("requirement body missing %q:\n%s", want, requirementBody)

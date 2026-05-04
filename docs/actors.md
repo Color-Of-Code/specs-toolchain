@@ -54,11 +54,10 @@ at least one feature.
 
 ## Architect
 
-Decomposes features into **components, services, and APIs**. The architect
+Decomposes features into **components**. The architect
 also keeps component baselines aligned with their upstream repositories.
 
-- Scaffolds artifacts:
-  `specs scaffold component|service|api --cr <NNN> <path>`.
+- Scaffolds artifacts: `specs scaffold component --cr <NNN> <path>`.
 - Maintains canonical component baselines: `specs baseline update`.
 - Verifies traceability: `specs graph validate`,
   `specs visualize traceability`.
@@ -70,7 +69,7 @@ also keeps component baselines aligned with their upstream repositories.
    the same CR, populating `## Realises` and `## Realised By` to keep the
    PR ↔ MR traceability symmetric.
 3. **Analyst** adds features that implement those MRs.
-4. **Architect** adds components, services, and APIs implementing the
+4. **Architect** adds components implementing the
    features.
 5. Anyone runs `specs format`, `specs lint`, and `specs graph validate` to
    validate the CR.

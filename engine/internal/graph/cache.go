@@ -28,7 +28,7 @@ func RebuildCache(cachePath string, g *Graph, dryRun bool) (*CacheStats, error) 
 	stats := &CacheStats{
 		CachePath:     absCachePath,
 		NodeCount:     len(g.NodeIDs()),
-		EdgeCount:     relationEntryCount(g.Realizations) + relationEntryCount(g.FeatureImplementations) + relationEntryCount(g.ComponentImplementations) + relationEntryCount(g.ServiceImplementations) + relationEntryCount(g.APIImplementations),
+		EdgeCount:     relationEntryCount(g.Realizations) + relationEntryCount(g.FeatureImplementations) + relationEntryCount(g.ComponentImplementations),
 		BaselineCount: len(g.Baselines),
 		LayoutCount:   len(g.Layout),
 	}
@@ -114,8 +114,6 @@ func RebuildCache(cachePath string, g *Graph, dryRun bool) (*CacheStats, error) 
 		{kind: PartKindRealization, entries: g.Realizations},
 		{kind: PartKindFeatureImplementation, entries: g.FeatureImplementations},
 		{kind: PartKindComponentImplementation, entries: g.ComponentImplementations},
-		{kind: PartKindServiceImplementation, entries: g.ServiceImplementations},
-		{kind: PartKindAPIImplementation, entries: g.APIImplementations},
 	} {
 		for _, entry := range group.entries {
 			for _, target := range entry.Targets {

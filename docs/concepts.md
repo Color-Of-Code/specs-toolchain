@@ -15,12 +15,12 @@ Three paths matter and are referenced throughout the documentation and in `specs
 Two trees hold persistent specification artifacts:
 
 - `product/` — **product requirements** (PRs): what the stakeholder asked for. Plain prose, the stakeholder's vocabulary, one PR per coherent demand. Sourced from the initial product description and from every subsequent change request.
-- `model/` — **model artifacts**: requirements (MRs), features, components, services, APIs. The MR is a re-formulation of one or more PRs in a precise, testable form that can be implemented and verified.
+- `model/` — **model artifacts**: requirements (MRs), features, components. The MR is a re-formulation of one or more PRs in a precise, testable form that can be implemented and verified.
 
 Each PR has a `## Realised By` section linking to the MRs that realise it; each MR has a `## Realises` section linking back. Together with the existing `Implemented By` / `Requirements` pair this gives a continuous traceability chain:
 
 ```text
-product-requirement ──► requirement ──► feature / component / service / api
+product-requirement ──► requirement ──► feature / component
        (PR)               (MR)
 ```
 

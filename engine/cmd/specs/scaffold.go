@@ -20,8 +20,6 @@ import (
 //	specs scaffold requirement <area>/<NNN-slug>           -> model/requirements/<area>/<NNN-slug>.md
 //	specs scaffold feature     <area>/<slug>               -> model/features/<area>/<slug>.md
 //	specs scaffold component   <group>/<slug>              -> model/components/<group>/<slug>.md
-//	specs scaffold api         <slug>                      -> model/apis/<slug>.md
-//	specs scaffold service     <slug>                      -> model/services/<slug>.md
 //	specs scaffold ... --cr <NNN>                          -> change-requests/CR-NNN-*/<kind>s/<...>.md
 //
 // --title overrides the H1; --force overwrites an existing file; --dry-run
@@ -29,7 +27,7 @@ import (
 func cmdScaffold(args []string) error {
 	if len(args) == 0 {
 		fmt.Fprintln(os.Stderr, "Usage: specs scaffold <kind> [--cr <NNN>] [--title <title>] [--force] [--dry-run] <path>")
-		fmt.Fprintln(os.Stderr, "Kinds: product-requirement, requirement, feature, component, api, service")
+		fmt.Fprintln(os.Stderr, "Kinds: product-requirement, requirement, feature, component")
 		return exitWith(2, "missing kind")
 	}
 	kind := args[0]
@@ -71,7 +69,7 @@ func cmdScaffold(args []string) error {
 
 	tplName, dirName, ok := scaffoldKindMap(kind)
 	if !ok {
-		return exitWith(2, "unknown kind %q (want: product-requirement|requirement|feature|component|api|service)", kind)
+		return exitWith(2, "unknown kind %q (want: product-requirement|requirement|feature|component)", kind)
 	}
 	tplPath := filepath.Join(cfg.FrameworkDir, "templates", tplName)
 	if _, err := os.Stat(tplPath); err != nil {
@@ -125,10 +123,6 @@ func scaffoldKindMap(kind string) (tpl, dir string, ok bool) {
 		return "feature.md", "features", true
 	case "component":
 		return "component.md", "components", true
-	case "api":
-		return "api.md", "apis", true
-	case "service":
-		return "service.md", "services", true
 	}
 	return "", "", false
 }

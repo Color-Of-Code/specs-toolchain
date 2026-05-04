@@ -346,7 +346,6 @@ func TestCmdGraphSaveRelationsAllowsUnlinkedArtifactNode(t *testing.T) {
 		filepath.Join(specsDir, "model", "requirements"),
 		filepath.Join(specsDir, "model", "features"),
 		filepath.Join(specsDir, "model", "components"),
-		filepath.Join(specsDir, "model", "services"),
 	} {
 		if err := os.MkdirAll(path, 0o755); err != nil {
 			t.Fatal(err)
@@ -356,11 +355,11 @@ func TestCmdGraphSaveRelationsAllowsUnlinkedArtifactNode(t *testing.T) {
 		t.Fatal(err)
 	}
 	writeGraphFixture(t, specsDir)
-	if err := os.WriteFile(filepath.Join(specsDir, "model", "services", "alpha-service.md"), []byte("# Alpha Service\n"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(specsDir, "model", "components", "beta-component.md"), []byte("# Beta Component\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	inputPath := filepath.Join(dir, "relations.json")
-	if err := os.WriteFile(inputPath, []byte(`{"edges":[{"source":"model/requirements/alpha-requirement","target":"model/services/alpha-service","kind":"service_implementation"}]}`), 0o644); err != nil {
+	if err := os.WriteFile(inputPath, []byte(`{"edges":[{"source":"model/requirements/alpha-requirement","target":"model/components/beta-component","kind":"component_implementation"}]}`), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -384,11 +383,11 @@ func TestCmdGraphSaveRelationsAllowsUnlinkedArtifactNode(t *testing.T) {
 	if err != nil {
 		t.Fatalf("graph.Load() error = %v", err)
 	}
-	if len(reloaded.ServiceImplementations) != 1 {
-		t.Fatalf("len(ServiceImplementations) = %d, want 1", len(reloaded.ServiceImplementations))
+	if len(reloaded.ComponentImplementations) != 1 {
+		t.Fatalf("len(ComponentImplementations) = %d, want 1", len(reloaded.ComponentImplementations))
 	}
-	if reloaded.ServiceImplementations[0].Source != "model/requirements/alpha-requirement" || len(reloaded.ServiceImplementations[0].Targets) != 1 || reloaded.ServiceImplementations[0].Targets[0] != "model/services/alpha-service" {
-		t.Fatalf("unexpected service implementation entry: %+v", reloaded.ServiceImplementations[0])
+	if reloaded.ComponentImplementations[0].Source != "model/requirements/alpha-requirement" || len(reloaded.ComponentImplementations[0].Targets) != 1 || reloaded.ComponentImplementations[0].Targets[0] != "model/components/beta-component" {
+		t.Fatalf("unexpected component implementation entry: %+v", reloaded.ComponentImplementations[0])
 	}
 }
 
@@ -423,14 +422,7 @@ func writeGraphFixture(t *testing.T, specsDir string) {
 			"    file: component_implementations.yaml",
 			"    kind: component_implementation",
 			"    required: true",
-			"  - name: service_implementations",
-			"    file: service_implementations.yaml",
-			"    kind: service_implementation",
-			"    required: true",
-			"  - name: api_implementations",
-			"    file: api_implementations.yaml",
-			"    kind: api_implementation",
-			"    required: true",
+
 			"  - name: baselines",
 			"    file: baselines.yaml",
 			"    kind: baseline",
@@ -455,8 +447,6 @@ func writeGraphFixture(t *testing.T, specsDir string) {
 			"      - model/features/alpha-feature",
 		}, "\n"),
 		"component_implementations.yaml": "kind: component_implementation\nentries: []\n",
-		"service_implementations.yaml":   "kind: service_implementation\nentries: []\n",
-		"api_implementations.yaml":       "kind: api_implementation\nentries: []\n",
 		"baselines.yaml": strings.Join([]string{
 			"kind: baseline",
 			"entries:",

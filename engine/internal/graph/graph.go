@@ -20,8 +20,6 @@ const (
 	PartKindRealization             PartKind = "realization"
 	PartKindFeatureImplementation   PartKind = "feature_implementation"
 	PartKindComponentImplementation PartKind = "component_implementation"
-	PartKindServiceImplementation   PartKind = "service_implementation"
-	PartKindAPIImplementation       PartKind = "api_implementation"
 	PartKindBaseline                PartKind = "baseline"
 	PartKindLayout                  PartKind = "layout"
 )
@@ -72,8 +70,6 @@ type Graph struct {
 	Realizations             []RelationEntry
 	FeatureImplementations   []RelationEntry
 	ComponentImplementations []RelationEntry
-	ServiceImplementations   []RelationEntry
-	APIImplementations       []RelationEntry
 	Baselines                []BaselineEntry
 	Layout                   []LayoutEntry
 }
@@ -104,8 +100,6 @@ var manifestPartSpecs = []partSpec{
 	{Name: "realizations", File: "realizations.yaml", Kind: PartKindRealization, Required: true},
 	{Name: "feature_implementations", File: "feature_implementations.yaml", Kind: PartKindFeatureImplementation, Required: true},
 	{Name: "component_implementations", File: "component_implementations.yaml", Kind: PartKindComponentImplementation, Required: true},
-	{Name: "service_implementations", File: "service_implementations.yaml", Kind: PartKindServiceImplementation, Required: true},
-	{Name: "api_implementations", File: "api_implementations.yaml", Kind: PartKindAPIImplementation, Required: true},
 	{Name: "baselines", File: "baselines.yaml", Kind: PartKindBaseline, Required: false},
 	{Name: "layout", File: "layout.yaml", Kind: PartKindLayout, Required: false},
 }
@@ -183,10 +177,6 @@ func KindForNodeID(id string) string {
 		return "feature"
 	case strings.HasPrefix(id, "model/components/"):
 		return "component"
-	case strings.HasPrefix(id, "model/services/"):
-		return "service"
-	case strings.HasPrefix(id, "model/apis/"):
-		return "api"
 	default:
 		return ""
 	}
@@ -202,8 +192,6 @@ func (g *Graph) NodeIDs() []string {
 		g.Realizations,
 		g.FeatureImplementations,
 		g.ComponentImplementations,
-		g.ServiceImplementations,
-		g.APIImplementations,
 	} {
 		for _, entry := range entries {
 			seen[entry.Source] = struct{}{}
@@ -316,18 +304,6 @@ func (g *Graph) loadPart(part ManifestPart) error {
 			return fmt.Errorf("load %s: %w", part.File, err)
 		}
 		g.ComponentImplementations = entries
-	case PartKindServiceImplementation:
-		entries, err := loadRelationEntries(data, part.Kind)
-		if err != nil {
-			return fmt.Errorf("load %s: %w", part.File, err)
-		}
-		g.ServiceImplementations = entries
-	case PartKindAPIImplementation:
-		entries, err := loadRelationEntries(data, part.Kind)
-		if err != nil {
-			return fmt.Errorf("load %s: %w", part.File, err)
-		}
-		g.APIImplementations = entries
 	case PartKindBaseline:
 		entries, err := loadBaselineEntries(data)
 		if err != nil {
@@ -387,12 +363,6 @@ func (g *Graph) validate() error {
 		return err
 	}
 	if err := validateRelationEntries(g.ComponentImplementations, PartKindComponentImplementation, "requirement", "component"); err != nil {
-		return err
-	}
-	if err := validateRelationEntries(g.ServiceImplementations, PartKindServiceImplementation, "requirement", "service"); err != nil {
-		return err
-	}
-	if err := validateRelationEntries(g.APIImplementations, PartKindAPIImplementation, "requirement", "api"); err != nil {
 		return err
 	}
 	if err := validateBaselines(g.Baselines); err != nil {

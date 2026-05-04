@@ -3,11 +3,6 @@
 Core vocabulary used throughout the toolchain docs. These definitions describe
 the artifact kinds, paths, and framework terms that appear most often.
 
-## API
-
-An interface artifact under `model/apis/` describing how components interact
-with each other or with the outside world.
-
 ## Change request
 
 A numbered work area under `change-requests/` where product requirements and
@@ -59,8 +54,7 @@ the user cache and reuses it across hosts on the same machine.
 
 ## Model artifact
 
-Any artifact stored under `model/`: requirement, feature, component, service,
-or API.
+Any artifact stored under `model/`: requirement, feature, or component.
 
 ## Model requirement
 
@@ -80,11 +74,6 @@ product requirements into a precise, testable statement.
 This is the artifact sometimes called a model requirement or technical
 requirement. Across the docs, `requirement` is the usual short form unless the
 product requirement versus requirement distinction needs to be explicit.
-
-## Service
-
-An interface artifact under `model/services/` describing behavior exposed
-between components.
 
 ## Specs root
 

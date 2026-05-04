@@ -26,8 +26,6 @@ func ImportMarkdown(modelDir, productDir, baselinesFile string) (*Graph, error) 
 	realizations := map[string]map[string]struct{}{}
 	featureImplementations := map[string]map[string]struct{}{}
 	componentImplementations := map[string]map[string]struct{}{}
-	serviceImplementations := map[string]map[string]struct{}{}
-	apiImplementations := map[string]map[string]struct{}{}
 
 	addEdge := func(edges map[string]map[string]struct{}, source, target string) {
 		if edges[source] == nil {
@@ -86,10 +84,6 @@ func ImportMarkdown(modelDir, productDir, baselinesFile string) (*Graph, error) 
 					addEdge(featureImplementations, source, target)
 				case "component":
 					addEdge(componentImplementations, source, target)
-				case "service":
-					addEdge(serviceImplementations, source, target)
-				case "api":
-					addEdge(apiImplementations, source, target)
 				default:
 					return fmt.Errorf("implemented-by target %q from %s is not a supported implementer kind", target, path)
 				}
@@ -106,8 +100,6 @@ func ImportMarkdown(modelDir, productDir, baselinesFile string) (*Graph, error) 
 	}{
 		{root: filepath.Join(modelDir, "features"), edges: featureImplementations},
 		{root: filepath.Join(modelDir, "components"), edges: componentImplementations},
-		{root: filepath.Join(modelDir, "services"), edges: serviceImplementations},
-		{root: filepath.Join(modelDir, "apis"), edges: apiImplementations},
 	} {
 		if _, err := os.Stat(area.root); err != nil {
 			continue
@@ -141,8 +133,6 @@ func ImportMarkdown(modelDir, productDir, baselinesFile string) (*Graph, error) 
 	graphData.Realizations = relationEntriesFromMap(realizations)
 	graphData.FeatureImplementations = relationEntriesFromMap(featureImplementations)
 	graphData.ComponentImplementations = relationEntriesFromMap(componentImplementations)
-	graphData.ServiceImplementations = relationEntriesFromMap(serviceImplementations)
-	graphData.APIImplementations = relationEntriesFromMap(apiImplementations)
 	graphData.Manifest = manifestForGraph(graphData)
 	if err := graphData.validate(); err != nil {
 		return nil, err
@@ -177,14 +167,6 @@ func Write(manifestPath string, g *Graph) error {
 		"component_implementations.yaml": relationPart{
 			Kind:    PartKindComponentImplementation,
 			Entries: g.ComponentImplementations,
-		},
-		"service_implementations.yaml": relationPart{
-			Kind:    PartKindServiceImplementation,
-			Entries: g.ServiceImplementations,
-		},
-		"api_implementations.yaml": relationPart{
-			Kind:    PartKindAPIImplementation,
-			Entries: g.APIImplementations,
 		},
 	}
 	if len(g.Baselines) > 0 {

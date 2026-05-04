@@ -159,10 +159,7 @@ func TestNewTraceabilityUIHandlerAddsRelations(t *testing.T) {
 		t.Fatal(err)
 	}
 	writeGraphFixture(t, specsDir)
-	if err := os.MkdirAll(filepath.Join(specsDir, "model", "services"), 0o755); err != nil {
-		t.Fatal(err)
-	}
-	if err := os.WriteFile(filepath.Join(specsDir, "model", "services", "alpha-service.md"), []byte("# Alpha Service\n"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(specsDir, "model", "components", "alpha-component.md"), []byte("# Alpha Component\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -173,7 +170,7 @@ func TestNewTraceabilityUIHandlerAddsRelations(t *testing.T) {
 	server := httptest.NewServer(handler)
 	defer server.Close()
 
-	payload := `{"edges":[{"source":"product/alpha","target":"model/requirements/alpha-requirement","kind":"realization"},{"source":"model/requirements/alpha-requirement","target":"model/features/alpha-feature","kind":"feature_implementation"},{"source":"model/requirements/alpha-requirement","target":"model/services/alpha-service","kind":"service_implementation"}]}`
+	payload := `{"edges":[{"source":"product/alpha","target":"model/requirements/alpha-requirement","kind":"realization"},{"source":"model/requirements/alpha-requirement","target":"model/features/alpha-feature","kind":"feature_implementation"},{"source":"model/requirements/alpha-requirement","target":"model/components/alpha-component","kind":"component_implementation"}]}`
 	resp, err := http.Post(server.URL+"/relations", "application/json", strings.NewReader(payload))
 	if err != nil {
 		t.Fatalf("POST /relations add: %v", err)
@@ -187,12 +184,12 @@ func TestNewTraceabilityUIHandlerAddsRelations(t *testing.T) {
 		t.Fatalf("POST /relations add status = %d, want 204\n%s", resp.StatusCode, string(body))
 	}
 
-	serviceData, err := os.ReadFile(filepath.Join(specsDir, "model", "traceability", "service_implementations.yaml"))
+	componentData, err := os.ReadFile(filepath.Join(specsDir, "model", "traceability", "component_implementations.yaml"))
 	if err != nil {
-		t.Fatalf("read service_implementations.yaml: %v", err)
+		t.Fatalf("read component_implementations.yaml: %v", err)
 	}
-	if !strings.Contains(string(serviceData), "model/services/alpha-service") {
-		t.Fatalf("service_implementations.yaml missing added service edge\n%s", string(serviceData))
+	if !strings.Contains(string(componentData), "model/components/alpha-component") {
+		t.Fatalf("component_implementations.yaml missing added component edge\n%s", string(componentData))
 	}
 
 	resp, err = http.Get(server.URL + "/graph.json")
@@ -207,8 +204,8 @@ func TestNewTraceabilityUIHandlerAddsRelations(t *testing.T) {
 	if resp.StatusCode != http.StatusOK {
 		t.Fatalf("GET /graph.json after add status = %d, want 200\n%s", resp.StatusCode, string(body))
 	}
-	if !strings.Contains(string(body), `"target": "model/services/alpha-service"`) {
-		t.Fatalf("graph.json missing added service edge\n%s", string(body))
+	if !strings.Contains(string(body), `"target": "model/components/alpha-component"`) {
+		t.Fatalf("graph.json missing added component edge\n%s", string(body))
 	}
 }
 

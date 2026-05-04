@@ -30,13 +30,9 @@ func GenerateMarkdown(modelDir, productDir string, g *Graph, dryRun bool) (*Gene
 	implementedByByRequirement := mergeRelationEntries(
 		g.FeatureImplementations,
 		g.ComponentImplementations,
-		g.ServiceImplementations,
-		g.APIImplementations,
 	)
 	requirementsByFeature := invertRelationEntries(g.FeatureImplementations)
 	requirementsByComponent := invertRelationEntries(g.ComponentImplementations)
-	requirementsByService := invertRelationEntries(g.ServiceImplementations)
-	requirementsByAPI := invertRelationEntries(g.APIImplementations)
 	baselinesByComponent := map[string]BaselineEntry{}
 	for _, entry := range g.Baselines {
 		baselinesByComponent[entry.Component] = entry
@@ -99,8 +95,6 @@ func GenerateMarkdown(modelDir, productDir string, g *Graph, dryRun bool) (*Gene
 	}{
 		{root: filepath.Join(modelDir, "features"), requirements: requirementsByFeature},
 		{root: filepath.Join(modelDir, "components"), requirements: requirementsByComponent, includeBase: true},
-		{root: filepath.Join(modelDir, "services"), requirements: requirementsByService},
-		{root: filepath.Join(modelDir, "apis"), requirements: requirementsByAPI},
 	} {
 		if _, err := os.Stat(area.root); err != nil {
 			continue

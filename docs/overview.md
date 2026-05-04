@@ -7,21 +7,19 @@ and is not covered here.
 ## What the engine is for
 
 A small CLI that lets a team author a structured specification model in
-markdown — product requirements, model requirements, features, components,
-services, APIs — with guaranteed formatting, traceability, and baseline
-integrity.
+markdown — product requirements, model requirements, features, components —
+with guaranteed formatting, traceability, and baseline integrity.
 
 ## The model
 
-Five artifact kinds, scaffolded from templates:
+Four artifact kinds, scaffolded from templates:
 
-| Kind                | Owned by    | Purpose                                                                       |
-| ------------------- | ----------- | ----------------------------------------------------------------------------- |
-| Product requirement | Stakeholder | What was asked for, in the stakeholder's vocabulary. Lives under `product/`.  |
-| Requirement         | Author      | A single, testable re-formulation of one or more product requirements.        |
-| Feature             | Analyst     | A grouping that implements one or more requirements.                          |
-| Component           | Architect   | A unit of implementation pinned to an upstream repo.                          |
-| Service / API       | Architect   | An interface between components or with the outside.                          |
+| Kind                | Owned by    | Purpose                                                                      |
+| ------------------- | ----------- | ---------------------------------------------------------------------------- |
+| Product requirement | Stakeholder | What was asked for, in the stakeholder's vocabulary. Lives under `product/`. |
+| Requirement         | Author      | A single, testable re-formulation of one or more product requirements.       |
+| Feature             | Analyst     | A grouping that implements one or more requirements.                         |
+| Component           | Architect   | A unit of implementation pinned to an upstream repo.                         |
 
 Product requirements live under `product/`; the rest live under `model/`.
 All artifacts are written in markdown.
@@ -30,7 +28,7 @@ All artifacts are written in markdown.
 
 ```text
 Stakeholder ──► Author ──► Analyst ──► Architect
- product       requirements   features    components / services / APIs
+ product       requirements   features    components
  requirement
 ```
 

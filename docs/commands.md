@@ -11,7 +11,7 @@ Every command below is reachable as `specs <command>` on the terminal. Most are 
 - `specs lint [--all] [--links] [--style] [--baselines]` — run lint checks. With no flag, all checks run.
 - `specs format [--check] [--at <path>] [files...]` — format markdown files in place; `--check` exits non-zero if any file would change.
 - `specs framework update [--to <ref>]` — update the `.specs-framework` content layer.
-- `specs scaffold <kind> [--cr <NNN>] [--title <t>] [--force] [--dry-run] <path>` — instantiate a template (`product-requirement`, `requirement`, `feature`, `component`, `api`, or `service`). Without `--cr`, `product-requirement` lands directly under `product/<path>.md`; the model kinds land under `model/<kind>s/<path>.md`. With `--cr`, every kind goes into the matching `change-requests/CR-NNN-*/<kind>s/` subtree.
+- `specs scaffold <kind> [--cr <NNN>] [--title <t>] [--force] [--dry-run] <path>` — instantiate a template (`product-requirement`, `requirement`, `feature`, or `component`). Without `--cr`, `product-requirement` lands directly under `product/<path>.md`; the model kinds land under `model/<kind>s/<path>.md`. With `--cr`, every kind goes into the matching `change-requests/CR-NNN-*/<kind>s/` subtree.
 - `specs cr new --id <NNN> --slug <slug> [--title <t>] [--force] [--dry-run]` — create a new change request from the template tree.
 - `specs cr status` — list change requests with file counts per area.
 - `specs cr drain --id <NNN> [--yes] [--dry-run]` — interactively `git mv` CR-local files to canonical model homes.

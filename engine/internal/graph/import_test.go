@@ -88,8 +88,8 @@ func TestImportMarkdownAndWriteRoundTrip(t *testing.T) {
 	if got := len(reloaded.NodeIDs()); got != 4 {
 		t.Fatalf("len(NodeIDs()) = %d, want 4", got)
 	}
-	if len(reloaded.Manifest.Parts) != 6 {
-		t.Fatalf("len(Manifest.Parts) = %d, want 6", len(reloaded.Manifest.Parts))
+	if len(reloaded.Manifest.Parts) != 4 {
+		t.Fatalf("len(Manifest.Parts) = %d, want 4", len(reloaded.Manifest.Parts))
 	}
 }
 
