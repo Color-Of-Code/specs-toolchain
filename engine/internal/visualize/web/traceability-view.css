@@ -55,8 +55,55 @@ body.traceability-shell {
   background: var(--traceability-button-hover, #2e648d);
 }
 
+.toolbar button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.toolbar button:disabled:hover {
+  background: var(--traceability-button-bg, #204a68);
+}
+
 .toolbar select {
   appearance: none;
+}
+
+.toolbar-icon-button {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  position: relative;
+}
+
+.toolbar-icon-button::before {
+  display: block;
+  color: currentColor;
+}
+
+.toolbar-icon-button.is-active,
+.toolbar-icon-button[aria-pressed="true"] {
+  background: var(--traceability-button-hover, #2e648d);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, currentColor 35%, transparent);
+}
+
+.toolbar-add-edge-button::before {
+  content: "+";
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.toolbar-remove-edge-button::before {
+  content: "";
+  width: 16px;
+  height: 16px;
+  background: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='black' d='M6 1h4l.5 1H13v1.5H3V2h2.5L6 1ZM4.5 5h1.25v6H4.5V5Zm2.875 0h1.25v6h-1.25V5ZM10.25 5h1.25v6h-1.25V5ZM4 4h8l-.4 8.2A1 1 0 0 1 10.6 13H5.4a1 1 0 0 1-.999-.8L4 4Z'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='black' d='M6 1h4l.5 1H13v1.5H3V2h2.5L6 1ZM4.5 5h1.25v6H4.5V5Zm2.875 0h1.25v6h-1.25V5ZM10.25 5h1.25v6h-1.25V5ZM4 4h8l-.4 8.2A1 1 0 0 1 10.6 13H5.4a1 1 0 0 1-.999-.8L4 4Z'/%3E%3C/svg%3E") center / contain no-repeat;
 }
 
 #layout-mode {

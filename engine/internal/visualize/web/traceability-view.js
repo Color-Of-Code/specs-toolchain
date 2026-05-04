@@ -527,7 +527,7 @@
         { label: "Source ID", value: edge.data("source") },
         { label: "Target", value: targetNode ? targetNode.data("label") || targetNode.id() : edge.data("target") },
         { label: "Target ID", value: edge.data("target") },
-      ], canSaveRelations ? "Use Remove Selected Edge to delete this relation. The UI asks for confirmation before persisting the change." : "");
+      ], canSaveRelations ? "Use the remove button to delete this relation. The UI asks for confirmation before persisting the change." : "");
     }
 
     function describeCreateMode() {
@@ -615,13 +615,31 @@
       updateCreateClasses();
     }
 
+    function currentSelectedEdge() {
+      if (selectedEdge && !selectedEdge.removed()) {
+        return selectedEdge;
+      }
+      if (!cy) {
+        return undefined;
+      }
+      const selectedEdges = cy.$("edge:selected");
+      return selectedEdges.length > 0 ? selectedEdges[0] : undefined;
+    }
+
+    function updateAddEdgeButton() {
+      if (!options.addEdgeButton) {
+        return;
+      }
+      options.addEdgeButton.disabled = !canSaveRelations;
+      options.addEdgeButton.setAttribute("aria-pressed", createEdgeMode ? "true" : "false");
+      options.addEdgeButton.classList.toggle("is-active", createEdgeMode);
+    }
+
     function exitCreateEdgeMode() {
       createEdgeMode = false;
       clearEdgeSourceSelection();
       clearCreateClasses();
-      if (options.addEdgeButton) {
-        options.addEdgeButton.textContent = "Add Edge";
-      }
+      updateAddEdgeButton();
       updateDetailsPanel();
     }
 
@@ -630,9 +648,7 @@
       selectedEdge = undefined;
       selectedNode = undefined;
       updateRemoveEdgeButton();
-      if (options.addEdgeButton) {
-        options.addEdgeButton.textContent = "Cancel Add";
-      }
+      updateAddEdgeButton();
       updateCreateClasses();
       setCreateStatus(invalidCreateSelectionMessage("source").replace("choose a ", "select a "));
       updateDetailsPanel();
@@ -671,11 +687,8 @@
         setMetaStatus(options, "edge creation cancelled");
         return;
       }
-      const originalLabel = options.addEdgeButton ? options.addEdgeButton.textContent : "Add Edge";
-      let saveSucceeded = false;
       if (options.addEdgeButton) {
         options.addEdgeButton.disabled = true;
-        options.addEdgeButton.textContent = "Adding...";
       }
       try {
         await persistRelations(options, cy, { appendEdges: [nextEdge] });
@@ -685,25 +698,14 @@
         updateMetaSummary(options, cy.nodes().length, cy.edges().length);
         updateRemoveEdgeButton();
         setMetaStatus(options, "edge added");
-        saveSucceeded = true;
         exitCreateEdgeMode();
       } catch (error) {
         console.error(error);
         setMetaStatus(options, "edge creation failed");
-        if (options.addEdgeButton) {
-          options.addEdgeButton.textContent = "Add Failed";
-        }
         window.setTimeout(() => {
-          if (options.addEdgeButton) {
-            options.addEdgeButton.textContent = originalLabel;
-            options.addEdgeButton.disabled = !canSaveRelations;
-          }
+          updateAddEdgeButton();
         }, 1200);
         return;
-      }
-      if (options.addEdgeButton) {
-        options.addEdgeButton.textContent = saveSucceeded ? "Add Edge" : originalLabel;
-        options.addEdgeButton.disabled = !canSaveRelations;
       }
     }
 
@@ -711,6 +713,7 @@
       if (!options.removeEdgeButton) {
         return;
       }
+      selectedEdge = currentSelectedEdge();
       options.removeEdgeButton.disabled = !canSaveRelations || !selectedEdge;
     }
 
@@ -728,7 +731,7 @@
     }
 
     if (options.addEdgeButton) {
-      options.addEdgeButton.disabled = !canSaveRelations;
+      updateAddEdgeButton();
       options.addEdgeButton.addEventListener("click", () => {
         if (!canSaveRelations) {
           return;
@@ -766,10 +769,10 @@
     if (options.removeEdgeButton) {
       updateRemoveEdgeButton();
       options.removeEdgeButton.addEventListener("click", async () => {
-        if (!selectedEdge || !canSaveRelations || !cy) {
+        const edgeToRemove = currentSelectedEdge();
+        if (!edgeToRemove || !canSaveRelations || !cy) {
           return;
         }
-        const edgeToRemove = selectedEdge;
         const removalPreview = {
           source: edgeToRemove.data("source"),
           target: edgeToRemove.data("target"),
@@ -782,9 +785,7 @@
           updateDetailsPanel();
           return;
         }
-        const originalLabel = options.removeEdgeButton.textContent;
         options.removeEdgeButton.disabled = true;
-        options.removeEdgeButton.textContent = "Removing...";
         try {
           await persistRelations(options, cy, { omitEdgeId: edgeToRemove.id() });
           edgeToRemove.remove();
@@ -795,11 +796,9 @@
           updateDetailsPanel();
         } catch (error) {
           console.error(error);
-          options.removeEdgeButton.textContent = "Remove Failed";
           setMetaStatus(options, "edge removal failed");
         } finally {
           window.setTimeout(() => {
-            options.removeEdgeButton.textContent = originalLabel;
             updateRemoveEdgeButton();
           }, 1200);
         }

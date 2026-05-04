@@ -306,8 +306,8 @@ ${fallbackBanner}
     <option value="service_implementation">Service</option>
     <option value="api_implementation">API</option>
   </select>
-  <button id="add-edge">Add Edge</button>
-  <button id="remove-edge">Remove Selected Edge</button>
+  <button id="add-edge" class="toolbar-icon-button toolbar-add-edge-button" aria-label="Add edge" title="Add edge"><span class="details-visually-hidden">Add edge</span></button>
+  <button id="remove-edge" class="toolbar-icon-button toolbar-remove-edge-button" aria-label="Remove selected edge" title="Remove selected edge"><span class="details-visually-hidden">Remove selected edge</span></button>
   <button id="export-json">Export JSON</button>
   <div class="meta" id="meta">${graph.nodes.length} nodes / ${graph.edges.length} edges</div>
 </div>
