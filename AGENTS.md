@@ -60,7 +60,6 @@ After any change, **always** run the relevant build/tests for the surfaces you t
 - Subcommands live in `engine/cmd/specs/<name>.go`; register them in the `commands` slice in `main.go`.
 - Reusable logic must go under `engine/internal/<package>/` with unit tests in the same package.
 - Config schema is in [engine/internal/config/config.go](engine/internal/config/config.go); add new keys to both `File` and `Resolved` and preserve them on round-trip in `cmdInit`.
-- Framework registry: see [engine/internal/registry/registry.go](engine/internal/registry/registry.go); URL/path entries are mutually exclusive.
 - Path-exclusion helpers (`isExcludedPath` in `format.go`, `isExcludedRel` in `internal/lint/lint.go`) match by path **component** at any depth, not by prefix. Add new exclusions to the component set.
 - Goldmark inline AST nodes (`*ast.RawHTML`, etc.) panic on `Lines()`. Always walk up to the nearest block ancestor before reading line ranges — see `lineOf` in [engine/internal/lint/rules.go](engine/internal/lint/rules.go).
 - To distinguish a user-supplied flag from its default value, use the `flagWasSet` helper rather than comparing against the default literal.
@@ -109,7 +108,6 @@ After any change, **always** run the relevant build/tests for the surfaces you t
 
 - Engine entry point: [engine/cmd/specs/main.go](engine/cmd/specs/main.go)
 - Config schema: [engine/internal/config/config.go](engine/internal/config/config.go)
-- Framework registry: [engine/internal/registry/registry.go](engine/internal/registry/registry.go)
 - Extension activation: [extension/src/extension.ts](extension/src/extension.ts)
 - Engine resolver: [extension/src/engine.ts](extension/src/engine.ts)
 - Palette commands: [extension/src/commands.ts](extension/src/commands.ts) ↔ [extension/package.json](extension/package.json)

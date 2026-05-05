@@ -79,6 +79,6 @@ Decomposes use cases into **components**.
    `model/`.
 
 Setup tasks (installing the engine, initialising a host repo, managing
-the framework registry) are one-time prerequisites and are not part of
+the framework source) are one-time prerequisites and are not part of
 the authoring chain. See [overview.md](overview.md) and
 [install.md](install.md).

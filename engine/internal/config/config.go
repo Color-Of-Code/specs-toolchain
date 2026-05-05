@@ -8,7 +8,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/Color-Of-Code/specs-toolchain/engine/internal/cache"
 	"gopkg.in/yaml.v3"
 )
 
@@ -16,7 +15,7 @@ import (
 const FileName = ".specs.yaml"
 
 const (
-	defaultFrameworkDirName = ".specs-framework"
+	defaultFrameworkDirName = ".framework"
 )
 
 // SpecsMode describes how the specs root is materialised in the host.
@@ -33,8 +32,7 @@ const (
 type FrameworkMode string
 
 const (
-	FrameworkModeManaged FrameworkMode = "managed" // engine-fetched checkout in the user cache dir
-	FrameworkModeLocal   FrameworkMode = "local"   // host-managed directory on disk (plain folder, submodule, or vendored snapshot)
+	FrameworkModeLocal   FrameworkMode = "local" // host-managed directory on disk (plain folder, submodule, or vendored snapshot)
 	FrameworkModeMissing FrameworkMode = "missing"
 )
 
@@ -43,8 +41,6 @@ const (
 type File struct {
 	SpecsRoot         string            `yaml:"specs_root,omitempty"`
 	FrameworkDir      string            `yaml:"framework_dir,omitempty"`
-	FrameworkURL      string            `yaml:"framework_url,omitempty"`
-	FrameworkRef      string            `yaml:"framework_ref,omitempty"`
 	ChangeRequestsDir string            `yaml:"change_requests_dir,omitempty"`
 	ModelDir          string            `yaml:"model_dir,omitempty"`
 	ProductDir        string            `yaml:"product_dir,omitempty"`
@@ -65,8 +61,6 @@ type Resolved struct {
 	SpecsMode         SpecsMode
 	FrameworkDir      string // absolute path; may be empty if missing
 	FrameworkMode     FrameworkMode
-	FrameworkURL      string // managed mode: upstream git URL
-	FrameworkRef      string // managed mode: pinned tag/branch/commit
 	ChangeRequestsDir string // absolute path
 	ModelDir          string // absolute path
 	ProductDir        string // absolute path
@@ -133,26 +127,14 @@ func Load(start string) (*Resolved, error) {
 	}
 	r.SpecsMode = detectSpecsMode(r.HostRoot, r.SpecsRoot)
 
-	// Resolve framework location. Managed mode wins when framework_url is set: the
-	// content lives in the user cache dir, and framework_dir (if any) is ignored.
-	r.FrameworkURL = f.FrameworkURL
-	r.FrameworkRef = f.FrameworkRef
-	if f.FrameworkURL != "" {
-		cachePath, err := cache.ManagedPath(f.FrameworkRef)
-		if err != nil {
-			return nil, fmt.Errorf("resolve managed cache path: %w", err)
-		}
-		r.FrameworkDir = cachePath
-		r.FrameworkMode = FrameworkModeManaged
-	} else {
-		dir := f.FrameworkDir
-		if dir == "" {
-			dir = "auto"
-		}
-		resolvedDir, mode := resolveFrameworkDir(dir, configBase, r.SpecsRoot, r.HostRoot)
-		r.FrameworkDir = resolvedDir
-		r.FrameworkMode = mode
+	// Resolve framework location from local directories only.
+	dir := f.FrameworkDir
+	if dir == "" {
+		dir = "auto"
 	}
+	resolvedDir, mode := resolveFrameworkDir(dir, configBase, r.SpecsRoot, r.HostRoot)
+	r.FrameworkDir = resolvedDir
+	r.FrameworkMode = mode
 
 	// Resolve other dirs/files (relative paths anchored to SpecsRoot).
 	r.ChangeRequestsDir = absOr(r.SpecsRoot, f.ChangeRequestsDir, "change-requests")
@@ -279,8 +261,7 @@ func isSubmodule(hostRoot, child string) bool {
 
 // resolveFrameworkDir resolves the framework_dir setting to an absolute path
 // and detects the content mode. Recognised values for raw:
-//   - "auto": try <specsRoot>/.specs-framework, then the same name under
-//     <hostRoot>.
+//   - "auto": try <specsRoot>/.framework, then the same name under <hostRoot>.
 //   - absolute or relative path: anchored to the directory containing
 //     .specs.yaml.
 func resolveFrameworkDir(raw, configBase, specsRoot, hostRoot string) (string, FrameworkMode) {

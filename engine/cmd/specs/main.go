@@ -22,7 +22,7 @@ func init() {
 	commands = []command{
 		{"version", "print version and exit", cmdVersion},
 		{"doctor", "diagnose environment, layout, and version drift", cmdDoctor},
-		{"init", "create or configure a host (writes .specs.yaml, fetches framework)", cmdInit},
+		{"init", "create or configure a host (writes .specs.yaml and framework source)", cmdInit},
 		{"lint", "run lint checks (--all|--links|--style)", cmdLint},
 		{"format", "format markdown files (tables, whitespace, line endings)", cmdFormat},
 		{"scaffold", "instantiate a template (requirement|use-case|component)", cmdScaffold},
@@ -30,7 +30,7 @@ func init() {
 		{"graph", "manage canonical traceability graph data (validate)", cmdGraph},
 		{"visualize", "render or serve the traceability graph (Mermaid, JSON, web)", cmdVisualize},
 		{"vscode", "manage .vscode integration (init)", cmdVSCode},
-		{"framework", "manage framework templates and content layer (list, add, remove, seed, update)", cmdFramework},
+		{"framework", "manage framework templates and content layer (seed, update, skills, agents)", cmdFramework},
 	}
 }
 

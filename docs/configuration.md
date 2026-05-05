@@ -2,32 +2,19 @@
 
 Lives next to the specs root.
 
-## Managed mode (recommended default)
+## Framework directory
+
+Point `framework_dir` at the framework directory on disk:
 
 ```yaml
-framework_url: https://github.com/Color-Of-Code/specs-framework.git
-framework_ref: v1.0.0 # tag, branch, or commit SHA
-min_specs_version: 0.1.0
-repos:
-  redmine: container/redmine/redmine
-  application_packages: container/redmine/application_packages
-```
-
-## Local mode
-
-Drop `framework_url` / `framework_ref` and point at a directory on disk instead:
-
-```yaml
-framework_dir: ../specs-framework # or .specs-framework, or any absolute path
+framework_dir: .framework # or ../framework, or any absolute path
 min_specs_version: 0.1.0
 repos: ...
 ```
 
 The directory can be a regular git checkout, a submodule, or a vendored snapshot — the toolchain treats them identically and never modifies the directory itself.
 
-## Using a named framework
-
-The toolchain resolves `framework_url`/`framework_ref` (or `framework_dir`) from a named [framework registry](#framework-registry) entry at `specs init` time. The resolved values are written into `.specs.yaml`; subsequent commands read the file directly without consulting the registry again.
+If `framework_dir` is omitted, the engine auto-detects `.framework` under the specs root (or host root when specs lives in a subdirectory).
 
 ## Optional knobs
 
@@ -61,50 +48,3 @@ rules:
 
 Only include keys you want to override — omitted keys use the compiled-in defaults.
 
----
-
-## Framework registry
-
-The framework registry is a **user-level** configuration file that maps short names to framework sources. It is read by `specs init` and `specs framework` commands.
-
-### Location
-
-| Platform | Path                                                  |
-| -------- | ----------------------------------------------------- |
-| Linux    | `~/.config/specs/frameworks.yaml`                     |
-| macOS    | `~/Library/Application Support/specs/frameworks.yaml` |
-| Windows  | `%APPDATA%\specs\frameworks.yaml`                     |
-
-### Schema
-
-```yaml
-# frameworks.yaml
-frameworks:
-  <name>:
-    url: <git-url>        # mutually exclusive with `path`
-    ref: <tag-or-branch>  # optional; defaults to "main"
-    path: <local-dir>     # mutually exclusive with `url`
-```
-
-### Example
-
-```yaml
-frameworks:
-  default:
-    url: https://github.com/Color-Of-Code/specs-framework.git
-    ref: v1.0.0
-  acme:
-    url: https://git.example.com/acme/specs-framework.git
-    ref: main
-  local:
-    path: ~/src/specs-framework
-```
-
-### Resolution order
-
-`specs init` resolves the framework as follows:
-
-1. Explicit `--framework <name>[@ref]` value: looked up in the registry; an `@ref` suffix overrides the registered ref for URL-based entries.
-2. With no `--framework` flag, the registry's `default` entry is used.
-
-If the requested name (or `default`) is not registered, `specs init` fails with a hint pointing at `specs framework add`. URLs and filesystem paths are not accepted on the command line — register them once and refer to them by name.

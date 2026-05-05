@@ -1,7 +1,7 @@
 // Integration tests for the core specs commands (version, init, doctor,
 // format, lint, framework). These build the binary into a tempdir and
 // invoke it against tempdir hosts with isolated HOME / XDG_CONFIG_HOME
-// so the tests never touch the user's real registry or git config.
+// so the tests never touch the user's real git config.
 package main_test
 
 import (
@@ -61,9 +61,8 @@ func TestInit_WritesConfig_FrameworkDir(t *testing.T) {
 	bin := buildBinary(t)
 	host := t.TempDir()
 	env := isolatedEnv(t)
-	registerPath(t, bin, host, env, "local-dev", "../specs-framework")
 
-	out, se, code := runSpecsEnv(t, bin, host, env, "init", "--framework", "local-dev")
+	out, se, code := runSpecsEnv(t, bin, host, env, "init", "--framework", "../specs-framework")
 	if code != 0 {
 		t.Fatalf("exit %d\nstdout:%s\nstderr:%s", code, out, se)
 	}
@@ -82,12 +81,11 @@ func TestInit_FailsWithoutForce(t *testing.T) {
 	bin := buildBinary(t)
 	host := t.TempDir()
 	env := isolatedEnv(t)
-	registerPath(t, bin, host, env, "x", "./x")
 
-	if _, _, code := runSpecsEnv(t, bin, host, env, "init", "--framework", "x"); code != 0 {
+	if _, _, code := runSpecsEnv(t, bin, host, env, "init", "--framework", "./x"); code != 0 {
 		t.Fatalf("first init unexpectedly failed (exit %d)", code)
 	}
-	_, se, code := runSpecsEnv(t, bin, host, env, "init", "--framework", "x")
+	_, se, code := runSpecsEnv(t, bin, host, env, "init", "--framework", "./x")
 	if code == 0 {
 		t.Fatalf("expected non-zero exit when .specs.yaml exists without --force")
 	}
@@ -100,7 +98,6 @@ func TestInit_RejectsConflictingFlags(t *testing.T) {
 	bin := buildBinary(t)
 	host := t.TempDir()
 	env := isolatedEnv(t)
-	registerURL(t, bin, host, env, "demo", "https://example.com/x.git", "")
 
 	_, _, code := runSpecsEnv(t, bin, host, env,
 		"init", "--framework", "demo", "unexpected", "extra", "args")
@@ -113,9 +110,8 @@ func TestDoctor_JSON_AfterInit(t *testing.T) {
 	bin := buildBinary(t)
 	host := t.TempDir()
 	env := isolatedEnv(t)
-	registerPath(t, bin, host, env, "local-dev", "../specs-framework")
 
-	if _, se, code := runSpecsEnv(t, bin, host, env, "init", "--framework", "local-dev"); code != 0 {
+	if _, se, code := runSpecsEnv(t, bin, host, env, "init", "--framework", "../specs-framework"); code != 0 {
 		t.Fatalf("init failed: exit %d\n%s", code, se)
 	}
 	out, se, code := runSpecsEnv(t, bin, host, env, "doctor", "--json")
@@ -165,50 +161,17 @@ func TestFormat_Check_DirtyFileFails(t *testing.T) {
 	}
 }
 
-func TestFrameworkList_EmptyRegistry(t *testing.T) {
+func TestFrameworkRejectsUnsupportedSubcommands(t *testing.T) {
 	bin := buildBinary(t)
 	host := t.TempDir()
 	env := isolatedEnv(t)
 
-	out, se, code := runSpecsEnv(t, bin, host, env, "framework", "list")
-	if code != 0 {
-		t.Fatalf("exit %d\nstderr: %s", code, se)
+	_, se, code := runSpecsEnv(t, bin, host, env, "framework", "list")
+	if code == 0 {
+		t.Fatalf("expected non-zero exit for legacy framework subcommand")
 	}
-	if !strings.Contains(out, "No frameworks registered") {
-		t.Errorf("expected 'No frameworks registered' message, got:\n%s", out)
-	}
-}
-
-func TestFrameworkAddListRemove_Roundtrip(t *testing.T) {
-	bin := buildBinary(t)
-	host := t.TempDir()
-	env := isolatedEnv(t)
-
-	if _, se, code := runSpecsEnv(t, bin, host, env,
-		"framework", "add", "demo",
-		"--url", "https://example.com/specs-framework.git",
-		"--ref", "v1.2.3"); code != 0 {
-		t.Fatalf("add: exit %d\n%s", code, se)
-	}
-
-	out, _, code := runSpecsEnv(t, bin, host, env, "framework", "list")
-	if code != 0 {
-		t.Fatalf("list exit %d", code)
-	}
-	if !strings.Contains(out, "demo") || !strings.Contains(out, "v1.2.3") {
-		t.Errorf("expected demo/v1.2.3 in list output:\n%s", out)
-	}
-
-	if _, se, code := runSpecsEnv(t, bin, host, env, "framework", "remove", "demo"); code != 0 {
-		t.Fatalf("remove: exit %d\n%s", code, se)
-	}
-
-	out, _, code = runSpecsEnv(t, bin, host, env, "framework", "list")
-	if code != 0 {
-		t.Fatalf("list-after-remove exit %d", code)
-	}
-	if strings.Contains(out, "demo") {
-		t.Errorf("removed entry still present:\n%s", out)
+	if !strings.Contains(se, "unknown subcommand") {
+		t.Errorf("expected unknown subcommand message, got: %s", se)
 	}
 }
 

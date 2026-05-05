@@ -26,16 +26,15 @@ Pre-conditions: `<dir>` does not exist or is empty.
 ## Exit point
 
 The output directory contains the empty skeleton. The caller is
-responsible for `git init`, pushing to a remote, and registering the
-result via [`specs framework add`](manage-framework-registry.md).
+responsible for `git init`, pushing to a remote, and pointing hosts at
+the framework via `specs init --framework <path-or-url>`.
 
 ## Workflow
 
 1. Run `specs framework seed --out /path/to/my-framework`.
 2. Author templates, process docs, skills, and agents.
 3. `git init`, commit, push to a remote.
-4. Register: `specs framework add my-org --url <remote> --ref main`.
-5. Use it: [`specs init --framework my-org`](setup-host.md).
+4. Use it: [`specs init --framework <remote-or-path>`](setup-host.md).
 
 ### Iteration
 

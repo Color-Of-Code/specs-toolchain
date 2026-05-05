@@ -12,24 +12,16 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"github.com/Color-Of-Code/specs-toolchain/engine/internal/cache"
 	"github.com/Color-Of-Code/specs-toolchain/engine/internal/config"
 	"github.com/Color-Of-Code/specs-toolchain/engine/internal/framework"
-	"github.com/Color-Of-Code/specs-toolchain/engine/internal/registry"
 )
 
 func cmdFramework(args []string) error {
 	if len(args) == 0 {
-		fmt.Fprintln(os.Stderr, "Usage: specs framework <list|add|remove|seed|update>")
+		fmt.Fprintln(os.Stderr, "Usage: specs framework <seed|update|skills|agents>")
 		return exitWith(2, "missing subcommand")
 	}
 	switch args[0] {
-	case "list":
-		return cmdFrameworkList(args[1:])
-	case "add":
-		return cmdFrameworkAdd(args[1:])
-	case "remove", "rm":
-		return cmdFrameworkRemove(args[1:])
 	case "seed":
 		return cmdFrameworkSeed(args[1:])
 	case "update":
@@ -39,7 +31,7 @@ func cmdFramework(args []string) error {
 	case "agents":
 		return cmdFrameworkAgents(args[1:])
 	case "-h", "--help", "help":
-		fmt.Fprintln(os.Stderr, "Usage: specs framework <list|add|remove|seed|update|skills|agents> [flags]")
+		fmt.Fprintln(os.Stderr, "Usage: specs framework <seed|update|skills|agents> [flags]")
 		return nil
 	default:
 		return exitWith(2, "unknown subcommand: specs framework %s", args[0])
@@ -48,8 +40,7 @@ func cmdFramework(args []string) error {
 
 // cmdFrameworkUpdate updates the framework content layer in place.
 //
-//	managed: fetch into the user cache and rewrite framework_ref
-//	local:   git fetch + checkout/pull inside framework_dir (no-op for non-git checkouts)
+//	local: git fetch + checkout/pull inside framework_dir (no-op for non-git checkouts)
 func cmdFrameworkUpdate(args []string) error {
 	fs2 := flag.NewFlagSet("framework update", flag.ContinueOnError)
 	to := fs2.String("to", "", "tag/branch/commit to check out (empty = pull current branch / default branch)")
@@ -67,8 +58,6 @@ func cmdFrameworkUpdate(args []string) error {
 	}
 
 	switch cfg.FrameworkMode {
-	case config.FrameworkModeManaged:
-		return updateManagedFramework(cfg, *to)
 	case config.FrameworkModeLocal:
 		if cfg.FrameworkDir == "" {
 			return exitWith(1, "framework_dir not found; run `specs init` or set framework_dir")
@@ -101,171 +90,6 @@ func runGit(dir string, args ...string) error {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	return cmd.Run()
-}
-
-// fetchManaged ensures the user-cache copy of a managed framework exists at
-// the requested ref. An empty ref defaults to "main". When dryRun is true,
-// the action is printed and the call is skipped; the returned path is empty.
-// The resolved ref is always returned so callers can persist it in
-// .specs.yaml.
-func fetchManaged(url, ref string, dryRun bool) (path, resolvedRef string, err error) {
-	resolvedRef = ref
-	if resolvedRef == "" {
-		resolvedRef = "main"
-	}
-	if dryRun {
-		fmt.Printf("would: fetch %s@%s into managed cache\n", url, resolvedRef)
-		return "", resolvedRef, nil
-	}
-	path, err = cache.Ensure(url, resolvedRef)
-	if err != nil {
-		return "", resolvedRef, exitWith(1, "fetch %s@%s: %v", url, resolvedRef, err)
-	}
-	return path, resolvedRef, nil
-}
-
-// updateManagedFramework fetches the requested ref into the user cache and rewrites
-// framework_ref in .specs.yaml so subsequent invocations resolve to it.
-func updateManagedFramework(cfg *config.Resolved, to string) error {
-	ref := to
-	if ref == "" {
-		ref = cfg.FrameworkRef
-	}
-	path, resolvedRef, err := fetchManaged(cfg.FrameworkURL, ref, false)
-	if err != nil {
-		return err
-	}
-	fmt.Printf("managed framework cached at %s\n", path)
-
-	// Always persist the resolved ref so the config stays authoritative even
-	// when --to was not given (e.g. defaults to "main").
-	if cfg.ConfigPath != "" && cfg.Source != nil && resolvedRef != cfg.FrameworkRef {
-		newFile := *cfg.Source
-		newFile.FrameworkRef = resolvedRef
-		if err := config.Save(cfg.ConfigPath, &newFile); err != nil {
-			return exitWith(1, "write %s: %v", cfg.ConfigPath, err)
-		}
-		fmt.Printf("updated %s: framework_ref=%s\n", cfg.ConfigPath, resolvedRef)
-	}
-	return nil
-}
-
-// cmdFrameworkList prints all registered framework entries.
-func cmdFrameworkList(args []string) error {
-	fs2 := flag.NewFlagSet("framework list", flag.ContinueOnError)
-	fs2.Usage = func() { fmt.Fprintln(os.Stderr, "Usage: specs framework list") }
-	if err := fs2.Parse(args); err != nil {
-		return err
-	}
-	reg, err := registry.Load("")
-	if err != nil {
-		return err
-	}
-	names := reg.Names()
-	if len(names) == 0 {
-		path, _ := registry.DefaultPath()
-		fmt.Printf("No frameworks registered (%s does not exist or is empty).\n", path)
-		return nil
-	}
-	for _, n := range names {
-		e := reg.Frameworks[n]
-		switch {
-		case e.URL != "":
-			ref := e.Ref
-			if ref == "" {
-				ref = "main"
-			}
-			fmt.Printf("%s\turl=%s\tref=%s\n", n, e.URL, ref)
-		case e.Path != "":
-			fmt.Printf("%s\tpath=%s\n", n, e.Path)
-		}
-	}
-	return nil
-}
-
-// cmdFrameworkAdd inserts or replaces an entry in the registry.
-func cmdFrameworkAdd(args []string) error {
-	if len(args) == 0 {
-		fmt.Fprintln(os.Stderr, "Usage: specs framework add <name> (--url <URL> [--ref <ref>] | --path <dir>)")
-		return exitWith(2, "missing name")
-	}
-	name := args[0]
-	fs2 := flag.NewFlagSet("framework add", flag.ContinueOnError)
-	url := fs2.String("url", "", "git URL of a remote framework source")
-	ref := fs2.String("ref", "", "tag/branch/commit (only with --url; default 'main')")
-	path := fs2.String("path", "", "local directory path of a framework source")
-	fs2.Usage = func() {
-		fmt.Fprintln(os.Stderr, "Usage: specs framework add <name> (--url <URL> [--ref <ref>] | --path <dir>)")
-		fs2.PrintDefaults()
-	}
-	if err := fs2.Parse(args[1:]); err != nil {
-		return err
-	}
-	entry := registry.Entry{URL: *url, Ref: *ref, Path: *path}
-	if entry.Path != "" {
-		// Expand a leading ~ for convenience and store an absolute path.
-		expanded, err := expandHome(entry.Path)
-		if err != nil {
-			return err
-		}
-		abs, err := filepath.Abs(expanded)
-		if err != nil {
-			return err
-		}
-		entry.Path = abs
-	}
-	if err := entry.Validate(); err != nil {
-		return exitWith(2, "%v", err)
-	}
-	reg, err := registry.Load("")
-	if err != nil {
-		return err
-	}
-	if err := reg.Add(name, entry); err != nil {
-		return err
-	}
-	if err := reg.Save(""); err != nil {
-		return err
-	}
-	regPath, _ := registry.DefaultPath()
-	fmt.Printf("registered %q in %s\n", name, regPath)
-	return nil
-}
-
-// cmdFrameworkRemove deletes an entry from the registry.
-func cmdFrameworkRemove(args []string) error {
-	if len(args) == 0 {
-		fmt.Fprintln(os.Stderr, "Usage: specs framework remove <name>")
-		return exitWith(2, "missing name")
-	}
-	name := args[0]
-	reg, err := registry.Load("")
-	if err != nil {
-		return err
-	}
-	if err := reg.Remove(name); err != nil {
-		return exitWith(1, "%v", err)
-	}
-	if err := reg.Save(""); err != nil {
-		return err
-	}
-	fmt.Printf("removed %q from registry\n", name)
-	return nil
-}
-
-// expandHome expands a leading "~" or "~/" segment to the user's home dir.
-func expandHome(p string) (string, error) {
-	if p == "~" || (len(p) >= 2 && p[:2] == "~/") {
-		home, err := os.UserHomeDir()
-		if err != nil {
-			return "", err
-		}
-		if p == "~" {
-			return home, nil
-		}
-		return filepath.Join(home, p[2:]), nil
-	}
-	return p, nil
 }
 
 func cmdFrameworkSeed(args []string) error {

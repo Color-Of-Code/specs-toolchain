@@ -42,7 +42,12 @@ Installing the extension and the engine side by side is fine and common: in ordi
 
 ## Advanced: starting with a custom framework
 
-Before running `specs init`, register the framework you want to use with `specs framework add` — for example, `specs framework add default --url https://github.com/Color-Of-Code/specs-framework.git --ref main`. `specs init` then resolves `--framework <name>` against the registry; with no `--framework` it picks the entry called `default`.
+Run `specs init` with either a local framework path or a remote git URL.
+
+- Local path example: `specs init --framework ../my-framework`
+- Remote URL example: `specs init --framework https://git.example.com/my-org/my-framework.git`
+
+When a URL is passed, init creates `specs/.framework` as a submodule and uses it as the framework directory.
 
 If you need to create a **brand-new framework from scratch** rather than forking an existing one:
 
@@ -53,10 +58,6 @@ git init && git add -A && git commit -m "initial skeleton"
 # push to your remote of choice
 ```
 
-Then register it for convenient reuse:
+Then use it from hosts with `specs init --framework <path-or-url>`.
 
-```bash
-specs framework add my-org --url https://git.example.com/my-org/my-framework.git
-```
-
-See [framework.md](framework.md) and [commands → Framework management](commands.md#framework-management-commands) for full details.
+See [framework.md](framework.md) and [commands](commands.md) for full details.

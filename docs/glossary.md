@@ -21,14 +21,8 @@ scenario that satisfies one or more requirements.
 ## Framework dir
 
 The directory holding the materialised framework content: `templates/`,
-`process/`, `skills/`, `agents/`, and lint configuration. In managed mode this
-is the user cache; in local mode it is the directory named by `framework_dir`.
-
-## Framework registry
-
-A user-level name-to-source mapping for framework sources, stored in
-`~/.config/specs/frameworks.yaml` on Linux and the platform equivalent
-elsewhere.
+`process/`, `skills/`, `agents/`, and lint configuration. This is the
+directory named by `framework_dir`.
 
 ## Framework source
 
@@ -40,17 +34,6 @@ either a remote git URL, a local directory path, or an empty seeded skeleton.
 The git repository that contains the specs root. It can be the specs root
 itself or a larger repository that contains the specs root as a subdirectory or
 submodule.
-
-## Local mode
-
-A framework consumption mode where the host points at a directory it controls
-via `framework_dir`. The engine reads from that directory but does not update
-it.
-
-## Managed mode
-
-The default framework consumption mode. The engine fetches the framework into
-the user cache and reuses it across hosts on the same machine.
 
 ## Model artifact
 

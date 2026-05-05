@@ -10,7 +10,7 @@ interface InitAnswers {
 }
 
 const FRAMEWORK_PROMPT =
-  "Registered framework name (--framework). Optional `@ref` overrides the registered ref. Leave empty to use the registry's `default` entry.";
+  "Framework source for --framework. Use a local path (for example ../framework) or a remote git URL (cloned as specs/.framework). Leave empty to use the default local path.";
 
 export async function runInitWizard(context: vscode.ExtensionContext): Promise<void> {
   const folder = pickFolder();

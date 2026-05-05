@@ -2,7 +2,7 @@
 
 ## Summary
 
-Refresh `.specs-framework` content (templates, process, skills, agents,
+Refresh framework content (templates, process, skills, agents,
 lint config) to a newer ref of the configured framework source.
 
 ## Owner
@@ -18,16 +18,15 @@ the framework maintainer without re-running the full setup.
 
 `specs framework update [--to <ref>]`
 
-Or VS Code palette: **Specs: Framework: Update cache**.
+Or VS Code palette: **Specs: Framework: Update**.
 
-Pre-conditions: the host is in `managed` framework mode (or a writable
-checkout); network access to the framework source URL.
+Pre-conditions: `framework_dir` points at a writable git checkout or
+submodule; network access to the framework remote.
 
 ## Exit point
 
-`framework_ref` in `.specs.yaml` is rewritten to the new ref and the
-content is re-fetched into the cache. The host repo's only diff is
-`.specs.yaml`.
+The framework checkout is fetched and optionally checked out to `--to <ref>`.
+For submodule-based setups, the host repo records the updated submodule commit.
 
 ## Iteration
 

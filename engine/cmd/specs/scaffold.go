@@ -10,11 +10,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/Color-Of-Code/specs-toolchain/engine/internal/cache"
 	"github.com/Color-Of-Code/specs-toolchain/engine/internal/config"
 )
 
-// cmdScaffold instantiates one of the canonical templates from .specs-framework
+// cmdScaffold instantiates one of the canonical templates from .framework
 // into either the model tree or a CR-local working tree.
 //
 // Usage:
@@ -60,13 +59,8 @@ func cmdScaffold(args []string) error {
 	if cfg.SpecsRoot == "" {
 		return exitWith(2, "could not determine specs root")
 	}
-	if cfg.FrameworkMode == config.FrameworkModeManaged {
-		if _, err := cache.Ensure(cfg.FrameworkURL, cfg.FrameworkRef); err != nil {
-			return exitWith(1, "fetch managed framework: %v", err)
-		}
-	}
 	if cfg.FrameworkDir == "" {
-		return exitWith(1, "framework dir not available; run `specs init` or set framework_dir/framework_url")
+		return exitWith(1, "framework dir not available; run `specs init` or set framework_dir")
 	}
 
 	tplName, dirName, ok := scaffoldKindMap(kind)
@@ -257,11 +251,6 @@ func cmdCRNew(args []string) error {
 	cfg, err := config.Load("")
 	if err != nil {
 		return err
-	}
-	if cfg.FrameworkMode == config.FrameworkModeManaged {
-		if _, err := cache.Ensure(cfg.FrameworkURL, cfg.FrameworkRef); err != nil {
-			return exitWith(1, "fetch managed framework: %v", err)
-		}
 	}
 	if cfg.FrameworkDir == "" {
 		return exitWith(1, "framework dir not available")

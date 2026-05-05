@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/Color-Of-Code/specs-toolchain/engine/internal/cache"
 	"github.com/Color-Of-Code/specs-toolchain/engine/internal/config"
 	"github.com/Color-Of-Code/specs-toolchain/engine/internal/lint"
 )
@@ -32,13 +31,6 @@ func cmdLint(args []string) error {
 	}
 	if cfg.SpecsRoot == "" {
 		return exitWith(2, "could not determine specs root; run from within a specs repo or pass via .specs.yaml")
-	}
-
-	// Managed mode: fetch into the user cache on first use.
-	if cfg.FrameworkMode == config.FrameworkModeManaged {
-		if _, err := cache.Ensure(cfg.FrameworkURL, cfg.FrameworkRef); err != nil {
-			return exitWith(1, "fetch managed framework: %v", err)
-		}
 	}
 
 	r := &lint.Result{}

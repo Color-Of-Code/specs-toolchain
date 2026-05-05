@@ -4,10 +4,11 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"strings"
 
 	"github.com/Color-Of-Code/specs-toolchain/engine/internal/config"
-	"github.com/Color-Of-Code/specs-toolchain/engine/internal/registry"
 )
 
 // cmdInit configures a host repository for use with the specs toolchain.
@@ -23,17 +24,12 @@ import (
 // `<path>` defaults to the current directory.
 //
 // `--framework <source>` accepts:
-//   - omitted              -> the registry's "default" entry
-//   - a registered name    (e.g. "default", "acme")
-//   - a name with ref override (e.g. "acme@v2.1") for URL-based entries
-//
-// Frameworks must be registered first via `specs framework add`. URLs and
-// filesystem paths are not accepted directly. The registry decides whether
-// the source is a remote git URL (managed mode) or a local directory
-// (local mode).
+//   - omitted              -> use local "./framework"
+//   - filesystem path      -> persisted as framework_dir
+//   - remote git URL       -> cloned as submodule at specs/.framework
 func cmdInit(args []string) error {
 	fs := flag.NewFlagSet("init", flag.ContinueOnError)
-	frameworkSpec := fs.String("framework", "", "registered framework name (or name@ref for URL-based entries); empty resolves the \"default\" entry. Register sources with `specs framework add` first.")
+	frameworkSpec := fs.String("framework", "", "framework source: local path or remote git URL. URLs are cloned as specs/.framework submodules; local paths are written to framework_dir.")
 	withModel := fs.Bool("with-model", false, "create empty model/, product/, and change-requests/ skeletons")
 	withVSCode := fs.Bool("with-vscode", false, "write .vscode/tasks.json")
 	force := fs.Bool("force", false, "overwrite an existing .specs.yaml")
@@ -72,30 +68,22 @@ func cmdInit(args []string) error {
 		return exitWith(1, "%s already exists (use --force to overwrite)", cfgPath)
 	}
 
-	entry, err := registry.Lookup(*frameworkSpec)
-	if err != nil {
-		return exitWith(2, "resolve framework: %v", err)
-	}
-
 	if err := ensureDir(specsRoot, *dryRun); err != nil {
 		return err
 	}
 
+	frameworkInput := strings.TrimSpace(*frameworkSpec)
+	if frameworkInput == "" {
+		frameworkInput = "./framework"
+	}
+
 	f := &config.File{MinSpecsVersion: Version}
-	if entry.Path != "" {
-		// Local entry: record framework_dir, do not materialise anything.
-		f.FrameworkDir = entry.Path
-	} else {
-		// URL entry: fetch into the managed cache, record url+ref.
-		path, ref, err := fetchManaged(entry.URL, entry.Ref, *dryRun)
-		if err != nil {
+	if looksLikeGitURL(frameworkInput) {
+		if err := setupFrameworkSubmodule(specsRoot, frameworkInput, *dryRun); err != nil {
 			return err
 		}
-		if !*dryRun {
-			fmt.Printf("managed framework cached at %s\n", path)
-		}
-		f.FrameworkURL = entry.URL
-		f.FrameworkRef = ref
+	} else {
+		f.FrameworkDir = frameworkInput
 	}
 
 	if err := saveConfig(cfgPath, f, *dryRun); err != nil {
@@ -103,6 +91,51 @@ func cmdInit(args []string) error {
 	}
 
 	return finalizeInit(specsRoot, *withModel, *withVSCode, *dryRun)
+}
+
+func setupFrameworkSubmodule(specsRoot, frameworkURL string, dryRun bool) error {
+	hostRoot := gitRepoRoot(specsRoot)
+	if hostRoot == "" {
+		return exitWith(2, "--framework URL requires a git host repository")
+	}
+
+	submoduleDir := filepath.Join(specsRoot, ".framework")
+	if st, err := os.Stat(submoduleDir); err == nil && st.IsDir() {
+		return nil
+	}
+
+	relPath, err := filepath.Rel(hostRoot, submoduleDir)
+	if err != nil {
+		return err
+	}
+	relPath = filepath.ToSlash(relPath)
+
+	return runOrLog(dryRun, fmt.Sprintf("git -C %s submodule add %s %s", hostRoot, frameworkURL, relPath), func() error {
+		cmd := exec.Command("git", "-C", hostRoot, "submodule", "add", frameworkURL, relPath)
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		if err := cmd.Run(); err != nil {
+			return exitWith(1, "git submodule add failed: %v", err)
+		}
+		return nil
+	})
+}
+
+func looksLikeGitURL(value string) bool {
+	v := strings.ToLower(value)
+	return strings.HasPrefix(v, "http://") ||
+		strings.HasPrefix(v, "https://") ||
+		strings.HasPrefix(v, "ssh://") ||
+		strings.HasPrefix(value, "git@")
+}
+
+func gitRepoRoot(start string) string {
+	cmd := exec.Command("git", "-C", start, "rev-parse", "--show-toplevel")
+	out, err := cmd.Output()
+	if err != nil {
+		return ""
+	}
+	return strings.TrimSpace(string(out))
 }
 
 // ensureDir creates the specs root if it does not exist.

@@ -105,11 +105,6 @@
         "category": "Specs"
       },
       {
-        "command": "specs.registerFrameworks",
-        "title": "Register Frameworks",
-        "category": "Specs"
-      },
-      {
         "command": "specs.doctor",
         "title": "Doctor",
         "category": "Specs"
@@ -131,7 +126,7 @@
       },
       {
         "command": "specs.frameworkUpdate",
-        "title": "Framework: Update cache",
+        "title": "Framework: Update",
         "category": "Specs"
       },
       {
@@ -310,34 +305,6 @@
           "type": "string",
           "default": "",
           "description": "Explicit path to the specs engine binary. Overrides workspace-local, bundled, and PATH lookup."
-        },
-        "specs.frameworks": {
-          "type": "array",
-          "default": [],
-          "markdownDescription": "Framework entries to register with `specs framework add` when using **Specs: Register Frameworks**. Each entry maps a short name to either a remote git URL or a local path. URL-based entries may optionally pin a git ref (branch, tag, or SHA).",
-          "items": {
-            "type": "object",
-            "required": ["name"],
-            "additionalProperties": false,
-            "properties": {
-              "name": {
-                "type": "string",
-                "description": "Short name used to reference this framework (e.g. 'default', 'acme')."
-              },
-              "url": {
-                "type": "string",
-                "description": "Git URL of the remote framework repository. Mutually exclusive with 'path'."
-              },
-              "ref": {
-                "type": "string",
-                "description": "Git ref (branch, tag, or SHA) to pin for a URL-based entry. Defaults to 'main' when omitted."
-              },
-              "path": {
-                "type": "string",
-                "description": "Absolute or workspace-relative path to a local framework directory. Mutually exclusive with 'url'."
-              }
-            }
-          }
         }
       }
     }

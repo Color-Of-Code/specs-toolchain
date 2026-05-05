@@ -23,7 +23,7 @@ Follow this path the first time through:
 | do day-to-day authoring work                                             | [Use cases](use-cases/README.md)                                |
 | browse the concept pages by topic                                        | [Concepts](concepts.md)                                         |
 | understand the artifact model and canonical paths                        | [Model](model.md) and [Glossary](glossary.md)                   |
-| understand framework sources, registry, and modes                        | [Framework](framework.md) and [Configuration](configuration.md) |
+| understand framework sources and framework directory behavior             | [Framework](framework.md) and [Configuration](configuration.md) |
 | understand who usually owns each part of the work                        | [Ownership](ownership.md)                                       |
 | look up exact command syntax                                             | [Commands](commands.md)                                         |
 | inspect relation names and meanings in SysML                             | [Relations in SysML](relations.md)                              |
@@ -42,7 +42,7 @@ Follow this path the first time through:
 
 ### Framework administration
 
-`manage-framework-registry` → `update-framework` → `configure-vscode`
+`seed-new-framework` → `update-framework` → `configure-vscode`
 
 ## Reference map
 
@@ -50,6 +50,6 @@ Follow this path the first time through:
 - [Concepts](concepts.md) for the concept index.
 - [Ownership](ownership.md) for the short actor and role map.
 - [Commands](commands.md) for terminal syntax.
-- [Configuration](configuration.md) for `.specs.yaml` and framework registry.
+- [Configuration](configuration.md) for `.specs.yaml`.
 - [Glossary](glossary.md) for exact terminology.
 - [Development](development.md) for building and releasing the toolchain.

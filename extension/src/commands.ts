@@ -38,9 +38,6 @@ export function registerCommands(context: vscode.ExtensionContext): void {
   // Change-requests.
   reg("specs.cr.new", () => crNew(context));
   reg("specs.cr.drain", () => crDrain(context));
-
-  // Framework registry.
-  reg("specs.registerFrameworks", () => registerFrameworks(context));
 }
 
 // --- helpers ---
@@ -173,49 +170,3 @@ async function visualize(context: vscode.ExtensionContext): Promise<void> {
   await vscode.window.showTextDocument(doc, { preview: true });
 }
 
-interface FrameworkEntry {
-  name: string;
-  url?: string;
-  ref?: string;
-  path?: string;
-}
-
-/**
- * Reads specs.frameworks from settings and calls `specs framework add` for
- * each entry, so the user-level registry stays in sync with their VS Code
- * configuration without manual terminal commands.
- */
-async function registerFrameworks(context: vscode.ExtensionContext): Promise<void> {
-  const cfg = vscode.workspace.getConfiguration("specs");
-  const entries = cfg.get<FrameworkEntry[]>("frameworks", []);
-
-  if (entries.length === 0) {
-    vscode.window.showInformationMessage(
-      "No frameworks configured. Add entries to 'specs.frameworks' in Settings.",
-    );
-    return;
-  }
-
-  const target = getSpecsExecutionTarget({ warnIfMissing: true });
-  if (!target) {
-    return;
-  }
-
-  for (const entry of entries) {
-    if (!entry.name) {
-      continue;
-    }
-    const args = ["framework", "add", entry.name];
-    if (entry.url) {
-      args.push("--url", entry.url);
-      if (entry.ref) {
-        args.push("--ref", entry.ref);
-      }
-    } else if (entry.path) {
-      args.push("--path", entry.path);
-    } else {
-      continue; // neither url nor path — skip silently
-    }
-    runInTerminal(context, args, target.cwd);
-  }
-}

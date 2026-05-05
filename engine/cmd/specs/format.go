@@ -115,11 +115,11 @@ func cmdFormat(args []string) error {
 func isExcludedPath(rel string) bool {
 	rel = filepath.ToSlash(rel)
 	excluded := map[string]struct{}{
-		".specs-framework": {},
-		".git":             {},
-		"node_modules":     {},
-		".lint":            {},
-		"dist":             {},
+		".framework":   {},
+		".git":         {},
+		"node_modules": {},
+		".lint":        {},
+		"dist":         {},
 	}
 	for _, part := range strings.Split(rel, "/") {
 		if _, ok := excluded[part]; ok {

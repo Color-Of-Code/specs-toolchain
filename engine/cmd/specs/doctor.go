@@ -25,8 +25,6 @@ type doctorJSON struct {
 	SpecsMode         string            `json:"specs_mode"`
 	FrameworkDir      string            `json:"framework_dir"`
 	FrameworkMode     string            `json:"framework_mode"`
-	FrameworkURL      string            `json:"framework_url,omitempty"`
-	FrameworkRef      string            `json:"framework_ref,omitempty"`
 	FrameworkRev      string            `json:"framework_rev,omitempty"`
 	ModelDir          string            `json:"model_dir"`
 	ProductDir        string            `json:"product_dir"`
@@ -80,19 +78,11 @@ func cmdDoctor(args []string) error {
 	if cfg.FrameworkDir != "" {
 		fmt.Printf("framework dir:    %s%s\n", cfg.FrameworkDir, existsSuffix(cfg.FrameworkDir))
 		fmt.Printf("framework mode:   %s\n", cfg.FrameworkMode)
-		if cfg.FrameworkMode == config.FrameworkModeManaged {
-			fmt.Printf("framework url:    %s\n", cfg.FrameworkURL)
-			ref := cfg.FrameworkRef
-			if ref == "" {
-				ref = "(unset; defaults to main on next fetch)"
-			}
-			fmt.Printf("framework ref:    %s\n", ref)
-		}
 		if rev := gitShortRev(cfg.FrameworkDir); rev != "" {
 			fmt.Printf("framework rev:    %s\n", rev)
 		}
 	} else {
-		fmt.Println("framework dir:    <missing> (run `specs init` or set framework_url/framework_dir)")
+		fmt.Println("framework dir:    <missing> (run `specs init` or set framework_dir)")
 	}
 	fmt.Printf("model dir:        %s\n", cfg.ModelDir)
 	fmt.Printf("product dir:      %s\n", cfg.ProductDir)
@@ -199,8 +189,6 @@ func emitDoctorJSON(cfg *config.Resolved) error {
 		SpecsMode:         string(cfg.SpecsMode),
 		FrameworkDir:      cfg.FrameworkDir,
 		FrameworkMode:     string(cfg.FrameworkMode),
-		FrameworkURL:      cfg.FrameworkURL,
-		FrameworkRef:      cfg.FrameworkRef,
 		ModelDir:          cfg.ModelDir,
 		ProductDir:        cfg.ProductDir,
 		ChangeRequestsDir: cfg.ChangeRequestsDir,

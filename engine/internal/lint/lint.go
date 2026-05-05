@@ -33,11 +33,11 @@ func (r *Result) warnf(format string, a ...any) {
 // lint script and the style config ignore list. Matches at any depth
 // (e.g. extension/node_modules/...).
 var excludedPathComponents = map[string]struct{}{
-	".specs-framework": {},
-	".lint":            {},
-	"node_modules":     {},
-	".git":             {},
-	"dist":             {},
+	".framework":   {},
+	".lint":        {},
+	"node_modules": {},
+	".git":         {},
+	"dist":         {},
 }
 
 func isExcludedRel(rel string) bool {

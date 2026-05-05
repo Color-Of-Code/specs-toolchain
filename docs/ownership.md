@@ -24,10 +24,10 @@ model.
 
 | Role                 | Responsibility                                                      | Typical commands                                                                        |
 | -------------------- | ------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
-| Any user             | local installation, diagnostics, and per-machine framework registry | `specs doctor`, `specs framework add`, `specs framework list`, `specs framework remove` |
-| Project owner        | host setup, framework mode selection, editor task setup             | `specs init`, `specs vscode init`, `specs framework update`                             |
+| Any user             | local installation and diagnostics                                  | `specs doctor`                                                                           |
+| Project owner        | host setup, framework source selection, editor task setup           | `specs init`, `specs vscode init`, `specs framework update`                             |
 | Reviewer             | traceability and structure checks before merge                      | `specs graph validate`, `specs visualize traceability`                                  |
-| Framework maintainer | create and publish framework content for downstream hosts           | `specs framework seed`, registry publication workflows                                  |
+| Framework maintainer | create and publish framework content for downstream hosts           | `specs framework seed`                                                                   |
 
 See [roles.md](roles.md) for the longer role-by-role detail.
 
@@ -35,4 +35,4 @@ See [roles.md](roles.md) for the longer role-by-role detail.
 
 - Use [use-cases/README.md](use-cases/README.md) when you already know the task.
 - Use [model.md](model.md) when you need the artifact model and traceability context.
-- Use [framework.md](framework.md) when you need framework source, registry, or mode details.
+- Use [framework.md](framework.md) when you need framework source and directory-mode details.

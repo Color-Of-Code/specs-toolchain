@@ -12,7 +12,7 @@ who normally owns a task.
 
 - First-time setup: [Set up a host](setup-host.md) → [Diagnose the environment](diagnose-environment.md)
 - Daily authoring: [Author a change request](author-change-request.md) → [Scaffold a model artifact](scaffold-model-artifact.md) → [Lint and format specifications](lint-and-format.md) → [Verify traceability links](verify-traceability.md)
-- Framework administration: [Manage the framework registry](manage-framework-registry.md) → [Update the framework content layer](update-framework.md) → [Configure VS Code integration](configure-vscode.md)
+- Framework administration: [Seed a brand-new framework](seed-new-framework.md) → [Update the framework content layer](update-framework.md) → [Configure VS Code integration](configure-vscode.md)
 
 ## Authoring (day-to-day)
 
@@ -32,5 +32,4 @@ who normally owns a task.
 | [Diagnose the environment](diagnose-environment.md)           | Any user *(role)*                  |
 | [Update the framework content layer](update-framework.md)     | Project owner *(role)*             |
 | [Configure VS Code integration](configure-vscode.md)          | Project owner *(role)* or Any user |
-| [Manage the framework registry](manage-framework-registry.md) | Any user *(role)*                  |
 | [Seed a brand-new framework](seed-new-framework.md)           | Framework maintainer *(role)*      |
