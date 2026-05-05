@@ -8,16 +8,15 @@ Every command below is reachable as `specs <command>` on the terminal. Most are 
 - `specs doctor` — diagnose environment, layout, and version drift.
 - `specs init [<path>] [--framework <name>[@ref]] [--with-model] [--with-vscode] [--force] [--dry-run]`
   Create or configure a host. `<path>` defaults to the current directory and is created if missing. `--framework` takes a name registered with `specs framework add` (for example `acme`, or `acme@v2.1` to override the registered ref). When `--framework` is omitted the registry's `default` entry is used; if no entries are registered, `specs init` fails. URL-based entries are fetched into the user cache (managed mode); path-based entries are recorded in `framework_dir` and left untouched, so the host can hold the framework as a plain folder, a git submodule, or a vendored snapshot — whichever fits.
-- `specs lint [--all] [--links] [--style] [--baselines]` — run lint checks. With no flag, all checks run.
+- `specs lint [--all] [--links] [--style]` — run lint checks. With no flag, all checks run.
 - `specs format [--check] [--at <path>] [files...]` — format markdown files in place; `--check` exits non-zero if any file would change.
 - `specs framework update [--to <ref>]` — update the `.specs-framework` content layer.
 - `specs scaffold <kind> [--cr <NNN>] [--title <t>] [--force] [--dry-run] <path>` — instantiate a template (`product-requirement`, `requirement`, `use-case`, or `component`). Without `--cr`, `product-requirement` lands directly under `product/<path>.md`; the model kinds land under `model/<kind>s/<path>.md`. With `--cr`, every kind goes into the matching `change-requests/CR-NNN-*/<kind>s/` subtree.
 - `specs cr new --id <NNN> --slug <slug> [--title <t>] [--force] [--dry-run]` — create a new change request from the template tree.
 - `specs cr status` — list change requests with file counts per area.
 - `specs cr drain --id <NNN> [--yes] [--dry-run]` — interactively `git mv` CR-local files to canonical model homes.
-- `specs baseline update [--only <substr>] [--dry-run]` — refresh stale canonical baseline SHAs from `git log` and regenerate component baseline fields.
-- `specs graph validate [--manifest <path>] [--json]` — validate the canonical traceability graph files, referenced markdown artifacts, and baseline repo mappings.
-- `specs graph import-markdown [--manifest <path>] [--force] [--dry-run] [--json]` — import the current markdown relationship fields and baseline table into canonical graph YAML.
+- `specs graph validate [--manifest <path>] [--json]` — validate the canonical traceability graph files, referenced markdown artifacts, and configured repo mappings.
+- `specs graph import-markdown [--manifest <path>] [--force] [--dry-run] [--json]` — import the current markdown relationship fields into canonical graph YAML.
 - `specs graph generate-markdown [--manifest <path>] [--dry-run] [--json]` — project canonical graph relations back into markdown field tables.
 - `specs graph rebuild-cache [--manifest <path>] [--cache <path>] [--dry-run] [--json]` — rebuild the derived SQLite cache from canonical graph YAML.
 - `specs graph save-relations [--manifest <path>] [--in <path>|-] [--json]` — update canonical relation entries from a JSON payload.

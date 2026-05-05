@@ -8,7 +8,7 @@ framework content.
 
 ## Owner
 
-**Any user** *(role)* — see [../roles.md](../roles.md). First call when something is not working locally.
+**Any user** *(role)* — see [../ownership.md](../ownership.md). First call when something is not working locally.
 
 ## Purpose
 

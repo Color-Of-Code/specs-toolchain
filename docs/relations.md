@@ -1,6 +1,9 @@
 # Relations in SysML
 
-The terms source and target in the actual SysML dependency direction: client/dependent element → supplier/independent element. Note: most arrows point opposite to the “top-down requirement flow” people often expect.
+The source and target columns below follow the actual SysML dependency
+direction: client/dependent element → supplier/independent element. Most
+arrows therefore point opposite to the top-down requirement flow people often
+expect.
 
 | Source                                          | Target                                             | Standard name                       | Purpose                                                                                                                                          |
 | ----------------------------------------------- | -------------------------------------------------- | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -17,4 +20,5 @@ Two useful clarifications:
 1. deriveReqt is the correct SysML standard name for the derivation relation. If you say “derive” informally, that is understandable, but the standard keyword is deriveReqt.
 2. Containment is a special case in this list: it is structural ownership of a sub-requirement by a composite requirement, not one of the stereotyped dependency names like deriveReqt or satisfy.
 
-If you want, I can also convert this into the exact PR/MR/use-case/component vocabulary used in concepts.md and point out where your current terminology matches or diverges from standard SysML.
+For the toolchain's artifact vocabulary, see [model.md](model.md) and
+[glossary.md](glossary.md).

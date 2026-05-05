@@ -9,7 +9,7 @@ remote.
 
 ## Owner
 
-**Framework maintainer** *(role)* — see [../roles.md](../roles.md). Authoring a bespoke framework that downstream host projects can consume. Not part of the authoring chain inside a host project.
+**Framework maintainer** *(role)* — see [../ownership.md](../ownership.md). Authoring a bespoke framework that downstream host projects can consume. Not part of the authoring chain inside a host project.
 
 ## Purpose
 

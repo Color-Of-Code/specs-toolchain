@@ -59,4 +59,4 @@ Then register it for convenient reuse:
 specs framework add my-org --url https://git.example.com/my-org/my-framework.git
 ```
 
-See [concepts → Framework sources](concepts.md#framework-sources) and [commands → Framework management](commands.md#framework-management-commands) for full details.
+See [framework.md](framework.md) and [commands → Framework management](commands.md#framework-management-commands) for full details.

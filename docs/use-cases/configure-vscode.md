@@ -7,7 +7,7 @@ from the VS Code task runner with no manual JSON authoring.
 
 ## Owner
 
-**Project owner** *(role)* when seeding tasks for the team, or **Any user** *(role)* configuring their own checkout — see [../roles.md](../roles.md).
+**Project owner** *(role)* when seeding tasks for the team, or **Any user** *(role)* configuring their own checkout — see [../ownership.md](../ownership.md).
 
 ## Purpose
 

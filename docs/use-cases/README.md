@@ -1,8 +1,18 @@
 # Use cases
 
-User-facing workflows exposed by the specs engine. Each file describes one use case as: **Summary**, **Owner**, **Purpose**, **Entry point**, **Exit point**, and (where the flow has decision points) a **Workflow** with iteration loops.
+Task-oriented workflows exposed by the specs engine. Each page describes one
+use case in terms of **Summary**, **Owner**, **Purpose**, **Entry point**, and
+**Exit point**.
 
-The **Owner** column below names whichever party is normally responsible. Authoring use cases are owned by an **actor** in the authoring chain (see [../actors.md](../actors.md)); setup, review, and maintenance use cases are owned by an operational **role** (see [../roles.md](../roles.md)). For a one-page summary of what the engine delivers, see [../overview.md](../overview.md).
+Use [../overview.md](../overview.md) when you need a fast router through the
+docs. Use [../ownership.md](../ownership.md) when you need the short answer to
+who normally owns a task.
+
+## Quick paths
+
+- First-time setup: [Set up a host](setup-host.md) → [Diagnose the environment](diagnose-environment.md)
+- Daily authoring: [Author a change request](author-change-request.md) → [Scaffold a model artifact](scaffold-model-artifact.md) → [Lint and format specifications](lint-and-format.md) → [Verify traceability links](verify-traceability.md)
+- Framework administration: [Manage the framework registry](manage-framework-registry.md) → [Update the framework content layer](update-framework.md) → [Configure VS Code integration](configure-vscode.md)
 
 ## Authoring (day-to-day)
 
@@ -12,7 +22,6 @@ The **Owner** column below names whichever party is normally responsible. Author
 | [Scaffold a model artifact](scaffold-model-artifact.md)          | Author / Analyst / Architect *(actors)*                               |
 | [Lint and format specifications](lint-and-format.md)             | Any authoring actor                                                   |
 | [Verify traceability links](verify-traceability.md)              | Reviewer *(role)* — typically Author / Analyst / Architect themselves |
-| [Maintain component baselines](maintain-baselines.md)            | Architect *(actor)*                                                   |
 | [Visualize the traceability graph](visualize-traceability.md)    | Any authoring actor; consumed by Reviewers and Stakeholders           |
 
 ## Setup and maintenance (one-off or occasional)

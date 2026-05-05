@@ -4,6 +4,9 @@ The toolchain is built around a short, linear authoring chain. Four actors
 cover everything the engine is concerned with; one person may hold several
 of these roles in the same project.
 
+For the short ownership map, start with [ownership.md](ownership.md). This
+page is the longer narrative version of the authoring chain.
+
 Setup, review, and framework-distribution work happens **outside** this
 chain and is described as *operational roles* in [roles.md](roles.md).
 
@@ -54,11 +57,9 @@ by at least one use case.
 
 ## Architect
 
-Decomposes use cases into **components**. The architect
-also keeps component baselines aligned with their upstream repositories.
+Decomposes use cases into **components**.
 
 - Scaffolds artifacts: `specs scaffold component --cr <NNN> <path>`.
-- Maintains canonical component baselines: `specs baseline update`.
 - Verifies traceability: `specs graph validate`,
   `specs visualize traceability`.
 

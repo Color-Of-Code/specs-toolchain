@@ -9,7 +9,7 @@ URLs.
 
 ## Owner
 
-**Any user** *(role)* — see [../roles.md](../roles.md). Each contributor maintains the framework registry on their own workstation. Not part of the authoring chain.
+**Any user** *(role)* — see [../ownership.md](../ownership.md). Each contributor maintains the framework registry on their own workstation. Not part of the authoring chain.
 
 ## Purpose
 

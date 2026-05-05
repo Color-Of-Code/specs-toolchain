@@ -1,104 +1,55 @@
 # Overview
 
-A single-page summary of what the **specs engine** delivers. Everything below
-is a feature of the `specs` binary; the VS Code extension is a thin wrapper
-and is not covered here.
+Use this page to get to the right document quickly. The specs engine helps a
+team author product requirements, model requirements, use cases, and
+components in markdown with formatting and traceability checks.
 
-## What the engine is for
+## Start here
 
-A small CLI that lets a team author a structured specification model in
-markdown — product requirements, model requirements, use cases, components —
-with guaranteed formatting, traceability, and baseline integrity.
+Follow this path the first time through:
 
-## The model
+1. [Install the engine or extension](install.md).
+2. [Set up a host](use-cases/setup-host.md).
+3. [Author a change request](use-cases/author-change-request.md).
+4. [Lint and format specifications](use-cases/lint-and-format.md).
+5. [Verify traceability links](use-cases/verify-traceability.md).
 
-Four artifact kinds, scaffolded from templates:
+## Find the right doc
 
-| Kind                | Owned by    | Purpose                                                                      |
-| ------------------- | ----------- | ---------------------------------------------------------------------------- |
-| Product requirement | Stakeholder | What was asked for, in the stakeholder's vocabulary. Lives under `product/`. |
-| Requirement         | Author      | A single, testable re-formulation of one or more product requirements.       |
-| Use case            | Analyst     | A scenario that satisfies one or more requirements.                          |
-| Component           | Architect   | A unit of implementation pinned to an upstream repo.                         |
+| If you want to...                                                        | Read                                                            |
+| ------------------------------------------------------------------------ | --------------------------------------------------------------- |
+| understand what the toolchain does at a high level                       | [Installation](install.md) and [Use cases](use-cases/README.md) |
+| start work in a new repo                                                 | [Set up a host](use-cases/setup-host.md)                        |
+| do day-to-day authoring work                                             | [Use cases](use-cases/README.md)                                |
+| browse the concept pages by topic                                        | [Concepts](concepts.md)                                         |
+| understand the artifact model and canonical paths                        | [Model](model.md) and [Glossary](glossary.md)                   |
+| understand framework sources, registry, and modes                        | [Framework](framework.md) and [Configuration](configuration.md) |
+| understand who usually owns each part of the work                        | [Ownership](ownership.md)                                       |
+| look up exact command syntax                                             | [Commands](commands.md)                                         |
+| inspect relation names and meanings in SysML                             | [Relations in SysML](relations.md)                              |
+| work on the toolchain itself                                             | [Development](development.md)                                   |
 
-Product requirements live under `product/`; the rest live under `model/`.
-All artifacts are written in markdown.
+## Common paths
 
-## The authoring chain
+### First-time setup
 
-```text
-Stakeholder ──► Author ──► Analyst ──► Architect
- product       requirements   use cases   components
- requirement
-```
+`install` → `setup-host` → `diagnose-environment`
 
-Stakeholders capture demands as **product requirements** inside change
-requests; authors re-formulate them as model **requirements**; analysts and
-architects refine those into use cases, components. See
-[actors.md](actors.md) for details. Setup, review, and framework distribution
-work is described as *operational roles* in [roles.md](roles.md).
+### Daily authoring
 
-## The change-request lifecycle
+`author-change-request` → `scaffold-model-artifact` → `lint-and-format` →
+`verify-traceability`
 
-Work happens inside numbered change-request folders so it can be reviewed
-in isolation before joining the canonical model.
+### Framework administration
 
-```text
-specs cr new      ──►  draft inside change-requests/NNN-slug/
-specs scaffold    ──►  add requirements / use cases / components / ...
-specs format      ──►  normalise markdown
-specs lint        ──►  style + links + baselines
-specs cr drain    ──►  git mv into canonical model paths
-```
+`manage-framework-registry` → `update-framework` → `configure-vscode`
 
-## What the engine guarantees
+## Reference map
 
-- **Consistent markdown** — `specs format` rewrites files in place,
-  `specs format --check` is a CI gate.
-- **Style compliance** — `specs lint --style` enforces the configured
-  rules (defaults compiled in, overridable via `style.yaml`).
-- **Traceability integrity** — `specs graph validate` verifies that the
-  canonical traceability graph is well-formed, points at real markdown
-  artifacts, and uses valid baseline repo mappings.
-- **Component baselines** — `specs lint --baselines` detects drift between
-  recorded SHAs and the real upstream commits;
-  `specs baseline update` refreshes canonical baseline entries and regenerates
-  component baseline fields.
-- **Visual traceability** — `specs visualize traceability` renders the
-  graph as Mermaid or JSON.
-- **Diagnostics** — `specs doctor` prints engine version, resolved paths,
-  framework mode, and version drift.
-
-## What the engine does *not* do
-
-- Render or publish documents — output is markdown, period.
-- Manage tickets, sprints, or workflow approvals.
-- Lock authors out of files — coordination is via change requests and
-  normal git review.
-
-## Where things live
-
-| Path                        | Contents                                                                                                                   |
-| --------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| `.specs.yaml`               | Per-host configuration; resolves paths and framework.                                                                      |
-| `product/`                  | Stakeholder-facing product requirements.                                                                                   |
-| `model/`                    | Canonical model artifacts (requirements, use cases, components).                                                           |
-| `change-requests/NNN-slug/` | Work in progress, drained into `product/` and `model/` on merge.                                                           |
-| `.specs-framework`          | Framework content (templates, lint config). Either fetched into the user cache (managed) or supplied as a local directory. |
-
-## Getting started
-
-1. Install the binary: see [install.md](install.md).
-2. Initialise a host: `specs init`.
-3. Verify the setup: `specs doctor`.
-4. Open a change request and start authoring: see [actors.md](actors.md)
-   and [use-cases/](use-cases/README.md).
-
-## Reference
-
-- [Concepts](concepts.md) — paths, framework sources, modes.
-- [Glossary](glossary.md) — core vocabulary and the product requirement vs.
-  requirement distinction.
-- [Commands](commands.md) — every `specs` subcommand.
-- [Configuration](configuration.md) — `.specs.yaml` and registry schemas.
-- [Use cases](use-cases/README.md) — task-oriented workflows.
+- [Use cases](use-cases/README.md) for task-oriented workflows.
+- [Concepts](concepts.md) for the concept index.
+- [Ownership](ownership.md) for the short actor and role map.
+- [Commands](commands.md) for terminal syntax.
+- [Configuration](configuration.md) for `.specs.yaml` and framework registry.
+- [Glossary](glossary.md) for exact terminology.
+- [Development](development.md) for building and releasing the toolchain.

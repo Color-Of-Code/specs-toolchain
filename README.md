@@ -1,6 +1,6 @@
 # specs-toolchain
 
-Tooling for the [specs framework](https://github.com/Color-Of-Code/specs-framework): lint, scaffolding, change-request lifecycle, traceability links, canonical graph import, generation, validation, and cache rebuild, and baseline updates for any host project that uses the framework.
+Tooling for the [specs framework](https://github.com/Color-Of-Code/specs-framework): lint, scaffolding, change-request lifecycle, traceability links, canonical graph import, generation, validation, and cache rebuild for any host project that uses the framework.
 
 It ships in two flavours that share the same engine:
 
@@ -36,15 +36,15 @@ Full installation notes (extension settings, combining both, platform paths) liv
 
 ## Documentation
 
-| Topic                                  | What it covers                                                                                |
-| -------------------------------------- | --------------------------------------------------------------------------------------------- |
-| [Overview](docs/overview.md)           | One-page summary of what the engine delivers.                                                 |
-| [Actors](docs/actors.md)               | The four authoring actors: stakeholder, author, analyst, architect.                           |
-| [Installation](docs/install.md)        | Extension and engine install paths, side-by-side usage.                                       |
-| [Concepts](docs/concepts.md)           | specs root vs. host repo vs. framework dir; `managed` vs. `local` mode for framework content. |
-| [Glossary](docs/glossary.md)           | Core vocabulary for artifact kinds, paths, and framework terms.                               |
-| [Commands](docs/commands.md)           | Reference for every `specs` subcommand (also reachable as **Specs: …** in VS Code).           |
-| [Configuration](docs/configuration.md) | `.specs.yaml` keys, defaults, and overrides.                                                  |
-| [Use cases](docs/use-cases/README.md)  | Task-oriented workflows grouped by authoring vs. setup.                                       |
-| [Development](docs/development.md)     | Building the engine and extension, release process.                                           |
-| [Extension](extension/README.md)       | VS Code-specific settings, packaging notes, platform matrix.                                  |
+| Topic                                  | What it covers                                                                                 |
+| -------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| [Overview](docs/overview.md)           | Fast router into the docs by reader intent.                                                    |
+| [Installation](docs/install.md)        | Extension and engine install paths, side-by-side usage.                                        |
+| [Use cases](docs/use-cases/README.md)  | Task-oriented workflows grouped by day-to-day work vs. setup and maintenance.                  |
+| [Concepts](docs/concepts.md)           | Index for model, framework, relation, and terminology concepts.                                |
+| [Ownership](docs/ownership.md)         | Short map of who usually owns authoring, review, setup, and framework work.                    |
+| [Glossary](docs/glossary.md)           | Core vocabulary for artifact kinds, paths, and framework terms.                                |
+| [Commands](docs/commands.md)           | Reference for every `specs` subcommand (also reachable as **Specs: ...** in VS Code).          |
+| [Configuration](docs/configuration.md) | `.specs.yaml` keys, defaults, and overrides.                                                   |
+| [Development](docs/development.md)     | Building the engine and extension, release process.                                            |
+| [Extension](extension/README.md)       | VS Code-specific settings, packaging notes, platform matrix.                                   |

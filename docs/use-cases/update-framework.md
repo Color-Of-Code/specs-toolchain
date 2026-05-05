@@ -7,7 +7,7 @@ lint config) to a newer ref of the configured framework source.
 
 ## Owner
 
-**Project owner** *(role)* — see [../roles.md](../roles.md). Picks up template fixes, new lint rules, or process updates published by a framework maintainer.
+**Project owner** *(role)* — see [../ownership.md](../ownership.md). Picks up template fixes, new lint rules, or process updates published by a framework maintainer.
 
 ## Purpose
 

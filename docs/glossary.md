@@ -11,7 +11,7 @@ model artifacts are drafted before being drained into their canonical homes.
 ## Component
 
 An implementation unit under `model/components/`, typically pinned to an
-upstream repository and tracked with a baseline.
+upstream repository.
 
 ## Use case
 

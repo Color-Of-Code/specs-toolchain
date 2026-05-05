@@ -7,7 +7,7 @@ or component — at a target path with placeholders pre-filled.
 
 ## Owner
 
-Depends on the artifact kind (see [../actors.md](../actors.md)):
+Depends on the artifact kind (see [../ownership.md](../ownership.md)):
 
 - **Stakeholder** *(actor)* for `product-requirement`.
 - **Author** *(actor)* for `requirement`.

@@ -7,11 +7,11 @@ real artifacts:
 
 - Every canonical node id resolves to a markdown artifact in the repo.
 - Every relation family uses valid source and target kinds.
-- Every baseline entry points at a configured repo mapping.
+- Every repo reference used by the graph points at a configured repo mapping.
 
 ## Owner
 
-**Reviewer** *(role)* — see [../roles.md](../roles.md). Typically the **Author**, **Analyst**, or **Architect** themselves run this check before submitting a CR for review:
+**Reviewer** *(role)* — see [../ownership.md](../ownership.md). Typically the **Author**, **Analyst**, or **Architect** themselves run this check before submitting a CR for review:
 
 - **Author** owns the product requirement ↔ model requirement links.
 - **Analyst** owns the requirement ↔ use case (satisfy) links.

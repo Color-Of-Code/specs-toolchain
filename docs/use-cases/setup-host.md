@@ -9,7 +9,7 @@ content.
 
 ## Owner
 
-**Project owner** *(role)* — see [../roles.md](../roles.md). Stands up the host repo and chooses managed vs. local mode. Not part of the authoring chain.
+**Project owner** *(role)* — see [../ownership.md](../ownership.md). Stands up the host repo and chooses managed vs. local mode. Not part of the authoring chain.
 
 ## Purpose
 

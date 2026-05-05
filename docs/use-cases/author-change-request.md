@@ -8,7 +8,7 @@ files into their canonical homes under `product/` and `model/`.
 
 ## Owner
 
-The authoring chain itself — see [../actors.md](../actors.md):
+The authoring chain itself — see [../ownership.md](../ownership.md):
 
 - **Stakeholder** *(actor)* opens the CR and drafts the **product requirements** that describe the demand.
 - **Author** *(actor)* re-formulates those into model **requirements**; **Analyst** *(actor)* writes the use cases; **Architect** *(actor)* the components — all inside the same CR.
@@ -52,7 +52,7 @@ removed), ready for the merge commit.
    then `--yes` to apply). The engine `git mv`s product requirements into
    `product/` and model artifacts into the matching `model/` subtree.
 6. **Verify** with [`specs graph validate`](verify-traceability.md) and
-   [`specs lint --baselines`](maintain-baselines.md) before merging.
+   [`specs lint`](lint-and-format.md) before merging.
 
 ### Iteration
 
