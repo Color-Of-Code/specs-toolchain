@@ -231,7 +231,7 @@ func manifestForGraph(g *Graph) Manifest {
 	for _, spec := range manifestPartSpecs {
 		if spec.isRelation {
 			if spec.Required || len(g.Relations[spec.Kind]) > 0 {
-				parts = append(parts, ManifestPart{Name: spec.Name, File: spec.File, Kind: spec.Kind, Required: spec.Required})
+				parts = append(parts, ManifestPart{Kind: spec.Kind, Required: spec.Required})
 			}
 			continue
 		}
@@ -243,7 +243,7 @@ func manifestForGraph(g *Graph) Manifest {
 				}
 			}
 		}
-		parts = append(parts, ManifestPart{Name: spec.Name, File: spec.File, Kind: spec.Kind, Required: spec.Required})
+		parts = append(parts, ManifestPart{Kind: spec.Kind, Required: spec.Required})
 	}
 	return Manifest{
 		SchemaVersion: 1,

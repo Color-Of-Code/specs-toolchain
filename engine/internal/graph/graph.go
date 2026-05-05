@@ -31,8 +31,6 @@ type Manifest struct {
 }
 
 type ManifestPart struct {
-	Name     string   `yaml:"name"`
-	File     string   `yaml:"file"`
 	Kind     PartKind `yaml:"kind"`
 	Required bool     `yaml:"required"`
 }
@@ -252,17 +250,8 @@ func validateManifest(manifest Manifest) error {
 			return fmt.Errorf("part %q is out of order", part.Kind)
 		}
 		maxIndex = index
-		if part.Name != spec.Name {
-			return fmt.Errorf("part %q must use name %q", part.Kind, spec.Name)
-		}
-		if part.File != spec.File {
-			return fmt.Errorf("part %q must use file %q", part.Kind, spec.File)
-		}
 		if part.Required != spec.Required {
 			return fmt.Errorf("part %q must use required=%t", part.Kind, spec.Required)
-		}
-		if filepath.Base(part.File) != part.File {
-			return fmt.Errorf("part %q file must not contain directories", part.Kind)
 		}
 	}
 	for _, spec := range manifestPartSpecs {
@@ -285,27 +274,26 @@ func specForKind(kind PartKind) (partSpec, int, bool) {
 }
 
 func (g *Graph) loadPart(part ManifestPart) error {
-	partPath := filepath.Join(g.RootDir, part.File)
+	spec, _, _ := specForKind(part.Kind)
+	partPath := filepath.Join(g.RootDir, spec.File)
 	data, err := os.ReadFile(partPath)
 	if err != nil {
-		return fmt.Errorf("read %s: %w", part.File, err)
+		return fmt.Errorf("read %s: %w", spec.File, err)
 	}
 
-	for _, spec := range manifestPartSpecs {
-		if spec.isRelation && spec.Kind == part.Kind {
-			entries, err := loadRelationEntries(data, part.Kind)
-			if err != nil {
-				return fmt.Errorf("load %s: %w", part.File, err)
-			}
-			g.Relations[part.Kind] = entries
-			return nil
+	if spec.isRelation {
+		entries, err := loadRelationEntries(data, part.Kind)
+		if err != nil {
+			return fmt.Errorf("load %s: %w", spec.File, err)
 		}
+		g.Relations[part.Kind] = entries
+		return nil
 	}
 	switch part.Kind {
 	case PartKindLayout:
 		entries, err := loadLayoutEntries(data)
 		if err != nil {
-			return fmt.Errorf("load %s: %w", part.File, err)
+			return fmt.Errorf("load %s: %w", spec.File, err)
 		}
 		g.Layout = entries
 	default:
