@@ -1,7 +1,7 @@
 // Status bar item showing current CR slug or framework_dir SHA.
 import * as cp from "child_process";
 import * as vscode from "vscode";
-import { runAndCapture, findSpecsFolder, findSpecsRoot } from "./engine";
+import { runAndCapture, getSpecsExecutionTarget } from "./engine";
 
 interface DoctorJSON {
   version: string;
@@ -24,13 +24,12 @@ export function registerStatusBar(context: vscode.ExtensionContext): void {
   context.subscriptions.push(item);
 
   const refresh = async () => {
-    const folder = findSpecsFolder();
-    if (!folder) {
+    const target = getSpecsExecutionTarget();
+    if (!target) {
       item.hide();
       return;
     }
-    const cwd = findSpecsRoot(folder) ?? folder.uri.fsPath;
-    const branch = currentBranch(folder.uri.fsPath);
+    const branch = currentBranch(target.folder.uri.fsPath);
     const cr = parseCRBranch(branch);
 
     let label: string;
@@ -39,7 +38,7 @@ export function registerStatusBar(context: vscode.ExtensionContext): void {
       label = `$(git-pull-request) ${cr}`;
       tooltipExtra = `On change-request branch ${branch}`;
     } else {
-      const doctor = await loadDoctor(context, cwd);
+      const doctor = await loadDoctor(context, target.cwd);
       const rev = doctor?.framework_rev ?? "?";
       label = `$(book) framework@${rev}`;
       if (doctor && !doctor.compatible) {
@@ -83,7 +82,7 @@ export function registerStatusBar(context: vscode.ExtensionContext): void {
   void refresh();
 
   // Event-driven refresh: workspace, config, branch and focus changes.
-  const folder = findSpecsFolder();
+  const target = getSpecsExecutionTarget();
   const subscriptions: vscode.Disposable[] = [
     vscode.workspace.onDidChangeWorkspaceFolders(scheduleRefresh),
     vscode.window.onDidChangeWindowState((s) => {
@@ -94,10 +93,10 @@ export function registerStatusBar(context: vscode.ExtensionContext): void {
     vscode.commands.registerCommand("specs.statusBar.refresh", refresh),
   ];
 
-  if (folder) {
+  if (target) {
     // Watch `.specs.yaml` anywhere under the workspace folder.
     const cfgWatcher = vscode.workspace.createFileSystemWatcher(
-      new vscode.RelativePattern(folder, "**/.specs.yaml"),
+      new vscode.RelativePattern(target.folder, "**/.specs.yaml"),
     );
     cfgWatcher.onDidCreate(scheduleRefresh);
     cfgWatcher.onDidChange(scheduleRefresh);
@@ -106,7 +105,7 @@ export function registerStatusBar(context: vscode.ExtensionContext): void {
 
     // Watch `.git/HEAD` for branch switches (covers terminal git checkouts).
     const headWatcher = vscode.workspace.createFileSystemWatcher(
-      new vscode.RelativePattern(folder, ".git/HEAD"),
+      new vscode.RelativePattern(target.folder, ".git/HEAD"),
     );
     headWatcher.onDidChange(scheduleRefresh);
     headWatcher.onDidCreate(scheduleRefresh);

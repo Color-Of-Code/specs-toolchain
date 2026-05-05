@@ -1,6 +1,6 @@
 // Palette wrappers around engine subcommands.
 import * as vscode from "vscode";
-import { runInTerminal, runAndCapture, findSpecsFolder, findSpecsRoot, getOutput } from "./engine";
+import { runInTerminal, runAndCapture, getSpecsExecutionTarget, getOutput } from "./engine";
 import { runInitWizard } from "./initWizard";
 
 type ScaffoldKind = "requirement" | "use-case" | "component";
@@ -46,22 +46,18 @@ export function registerCommands(context: vscode.ExtensionContext): void {
 // --- helpers ---
 
 function runTerminal(context: vscode.ExtensionContext, args: string[]): void {
-  const folder = findSpecsFolder();
-  if (!folder) {
-    vscode.window.showWarningMessage("Specs: no workspace folder is open.");
+  const target = getSpecsExecutionTarget({ warnIfMissing: true });
+  if (!target) {
     return;
   }
-  const cwd = findSpecsRoot(folder) ?? folder.uri.fsPath;
-  runInTerminal(context, args, cwd);
+  runInTerminal(context, args, target.cwd);
 }
 
 async function scaffold(context: vscode.ExtensionContext, kind: ScaffoldKind): Promise<void> {
-  const folder = findSpecsFolder();
-  if (!folder) {
-    vscode.window.showWarningMessage("Specs: no workspace folder is open.");
+  const target = getSpecsExecutionTarget({ warnIfMissing: true });
+  if (!target) {
     return;
   }
-  const cwd = findSpecsRoot(folder) ?? folder.uri.fsPath;
 
   const placeholder =
     kind === "requirement"
@@ -91,15 +87,14 @@ async function scaffold(context: vscode.ExtensionContext, kind: ScaffoldKind): P
     args.push("--title", title);
   }
   args.push(relPath);
-  runInTerminal(context, args, cwd);
+  runInTerminal(context, args, target.cwd);
 }
 
 async function crNew(context: vscode.ExtensionContext): Promise<void> {
-  const folder = findSpecsFolder();
-  if (!folder) {
+  const target = getSpecsExecutionTarget({ warnIfMissing: true });
+  if (!target) {
     return;
   }
-  const cwd = findSpecsRoot(folder) ?? folder.uri.fsPath;
 
   const id = await vscode.window.showInputBox({
     prompt: "Change-request id (e.g. 042)",
@@ -129,15 +124,14 @@ async function crNew(context: vscode.ExtensionContext): Promise<void> {
   if (title) {
     args.push("--title", title);
   }
-  runInTerminal(context, args, cwd);
+  runInTerminal(context, args, target.cwd);
 }
 
 async function crDrain(context: vscode.ExtensionContext): Promise<void> {
-  const folder = findSpecsFolder();
-  if (!folder) {
+  const target = getSpecsExecutionTarget({ warnIfMissing: true });
+  if (!target) {
     return;
   }
-  const cwd = findSpecsRoot(folder) ?? folder.uri.fsPath;
 
   const id = await vscode.window.showInputBox({
     prompt: "Change-request id (e.g. 042)",
@@ -147,15 +141,14 @@ async function crDrain(context: vscode.ExtensionContext): Promise<void> {
   if (!id) {
     return;
   }
-  runInTerminal(context, ["cr", "drain", "--id", id], cwd);
+  runInTerminal(context, ["cr", "drain", "--id", id], target.cwd);
 }
 
 async function visualize(context: vscode.ExtensionContext): Promise<void> {
-  const folder = findSpecsFolder();
-  if (!folder) {
+  const target = getSpecsExecutionTarget({ warnIfMissing: true });
+  if (!target) {
     return;
   }
-  const cwd = findSpecsRoot(folder) ?? folder.uri.fsPath;
 
 	const outPath = "model/_visualize.md";
   const out = getOutput();
@@ -164,7 +157,7 @@ async function visualize(context: vscode.ExtensionContext): Promise<void> {
   const res = await runAndCapture(
     context,
 		["visualize", "traceability", "--format", "mermaid", "--out", outPath],
-    cwd,
+    target.cwd,
   );
   if (res.exitCode !== 0) {
     out.appendLine(res.stderr);
@@ -175,7 +168,7 @@ async function visualize(context: vscode.ExtensionContext): Promise<void> {
     );
     return;
   }
-  const uri = vscode.Uri.joinPath(folder.uri, outPath);
+  const uri = vscode.Uri.joinPath(target.folder.uri, outPath);
   const doc = await vscode.workspace.openTextDocument(uri);
   await vscode.window.showTextDocument(doc, { preview: true });
 }
@@ -203,12 +196,10 @@ async function registerFrameworks(context: vscode.ExtensionContext): Promise<voi
     return;
   }
 
-  const folder = findSpecsFolder() ?? vscode.workspace.workspaceFolders?.[0];
-  if (!folder) {
-    vscode.window.showWarningMessage("Specs: no workspace folder is open.");
+  const target = getSpecsExecutionTarget({ warnIfMissing: true });
+  if (!target) {
     return;
   }
-  const cwd = findSpecsRoot(folder) ?? folder.uri.fsPath;
 
   for (const entry of entries) {
     if (!entry.name) {
@@ -225,6 +216,6 @@ async function registerFrameworks(context: vscode.ExtensionContext): Promise<voi
     } else {
       continue; // neither url nor path — skip silently
     }
-    runInTerminal(context, args, cwd);
+    runInTerminal(context, args, target.cwd);
   }
 }

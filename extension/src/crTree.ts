@@ -2,7 +2,7 @@
 import * as path from "path";
 import * as fs from "fs";
 import * as vscode from "vscode";
-import { runAndCapture, findSpecsFolder, findSpecsRoot, getOutput } from "./engine";
+import { runAndCapture, getSpecsExecutionTarget, getOutput } from "./engine";
 
 interface CRRecord {
   id: string;
@@ -92,12 +92,11 @@ export class CRTreeProvider implements vscode.TreeDataProvider<Node> {
   }
 
   private async loadRoots(): Promise<Node[]> {
-    const folder = findSpecsFolder();
-    if (!folder) {
+    const target = getSpecsExecutionTarget();
+    if (!target) {
       return [];
     }
-    const cwd = findSpecsRoot(folder) ?? folder.uri.fsPath;
-    const res = await runAndCapture(this.context, ["cr", "status", "--json"], cwd);
+    const res = await runAndCapture(this.context, ["cr", "status", "--json"], target.cwd);
     if (res.exitCode !== 0) {
       getOutput().appendLine(res.stderr);
       return [];
@@ -169,9 +168,9 @@ export function registerCRTree(context: vscode.ExtensionContext): CRTreeProvider
     }),
   );
   // Auto-refresh when change-requests/ changes.
-  const folder = findSpecsFolder();
-  if (folder) {
-    const root = findSpecsRoot(folder) ?? folder.uri.fsPath;
+  const target = getSpecsExecutionTarget();
+  if (target) {
+    const root = target.cwd;
     const watcher = vscode.workspace.createFileSystemWatcher(
       new vscode.RelativePattern(root, "change-requests/**"),
     );

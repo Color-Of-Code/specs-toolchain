@@ -2,7 +2,7 @@
 // registers each one as a vscode.lm tool so it is available in Agent Mode
 // and any other agentic context, not just @specs.
 import * as vscode from "vscode";
-import { runAndCapture, findSpecsFolder, findSpecsRoot } from "./engine";
+import { runAndCapture, getSpecsExecutionTarget } from "./engine";
 
 interface SkillEngineArgs {
   [key: string]: string[];
@@ -44,11 +44,11 @@ async function refreshFrameworkTools(context: vscode.ExtensionContext): Promise<
     d.dispose();
   }
 
-  const folder = findSpecsFolder();
-  if (!folder) {
+  const target = getSpecsExecutionTarget();
+  if (!target) {
     return;
   }
-  const cwd = findSpecsRoot(folder) ?? folder.uri.fsPath;
+  const cwd = target.cwd;
 
   const result = await runAndCapture(context, ["framework", "skills", "list"], cwd);
   if (result.exitCode !== 0 || !result.stdout.trim()) {

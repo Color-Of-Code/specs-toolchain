@@ -2,7 +2,7 @@
 import * as path from "path";
 import * as fs from "fs";
 import * as vscode from "vscode";
-import { findSpecsFolder, findSpecsRoot } from "./engine";
+import { getSpecsExecutionTarget } from "./engine";
 
 type Node = DirNode | FileNode;
 
@@ -70,12 +70,11 @@ export class ModelTreeProvider implements vscode.TreeDataProvider<Node> {
   }
 
   private resolveTreeRoot(): string | undefined {
-    const folder = findSpecsFolder();
-    if (!folder) {
+    const target = getSpecsExecutionTarget();
+    if (!target) {
       return undefined;
     }
-    const specsRoot = findSpecsRoot(folder) ?? folder.uri.fsPath;
-    return path.join(specsRoot, this.relativeDir);
+    return path.join(target.cwd, this.relativeDir);
   }
 
   private readDir(dir: string): Node[] {
@@ -110,9 +109,9 @@ export function registerModelTree(
     vscode.commands.registerCommand(refreshCommand, () => provider.refresh()),
   );
   // Auto-refresh when the backing tree directory changes.
-  const folder = findSpecsFolder();
-  if (folder) {
-    const root = findSpecsRoot(folder) ?? folder.uri.fsPath;
+  const target = getSpecsExecutionTarget();
+  if (target) {
+    const root = target.cwd;
     const watcher = vscode.workspace.createFileSystemWatcher(
       new vscode.RelativePattern(root, `${relativeDir}/**`),
     );

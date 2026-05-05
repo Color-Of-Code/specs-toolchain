@@ -1,6 +1,6 @@
 // @specs Chat Participant — central AI entry point for the specs toolchain.
 import * as vscode from "vscode";
-import { runAndCapture, findSpecsFolder, findSpecsRoot } from "./engine";
+import { runAndCapture, getSpecsExecutionTarget } from "./engine";
 
 const PARTICIPANT_ID = "specs-toolchain.specs";
 
@@ -45,13 +45,12 @@ export function registerChatParticipant(context: vscode.ExtensionContext): void 
 }
 
 async function loadAgents(context: vscode.ExtensionContext): Promise<void> {
-  const folder = findSpecsFolder();
-  if (!folder) {
+  const target = getSpecsExecutionTarget();
+  if (!target) {
     cachedAgents = [];
     return;
   }
-  const cwd = findSpecsRoot(folder) ?? folder.uri.fsPath;
-  const result = await runAndCapture(context, ["framework", "agents", "list"], cwd);
+  const result = await runAndCapture(context, ["framework", "agents", "list"], target.cwd);
   if (result.exitCode !== 0 || !result.stdout.trim()) {
     cachedAgents = [];
     return;
@@ -77,14 +76,14 @@ function makeHandler(
     stream: vscode.ChatResponseStream,
     token: vscode.CancellationToken,
   ): Promise<vscode.ChatResult> => {
-    const folder = findSpecsFolder();
-    if (!folder) {
+    const target = getSpecsExecutionTarget();
+    if (!target) {
       stream.markdown(
         "No specs workspace found. Open a folder containing `.specs.yaml` first.",
       );
       return {};
     }
-    const cwd = findSpecsRoot(folder) ?? folder.uri.fsPath;
+    const cwd = target.cwd;
 
     // Slash-command dispatch.
     if (request.command) {

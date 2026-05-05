@@ -42,11 +42,15 @@ export function resolveBinary(context: vscode.ExtensionContext): string {
   return "specs"; // resolved via PATH
 }
 
+function getWorkspaceFolderForResolution(): vscode.WorkspaceFolder | undefined {
+  return findSpecsFolder();
+}
+
 function resolveExplicitBinary(explicit: string): string {
   if (path.isAbsolute(explicit)) {
     return explicit;
   }
-  const folder = findSpecsFolder() ?? vscode.workspace.workspaceFolders?.[0];
+  const folder = getWorkspaceFolderForResolution();
   if (!folder) {
     return explicit;
   }
@@ -54,7 +58,7 @@ function resolveExplicitBinary(explicit: string): string {
 }
 
 function findWorkspaceBinary(exe: string): string | undefined {
-  const folder = findSpecsFolder() ?? vscode.workspace.workspaceFolders?.[0];
+  const folder = getWorkspaceFolderForResolution();
   if (!folder) {
     return undefined;
   }
@@ -69,6 +73,11 @@ export interface RunResult {
   stdout: string;
   stderr: string;
   exitCode: number;
+}
+
+export interface SpecsExecutionTarget {
+  folder: vscode.WorkspaceFolder;
+  cwd: string;
 }
 
 /** Runs the engine and captures stdout/stderr. Logs to the Specs output channel. */
@@ -125,6 +134,23 @@ export function findSpecsFolder(): vscode.WorkspaceFolder | undefined {
     }
   }
   return folders[0];
+}
+
+export function getSpecsExecutionTarget(options?: {
+  warnIfMissing?: boolean;
+}): SpecsExecutionTarget | undefined {
+  const folder = findSpecsFolder();
+  if (!folder) {
+    if (options?.warnIfMissing) {
+      vscode.window.showWarningMessage("Specs: no workspace folder is open.");
+    }
+    return undefined;
+  }
+
+  return {
+    folder,
+    cwd: findSpecsRoot(folder) ?? folder.uri.fsPath,
+  };
 }
 
 /** Returns the resolved specs root from .specs.yaml when present. */

@@ -3,7 +3,7 @@ import * as path from "path";
 import * as os from "os";
 import * as fs from "fs";
 import * as vscode from "vscode";
-import { runAndCapture, findSpecsFolder, findSpecsRoot, getOutput } from "./engine";
+import { runAndCapture, getSpecsExecutionTarget, getOutput } from "./engine";
 
 let currentPanel: vscode.WebviewPanel | undefined;
 let suppressRefreshUntil = 0;
@@ -57,9 +57,9 @@ export function registerVisualizePanel(context: vscode.ExtensionContext): void {
   );
 
   // Auto-refresh when markdown or canonical graph files change while the panel is open.
-  const folder = findSpecsFolder();
-  if (folder) {
-    const root = findSpecsRoot(folder) ?? folder.uri.fsPath;
+  const target = getSpecsExecutionTarget();
+  if (target) {
+    const root = target.cwd;
     const debounced = debounce(() => {
       if (currentPanel && Date.now() > suppressRefreshUntil) {
         refresh(context);
@@ -87,9 +87,8 @@ async function openOrRefresh(context: vscode.ExtensionContext): Promise<void> {
     await refresh(context);
     return;
   }
-  const folder = findSpecsFolder();
-  if (!folder) {
-    vscode.window.showWarningMessage("Specs: no workspace folder is open.");
+  const target = getSpecsExecutionTarget({ warnIfMissing: true });
+  if (!target) {
     return;
   }
   const mediaRoot = vscode.Uri.joinPath(context.extensionUri, "media");
@@ -128,18 +127,17 @@ async function saveGraphPayload(
   payload: SaveRelationsPayload,
   subcommand: "save-relations",
 ): Promise<void> {
-  const folder = findSpecsFolder();
-  if (!folder) {
+  const target = getSpecsExecutionTarget({ warnIfMissing: true });
+  if (!target) {
     await panel.webview.postMessage({ type: "save-relations-result", requestId, ok: false, error: "Specs: no workspace folder is open." });
     return;
   }
-  const cwd = findSpecsRoot(folder) ?? folder.uri.fsPath;
   const tempDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), "specs-relations-"));
   const inputPath = path.join(tempDir, "relations.json");
   try {
     await fs.promises.writeFile(inputPath, JSON.stringify(payload), "utf8");
     suppressRefreshUntil = Date.now() + 3000;
-    const res = await runAndCapture(context, ["graph", subcommand, "--in", inputPath], cwd);
+    const res = await runAndCapture(context, ["graph", subcommand, "--in", inputPath], target.cwd);
     if (res.exitCode !== 0) {
       const error = res.stderr || `graph ${subcommand} failed`;
       getOutput().appendLine(error);
@@ -156,15 +154,14 @@ async function refresh(context: vscode.ExtensionContext): Promise<void> {
   if (!currentPanel) {
     return;
   }
-  const folder = findSpecsFolder();
-  if (!folder) {
+  const target = getSpecsExecutionTarget();
+  if (!target) {
     return;
   }
-  const cwd = findSpecsRoot(folder) ?? folder.uri.fsPath;
   const res = await runAndCapture(
     context,
     ["visualize", "traceability", "--format", "json", "--out", "-"],
-    cwd,
+    target.cwd,
   );
   if (res.exitCode !== 0) {
     getOutput().appendLine(res.stderr);
@@ -187,14 +184,13 @@ async function exportFile(
   context: vscode.ExtensionContext,
 	format: "json",
 ): Promise<void> {
-  const folder = findSpecsFolder();
-  if (!folder) {
+  const executionTarget = getSpecsExecutionTarget({ warnIfMissing: true });
+  if (!executionTarget) {
     return;
   }
-  const cwd = findSpecsRoot(folder) ?? folder.uri.fsPath;
 	const ext = "json";
   const target = await vscode.window.showSaveDialog({
-    defaultUri: vscode.Uri.joinPath(folder.uri, `traceability.${ext}`),
+	  defaultUri: vscode.Uri.joinPath(executionTarget.folder.uri, `traceability.${ext}`),
 		filters: { "Traceability JSON": ["json"] },
   });
   if (!target) {
@@ -203,7 +199,7 @@ async function exportFile(
   const res = await runAndCapture(
     context,
     ["visualize", "traceability", "--format", format, "--out", target.fsPath],
-    cwd,
+    executionTarget.cwd,
   );
   if (res.exitCode !== 0) {
     vscode.window.showErrorMessage(`visualize failed: ${res.stderr}`);
@@ -216,17 +212,16 @@ async function openArtifact(
   context: vscode.ExtensionContext,
   relativePath: string,
 ): Promise<void> {
-  const folder = findSpecsFolder();
-  if (!folder) {
+  const target = getSpecsExecutionTarget({ warnIfMissing: true });
+  if (!target) {
     return;
   }
-  const cwd = findSpecsRoot(folder) ?? folder.uri.fsPath;
   if (path.isAbsolute(relativePath)) {
     vscode.window.showErrorMessage(`Specs: expected a repo-relative path, got ${relativePath}`);
     return;
   }
-  const targetPath = path.resolve(cwd, relativePath);
-  const targetRel = path.relative(cwd, targetPath);
+  const targetPath = path.resolve(target.cwd, relativePath);
+  const targetRel = path.relative(target.cwd, targetPath);
   if (targetRel.startsWith("..") || path.isAbsolute(targetRel)) {
     vscode.window.showErrorMessage(`Specs: refusing to open path outside specs root: ${relativePath}`);
     return;
