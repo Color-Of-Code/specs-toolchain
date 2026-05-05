@@ -10,7 +10,7 @@ requirements:
 
 Load the canonical traceability graph YAML files, verify that every node ID
 resolves to an existing markdown artifact, check that all relation targets
-are reachable, and validate baseline repository mappings.
+are reachable.
 
 ## Engine Surface
 

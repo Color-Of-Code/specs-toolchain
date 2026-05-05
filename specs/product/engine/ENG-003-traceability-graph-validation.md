@@ -29,5 +29,5 @@ merged into the canonical model.
 
 `specs graph validate` exits non-zero and prints each invalid reference when
 the traceability graph contains broken links, missing artifacts, or invalid
-baseline repository mappings. It exits zero when the graph is fully
-consistent. A `--json` flag emits machine-readable output for CI pipelines.
+relation mappings. It exits zero when the graph is fully consistent. A `--json`
+flag emits machine-readable output for CI pipelines.

@@ -26,7 +26,7 @@ actions stay within the editor and do not interrupt the editing flow.
 ## Acceptance Signal
 
 `Specs: Lint`, `Specs: Doctor`, `Specs: CR Status`, `Specs: Framework
-Update`, and the lint variant commands (`--links`, `--style`, `--baselines`)
+Update`, and the lint variant commands (`--links`, `--style`)
 are all available in the Command Palette. Each command runs in the
 integrated terminal rooted at the detected specs root. Commands that require
 user input (scaffold, CR new, CR drain) prompt with an input box or quick

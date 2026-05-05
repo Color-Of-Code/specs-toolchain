@@ -1,6 +1,5 @@
 ---
 requirements: []
-baseline: ~
 ---
 
 # Title

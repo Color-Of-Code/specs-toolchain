@@ -15,5 +15,4 @@ parts:
       required: true
 generation:
     markdown_relationship_fields: true
-    markdown_baseline_fields: true
     stable_sort: lexical_id

@@ -12,9 +12,9 @@ implemented_by:
 
 `specs graph validate` shall load the canonical traceability graph YAML files,
 verify that every node ID resolves to an existing markdown artifact, confirm
-that all relation targets are reachable, validate baseline repository mappings,
-and exit non-zero when any inconsistency is found. A `--json` flag shall emit
-a machine-readable result payload.
+that all relation targets are reachable, and exit non-zero when any
+inconsistency is found. A `--json` flag shall emit a machine-readable result
+payload.
 
 ## Rationale
 

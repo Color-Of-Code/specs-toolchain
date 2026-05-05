@@ -21,10 +21,6 @@ entries:
         - model/requirements/cr/CR-001-change-request-creation
         - model/requirements/cr/CR-002-change-request-status-reporting
         - model/requirements/cr/CR-003-change-request-drain
-    - source: product/engine/ENG-006-component-baseline-tracking
-      targets:
-        - model/requirements/baseline/BSL-001-component-baseline-drift-detection
-        - model/requirements/baseline/BSL-002-component-baseline-refresh
     - source: product/engine/ENG-007-traceability-visualization
       targets:
         - model/requirements/visualize/VIS-001-traceability-graph-export

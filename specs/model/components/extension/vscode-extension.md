@@ -1,7 +1,6 @@
 ---
 requirements:
     - ../../requirements/workspace/WS-003-repo-local-engine-integration.md
-baseline: ~
 ---
 
 # Vscode Extension

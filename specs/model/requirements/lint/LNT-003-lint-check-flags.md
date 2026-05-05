@@ -10,10 +10,9 @@ implemented_by:
 
 ## Requirement
 
-`specs lint` shall expose `--style`, `--links`, and `--baselines` flags that
-each enable exactly their corresponding check category. Invoking `specs lint`
-without any flag shall run all check categories as if all three flags were
-given.
+`specs lint` shall expose `--style` and `--links` flags that each enable
+exactly their corresponding check category. Invoking `specs lint` without any
+flag shall run all check categories as if both flags were given.
 
 ## Rationale
 

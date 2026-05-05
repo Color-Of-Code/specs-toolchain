@@ -11,7 +11,7 @@ implemented_by:
 ## Requirement
 
 `specs graph import-markdown` shall read the `Realises`, `Implemented By`, and
-baseline table fields from markdown artifact files and write the extracted
+relationship fields from markdown artifact files and write the extracted
 relations into the canonical traceability YAML. `specs graph
 generate-markdown` shall project the canonical YAML back into the
 corresponding markdown fields. Both commands shall accept `--dry-run` and

@@ -19,7 +19,7 @@ interface SkillInfo {
 }
 
 interface LintInput {
-  check?: "all" | "links" | "style" | "baselines";
+  check?: "all" | "links" | "style";
 }
 
 // Tracks disposables for registered tools so we can re-register on framework change.

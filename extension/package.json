@@ -130,11 +130,6 @@
         "category": "Specs"
       },
       {
-        "command": "specs.lint.baselines",
-        "title": "Lint: Baselines only",
-        "category": "Specs"
-      },
-      {
         "command": "specs.frameworkUpdate",
         "title": "Framework: Update cache",
         "category": "Specs"
@@ -172,11 +167,6 @@
       {
         "command": "specs.cr.drain",
         "title": "Change Request: Drain",
-        "category": "Specs"
-      },
-      {
-        "command": "specs.baseline.update",
-        "title": "Baseline: Update",
         "category": "Specs"
       },
       {

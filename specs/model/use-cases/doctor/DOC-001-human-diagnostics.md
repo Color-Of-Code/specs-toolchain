@@ -14,7 +14,7 @@ path information from missing derived artifacts such as caches.
 ## Engine Surface
 
 - `specs doctor` reports specs root, framework dir, manifest, graph manifest,
-  and baseline paths.
+  and graph cache paths.
 - Missing graph cache or similar derived files remain warnings, not layout
   failures.
 

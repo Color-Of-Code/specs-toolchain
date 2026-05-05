@@ -1,11 +1,5 @@
 kind: refine
 entries:
-    - source: model/requirements/baseline/BSL-001-component-baseline-drift-detection
-      targets:
-        - model/use-cases/baseline/BSL-001-baseline-drift-detection
-    - source: model/requirements/baseline/BSL-002-component-baseline-refresh
-      targets:
-        - model/use-cases/baseline/BSL-002-baseline-refresh
     - source: model/requirements/cr/CR-001-change-request-creation
       targets:
         - model/use-cases/cr/CR-001-cr-creation

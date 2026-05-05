@@ -15,8 +15,8 @@ terminal rooted at that directory.
 ## VS Code Surface
 
 - `Specs: Lint`, `Specs: Lint Links`, `Specs: Lint Style`, `Specs: Lint
-  Baselines`, `Specs: Doctor`, `Specs: CR Status`, and `Specs: Framework
-  Update` are all registered palette commands.
+  Doctor`, `Specs: CR Status`, and `Specs: Framework Update` are all
+  registered palette commands.
 - Each command resolves the workspace folder and specs root before invoking
   the engine.
 - Output appears in an integrated terminal panel named "Specs".

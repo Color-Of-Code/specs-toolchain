@@ -4,6 +4,5 @@
 | ------------ | ----- |
 | Status       | Draft |
 | Requirements | —     |
-| Baseline     | —     |
 
 ## Description

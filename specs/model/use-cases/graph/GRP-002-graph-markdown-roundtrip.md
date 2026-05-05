@@ -16,7 +16,7 @@ into the markdown fields.
 ## Engine Surface
 
 - `specs graph import-markdown` reads `Realises`, `Implemented By`, and
-  baseline table fields from markdown and writes canonical YAML entries.
+  relationship fields from markdown and writes canonical YAML entries.
 - `specs graph generate-markdown` writes those fields back into each
   markdown file from the canonical YAML.
 - Both commands accept `--dry-run` and `--json`.

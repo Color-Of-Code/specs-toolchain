@@ -50,7 +50,6 @@ type File struct {
 	ProductDir        string            `yaml:"product_dir,omitempty"`
 	GraphManifest     string            `yaml:"graph_manifest,omitempty"`
 	GraphCache        string            `yaml:"graph_cache,omitempty"`
-	BaselinesFile     string            `yaml:"baselines_file,omitempty"`
 	StyleConfig       string            `yaml:"style_config,omitempty"`
 	MinSpecsVersion   string            `yaml:"min_specs_version,omitempty"`
 	TemplatesSchema   int               `yaml:"templates_schema,omitempty"`
@@ -73,7 +72,6 @@ type Resolved struct {
 	ProductDir        string // absolute path
 	GraphManifest     string // absolute path; may not exist
 	GraphCache        string // absolute path; may not exist
-	BaselinesFile     string // absolute path; may not exist
 	StyleConfig       string // absolute path to style.yaml; may be empty (use embedded defaults)
 	MinSpecsVersion   string
 	TemplatesSchema   int
@@ -162,7 +160,6 @@ func Load(start string) (*Resolved, error) {
 	r.ProductDir = absOr(r.SpecsRoot, f.ProductDir, "product")
 	r.GraphManifest = absOr(r.SpecsRoot, f.GraphManifest, filepath.Join("model", "traceability", "graph.yaml"))
 	r.GraphCache = absOr(r.SpecsRoot, f.GraphCache, filepath.Join(".specs-cache", "traceability.sqlite"))
-	r.BaselinesFile = absOr(r.SpecsRoot, f.BaselinesFile, filepath.Join("model", "baselines", "repo-baseline.md"))
 
 	// Resolve style config: style_config > framework_dir fallback.
 	if f.StyleConfig != "" {

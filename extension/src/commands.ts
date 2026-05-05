@@ -11,7 +11,6 @@ const TERMINAL_COMMANDS: ReadonlyArray<readonly [string, readonly string[]]> = [
   ["specs.lint", ["lint"]],
   ["specs.lint.links", ["lint", "--links"]],
   ["specs.lint.style", ["lint", "--style"]],
-  ["specs.lint.baselines", ["lint", "--baselines"]],
   ["specs.doctor", ["doctor"]],
   ["specs.frameworkUpdate", ["framework", "update"]],
   ["specs.cr.status", ["cr", "status"]],
@@ -39,9 +38,6 @@ export function registerCommands(context: vscode.ExtensionContext): void {
   // Change-requests.
   reg("specs.cr.new", () => crNew(context));
   reg("specs.cr.drain", () => crDrain(context));
-
-  // Baseline.
-  reg("specs.baseline.update", () => baselineUpdate(context));
 
   // Framework registry.
   reg("specs.registerFrameworks", () => registerFrameworks(context));
@@ -152,24 +148,6 @@ async function crDrain(context: vscode.ExtensionContext): Promise<void> {
     return;
   }
   runInTerminal(context, ["cr", "drain", "--id", id], cwd);
-}
-
-async function baselineUpdate(context: vscode.ExtensionContext): Promise<void> {
-  const folder = findSpecsFolder();
-  if (!folder) {
-    return;
-  }
-  const cwd = findSpecsRoot(folder) ?? folder.uri.fsPath;
-
-  const only = await vscode.window.showInputBox({
-    prompt: "Component filter (substring; leave empty for all)",
-    ignoreFocusOut: true,
-  });
-  const args = ["baseline", "update"];
-  if (only) {
-    args.push("--only", only);
-  }
-  runInTerminal(context, args, cwd);
 }
 
 async function visualize(context: vscode.ExtensionContext): Promise<void> {
