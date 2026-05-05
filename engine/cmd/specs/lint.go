@@ -15,15 +15,14 @@ func cmdLint(args []string) error {
 	all := fs.Bool("all", false, "run every check (default)")
 	links := fs.Bool("links", false, "check broken symlinks and markdown link targets")
 	style := fs.Bool("style", false, "run markdown style checks")
-	baselines := fs.Bool("baselines", false, "verify component baseline SHAs")
 	fs.Usage = func() {
-		fmt.Fprintln(os.Stderr, "Usage: specs lint [--all|--links|--style|--baselines]")
+		fmt.Fprintln(os.Stderr, "Usage: specs lint [--all|--links|--style]")
 		fs.PrintDefaults()
 	}
 	if err := fs.Parse(args); err != nil {
 		return err
 	}
-	if !*links && !*style && !*baselines {
+	if !*links && !*style {
 		*all = true
 	}
 
@@ -49,9 +48,6 @@ func cmdLint(args []string) error {
 	}
 	if *all || *style {
 		lint.CheckMarkdownStyle(os.Stdout, cfg.SpecsRoot, cfg.StyleConfig, r)
-	}
-	if *all || *baselines {
-		lint.CheckBaselines(os.Stdout, cfg, r)
 	}
 
 	for _, w := range r.Warnings {

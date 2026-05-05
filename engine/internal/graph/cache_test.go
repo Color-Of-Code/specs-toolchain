@@ -11,17 +11,11 @@ func TestRebuildCacheWritesSQLiteTables(t *testing.T) {
 	cachePath := filepath.Join(t.TempDir(), "traceability.sqlite")
 	g := &Graph{
 		ManifestPath: "model/traceability/graph.yaml",
-		Manifest:     manifestForGraph(&Graph{Baselines: []BaselineEntry{{Component: "model/components/alpha-component"}}}),
+		Manifest:     manifestForGraph(&Graph{}),
 		Relations: map[PartKind][]RelationEntry{
 			PartKindDeriveReqt: {{Source: "product/alpha", Targets: []string{"model/requirements/alpha-requirement"}}},
 			PartKindRefine:     {{Source: "model/requirements/alpha-requirement", Targets: []string{"model/use-cases/alpha-feature"}}},
 		},
-		Baselines: []BaselineEntry{{
-			Component: "model/components/alpha-component",
-			Repo:      "host-repo",
-			Path:      "/",
-			Commit:    "0123456789abcdef0123456789abcdef01234567",
-		}},
 		Layout: []LayoutEntry{{ID: "model/use-cases/alpha-feature", X: 12.5, Y: 8.75, Locked: true}},
 	}
 
@@ -29,7 +23,7 @@ func TestRebuildCacheWritesSQLiteTables(t *testing.T) {
 	if err != nil {
 		t.Fatalf("RebuildCache() error = %v", err)
 	}
-	if stats.NodeCount != 4 || stats.EdgeCount != 2 || stats.BaselineCount != 1 || stats.LayoutCount != 1 {
+	if stats.NodeCount != 3 || stats.EdgeCount != 2 || stats.LayoutCount != 1 {
 		t.Fatalf("unexpected stats: %+v", stats)
 	}
 
@@ -38,9 +32,8 @@ func TestRebuildCacheWritesSQLiteTables(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer db.Close()
-	assertQueryCount(t, db, `SELECT COUNT(*) FROM nodes`, 4)
+	assertQueryCount(t, db, `SELECT COUNT(*) FROM nodes`, 3)
 	assertQueryCount(t, db, `SELECT COUNT(*) FROM edges`, 2)
-	assertQueryCount(t, db, `SELECT COUNT(*) FROM baselines`, 1)
 	assertQueryCount(t, db, `SELECT COUNT(*) FROM layout`, 1)
 	assertQueryCount(t, db, `SELECT COUNT(*) FROM meta`, 3)
 

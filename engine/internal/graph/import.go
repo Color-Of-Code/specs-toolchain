@@ -4,19 +4,13 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"regexp"
 	"sort"
 	"strings"
 
 	"gopkg.in/yaml.v3"
 )
 
-var (
-	inlineLinkRe      = regexp.MustCompile(`\]\(([^)]+)\)`)
-	baselineRowLinkRe = regexp.MustCompile(`^\|\s*\[`)
-)
-
-func ImportMarkdown(modelDir, productDir, baselinesFile string) (*Graph, error) {
+func ImportMarkdown(modelDir, productDir string) (*Graph, error) {
 	if _, err := os.Stat(modelDir); err != nil {
 		return nil, fmt.Errorf("model dir %s: %w", modelDir, err)
 	}
@@ -124,14 +118,6 @@ func ImportMarkdown(modelDir, productDir, baselinesFile string) (*Graph, error) 
 		}
 	}
 
-	if baselinesFile != "" {
-		entries, err := importBaselinesMarkdown(baselinesFile, modelDir, productDir)
-		if err != nil {
-			return nil, err
-		}
-		graphData.Baselines = entries
-	}
-
 	// Collect Trace relations from all artifact directories.
 	for _, area := range []string{
 		productDir,
@@ -204,9 +190,6 @@ func Write(manifestPath string, g *Graph) error {
 		}
 		toWrite[spec.File] = relationPart{Kind: spec.Kind, Entries: entries}
 	}
-	if len(g.Baselines) > 0 {
-		toWrite["baselines.yaml"] = baselinePart{Kind: PartKindBaseline, Entries: g.Baselines}
-	}
 	if len(g.Layout) > 0 {
 		toWrite["layout.yaml"] = layoutPart{Kind: PartKindLayout, Nodes: g.Layout}
 	}
@@ -220,7 +203,7 @@ func Write(manifestPath string, g *Graph) error {
 			return err
 		}
 	}
-	for _, optional := range []string{"baselines.yaml", "layout.yaml"} {
+	for _, optional := range []string{"layout.yaml"} {
 		if _, ok := toWrite[optional]; ok {
 			continue
 		}
@@ -254,10 +237,6 @@ func manifestForGraph(g *Graph) Manifest {
 		}
 		if !spec.Required {
 			switch spec.Kind {
-			case PartKindBaseline:
-				if len(g.Baselines) == 0 {
-					continue
-				}
 			case PartKindLayout:
 				if len(g.Layout) == 0 {
 					continue
@@ -272,7 +251,6 @@ func manifestForGraph(g *Graph) Manifest {
 		Parts:         parts,
 		Generation: GenerationConfig{
 			MarkdownRelationshipFields: true,
-			MarkdownBaselineFields:     true,
 			StableSort:                 "lexical_id",
 		},
 	}
@@ -395,72 +373,4 @@ func withinRoot(root, target string) (string, bool) {
 		return "", false
 	}
 	return rel, true
-}
-
-func importBaselinesMarkdown(path, modelDir, productDir string) ([]BaselineEntry, error) {
-	data, err := os.ReadFile(path)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return nil, nil
-		}
-		return nil, err
-	}
-	var entries []BaselineEntry
-	seen := map[string]struct{}{}
-	inComponents := false
-	for _, line := range strings.Split(string(data), "\n") {
-		trimmed := strings.TrimSpace(line)
-		if strings.HasPrefix(trimmed, "## ") {
-			inComponents = strings.Contains(trimmed, "Components")
-			continue
-		}
-		if !inComponents || !baselineRowLinkRe.MatchString(line) {
-			continue
-		}
-		cells := strings.Split(strings.TrimRight(line, "\r"), "|")
-		if len(cells) < 6 {
-			continue
-		}
-		componentLinks := firstMarkdownLink(cells[1])
-		if componentLinks == "" {
-			continue
-		}
-		componentPath, err := resolveMarkdownTarget(path, componentLinks)
-		if err != nil {
-			return nil, err
-		}
-		componentID, err := nodeIDForMarkdownPath(componentPath, modelDir, productDir)
-		if err != nil {
-			return nil, err
-		}
-		repo := strings.Trim(strings.TrimSpace(cells[2]), "`")
-		repoPath := strings.Trim(strings.TrimSpace(cells[3]), "`")
-		commit := strings.Trim(strings.TrimSpace(cells[4]), "`")
-		if repoPath == "" || strings.HasPrefix(repoPath, "_") || strings.HasPrefix(repoPath, "(") {
-			continue
-		}
-		entry := BaselineEntry{Component: componentID, Repo: repo, Path: repoPath, Commit: commit}
-		key := entry.Component + "\x00" + entry.Repo + "\x00" + entry.Path
-		if _, ok := seen[key]; ok {
-			continue
-		}
-		seen[key] = struct{}{}
-		entries = append(entries, entry)
-	}
-	sort.Slice(entries, func(i, j int) bool { return entries[i].Component < entries[j].Component })
-	return entries, nil
-}
-
-// firstMarkdownLink returns the href of the first [label](href) inline link in s,
-// stripping any fragment or query suffix. Returns "" if none is found.
-func firstMarkdownLink(s string) string {
-	m := inlineLinkRe.FindStringSubmatch(s)
-	if len(m) < 2 {
-		return ""
-	}
-	target := strings.TrimSpace(m[1])
-	if i := strings.IndexAny(target, "#?"); i >= 0 {
-		target = target[:i]
-	}
-	return target
 }

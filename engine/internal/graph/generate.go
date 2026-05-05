@@ -20,10 +20,6 @@ func GenerateMarkdown(modelDir, productDir string, g *Graph, dryRun bool) (*Gene
 	)
 	requirementsByUseCase := invertRelationEntries(g.Relations[PartKindRefine])
 	requirementsByComponent := invertRelationEntries(g.Relations[PartKindSatisfy])
-	baselinesByComponent := map[string]BaselineEntry{}
-	for _, entry := range g.Baselines {
-		baselinesByComponent[entry.Component] = entry
-	}
 	traceTargets := map[string][]string{}
 	for _, entry := range g.Relations[PartKindTrace] {
 		traceTargets[entry.Source] = entry.Targets
@@ -83,10 +79,9 @@ func GenerateMarkdown(modelDir, productDir string, g *Graph, dryRun bool) (*Gene
 	for _, area := range []struct {
 		root         string
 		requirements map[string][]string
-		includeBase  bool
 	}{
 		{root: filepath.Join(modelDir, "use-cases"), requirements: requirementsByUseCase},
-		{root: filepath.Join(modelDir, "components"), requirements: requirementsByComponent, includeBase: true},
+		{root: filepath.Join(modelDir, "components"), requirements: requirementsByComponent},
 	} {
 		if _, err := os.Stat(area.root); err != nil {
 			continue
@@ -103,13 +98,6 @@ func GenerateMarkdown(modelDir, productDir string, g *Graph, dryRun bool) (*Gene
 			updates := []fmUpdate{
 				{key: "requirements", paths: pathsForTargets(path, area.requirements[nodeID], modelDir, productDir)},
 				{key: "traces", paths: pathsForTargets(path, traceTargets[nodeID], modelDir, productDir), omitIfAbsent: true},
-			}
-			if area.includeBase {
-				updates = append(updates, fmUpdate{
-					key:      "baseline",
-					scalar:   renderBaselineScalar(baselinesByComponent[nodeID]),
-					isScalar: true,
-				})
 			}
 			updated, err := applyFMUpdates(string(body), updates)
 			if err != nil {
@@ -166,13 +154,6 @@ func pathsForTargets(fromPath string, targets []string, modelDir, productDir str
 		paths = append(paths, filepath.ToSlash(rel))
 	}
 	return paths
-}
-
-func renderBaselineScalar(entry BaselineEntry) string {
-	if entry.Component == "" {
-		return "~"
-	}
-	return fmt.Sprintf("%s:%s@%s", entry.Repo, entry.Path, entry.Commit)
 }
 
 func markdownPathForNodeID(nodeID, modelDir, productDir string) (string, error) {

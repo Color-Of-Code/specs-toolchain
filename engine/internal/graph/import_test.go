@@ -11,12 +11,10 @@ func TestImportMarkdownAndWriteRoundTrip(t *testing.T) {
 	root := t.TempDir()
 	modelDir := filepath.Join(root, "model")
 	productDir := filepath.Join(root, "product")
-	baselineFile := filepath.Join(modelDir, "baselines", "repo-baseline.md")
 	for _, dir := range []string{
 		filepath.Join(modelDir, "requirements"),
 		filepath.Join(modelDir, "use-cases"),
 		filepath.Join(modelDir, "components"),
-		filepath.Join(modelDir, "baselines"),
 		productDir,
 	} {
 		if err := os.MkdirAll(dir, 0o755); err != nil {
@@ -58,16 +56,7 @@ func TestImportMarkdownAndWriteRoundTrip(t *testing.T) {
 		"",
 		"# Alpha Component",
 	}, "\n"))
-	writeImportFile(t, baselineFile, strings.Join([]string{
-		"# Baselines",
-		"",
-		"## Components",
-		"| Component | Repo | Path | SHA | Date |",
-		"| --------- | ---- | ---- | --- | ---- |",
-		"| [Alpha Component](../components/alpha-component.md) | `host-repo` | `/` | `0123456789abcdef0123456789abcdef01234567` | 2026-05-03 |",
-	}, "\n"))
-
-	g, err := ImportMarkdown(modelDir, productDir, baselineFile)
+	g, err := ImportMarkdown(modelDir, productDir)
 	if err != nil {
 		t.Fatalf("ImportMarkdown() error = %v", err)
 	}
@@ -79,9 +68,6 @@ func TestImportMarkdownAndWriteRoundTrip(t *testing.T) {
 	}
 	if got := len(g.Relations[PartKindRefine]); got != 1 {
 		t.Fatalf("len(Relations[refine]) = %d, want 1", got)
-	}
-	if got := len(g.Baselines); got != 1 {
-		t.Fatalf("len(Baselines) = %d, want 1", got)
 	}
 
 	manifestPath := filepath.Join(modelDir, "traceability", "graph.yaml")
@@ -95,8 +81,8 @@ func TestImportMarkdownAndWriteRoundTrip(t *testing.T) {
 	if got := len(reloaded.NodeIDs()); got != 4 {
 		t.Fatalf("len(NodeIDs()) = %d, want 4", got)
 	}
-	if len(reloaded.Manifest.Parts) != 4 {
-		t.Fatalf("len(Manifest.Parts) = %d, want 4", len(reloaded.Manifest.Parts))
+	if len(reloaded.Manifest.Parts) != 3 {
+		t.Fatalf("len(Manifest.Parts) = %d, want 3", len(reloaded.Manifest.Parts))
 	}
 }
 

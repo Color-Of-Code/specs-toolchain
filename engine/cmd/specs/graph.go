@@ -19,7 +19,6 @@ type graphValidateJSON struct {
 	DeriveReqtEdges int    `json:"derive_reqt_edge_count"`
 	SatisfyEdges    int    `json:"satisfy_edge_count"`
 	RefineEdges     int    `json:"refine_edge_count"`
-	BaselineCount   int    `json:"baseline_count"`
 	LayoutNodeCount int    `json:"layout_node_count"`
 	RepoCount       int    `json:"repo_count"`
 }
@@ -29,7 +28,6 @@ type graphImportJSON struct {
 	DeriveReqtEdges int    `json:"derive_reqt_edge_count"`
 	SatisfyEdges    int    `json:"satisfy_edge_count"`
 	RefineEdges     int    `json:"refine_edge_count"`
-	BaselineCount   int    `json:"baseline_count"`
 	DryRun          bool   `json:"dry_run"`
 }
 
@@ -40,13 +38,12 @@ type graphGenerateJSON struct {
 }
 
 type graphCacheJSON struct {
-	ManifestPath  string `json:"manifest_path"`
-	CachePath     string `json:"cache_path"`
-	NodeCount     int    `json:"node_count"`
-	EdgeCount     int    `json:"edge_count"`
-	BaselineCount int    `json:"baseline_count"`
-	LayoutCount   int    `json:"layout_count"`
-	DryRun        bool   `json:"dry_run"`
+	ManifestPath string `json:"manifest_path"`
+	CachePath    string `json:"cache_path"`
+	NodeCount    int    `json:"node_count"`
+	EdgeCount    int    `json:"edge_count"`
+	LayoutCount  int    `json:"layout_count"`
+	DryRun       bool   `json:"dry_run"`
 }
 
 type graphSaveRelationsJSON struct {
@@ -183,21 +180,17 @@ func cmdGraphRebuildCache(args []string) error {
 	if err != nil {
 		return exitWith(1, "load graph %s: %v", path, err)
 	}
-	if err := validateBaselineRepos(g, cfg.Repos); err != nil {
-		return exitWith(1, "validate %s: %v", path, err)
-	}
 	stats, err := graph.RebuildCache(cache, g, *dryRun)
 	if err != nil {
 		return exitWith(1, "rebuild cache %s: %v", cache, err)
 	}
 	summary := graphCacheJSON{
-		ManifestPath:  path,
-		CachePath:     stats.CachePath,
-		NodeCount:     stats.NodeCount,
-		EdgeCount:     stats.EdgeCount,
-		BaselineCount: stats.BaselineCount,
-		LayoutCount:   stats.LayoutCount,
-		DryRun:        *dryRun,
+		ManifestPath: path,
+		CachePath:    stats.CachePath,
+		NodeCount:    stats.NodeCount,
+		EdgeCount:    stats.EdgeCount,
+		LayoutCount:  stats.LayoutCount,
+		DryRun:       *dryRun,
 	}
 	if *jsonOut {
 		enc := json.NewEncoder(os.Stdout)
@@ -212,7 +205,6 @@ func cmdGraphRebuildCache(args []string) error {
 	fmt.Printf("graph manifest:   %s\n", summary.ManifestPath)
 	fmt.Printf("nodes:            %d\n", summary.NodeCount)
 	fmt.Printf("edges:            %d\n", summary.EdgeCount)
-	fmt.Printf("baselines:        %d\n", summary.BaselineCount)
 	fmt.Printf("layout nodes:     %d\n", summary.LayoutCount)
 	return nil
 }
@@ -293,7 +285,7 @@ func cmdGraphImportMarkdown(args []string) error {
 		return exitWith(1, "graph manifest already exists at %s; rerun with --force to overwrite it", path)
 	}
 
-	g, err := graph.ImportMarkdown(cfg.ModelDir, cfg.ProductDir, cfg.BaselinesFile)
+	g, err := graph.ImportMarkdown(cfg.ModelDir, cfg.ProductDir)
 	if err != nil {
 		return exitWith(1, "import markdown: %v", err)
 	}
@@ -302,7 +294,6 @@ func cmdGraphImportMarkdown(args []string) error {
 		DeriveReqtEdges: relationEdgeCount(g.Relations[graph.PartKindDeriveReqt]),
 		SatisfyEdges:    relationEdgeCount(g.Relations[graph.PartKindSatisfy]),
 		RefineEdges:     relationEdgeCount(g.Relations[graph.PartKindRefine]),
-		BaselineCount:   len(g.Baselines),
 		DryRun:          *dryRun,
 	}
 	if *jsonOut {
@@ -320,8 +311,6 @@ func cmdGraphImportMarkdown(args []string) error {
 		fmt.Printf("derive_reqt:      %d edge(s)\n", summary.DeriveReqtEdges)
 		fmt.Printf("satisfactions:    %d edge(s)\n", summary.SatisfyEdges)
 		fmt.Printf("refinements:      %d edge(s)\n", summary.RefineEdges)
-
-		fmt.Printf("baselines:        %d\n", summary.BaselineCount)
 	}
 	if *dryRun {
 		return nil
@@ -363,9 +352,6 @@ func cmdGraphValidate(args []string) error {
 	if err := validateGraphNodeFiles(g, cfg.SpecsRoot); err != nil {
 		return exitWith(1, "validate %s: %v", path, err)
 	}
-	if err := validateBaselineRepos(g, cfg.Repos); err != nil {
-		return exitWith(1, "validate %s: %v", path, err)
-	}
 
 	summary := graphValidateJSON{
 		ManifestPath:    path,
@@ -373,7 +359,6 @@ func cmdGraphValidate(args []string) error {
 		DeriveReqtEdges: relationEdgeCount(g.Relations[graph.PartKindDeriveReqt]),
 		SatisfyEdges:    relationEdgeCount(g.Relations[graph.PartKindSatisfy]),
 		RefineEdges:     relationEdgeCount(g.Relations[graph.PartKindRefine]),
-		BaselineCount:   len(g.Baselines),
 		LayoutNodeCount: len(g.Layout),
 		RepoCount:       len(cfg.Repos),
 	}
@@ -389,7 +374,6 @@ func cmdGraphValidate(args []string) error {
 	fmt.Printf("derive_reqt:      %d edge(s)\n", summary.DeriveReqtEdges)
 	fmt.Printf("satisfactions:    %d edge(s)\n", summary.SatisfyEdges)
 	fmt.Printf("refinements:      %d edge(s)\n", summary.RefineEdges)
-	fmt.Printf("baselines:        %d\n", summary.BaselineCount)
 	fmt.Printf("layout nodes:     %d\n", summary.LayoutNodeCount)
 	fmt.Printf("repos checked:    %d\n", summary.RepoCount)
 	return nil
@@ -448,15 +432,6 @@ func relationEdgeCount(entries []graph.RelationEntry) int {
 		total += len(entry.Targets)
 	}
 	return total
-}
-
-func validateBaselineRepos(g *graph.Graph, repos map[string]string) error {
-	for index, entry := range g.Baselines {
-		if _, ok := repos[entry.Repo]; !ok {
-			return fmt.Errorf("baseline entry %d repo %q is not configured in repos", index, entry.Repo)
-		}
-	}
-	return nil
 }
 
 func validateGraphNodeFiles(g *graph.Graph, specsRoot string) error {

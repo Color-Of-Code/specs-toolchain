@@ -157,9 +157,6 @@ func traceabilityAllowedNodeIDs(modelDir, productDir string, g *tracegraph.Graph
 			}
 		}
 	}
-	for _, baseline := range g.Baselines {
-		allowed[baseline.Component] = struct{}{}
-	}
 	for _, root := range []struct {
 		dir    string
 		prefix string

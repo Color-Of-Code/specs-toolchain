@@ -30,13 +30,6 @@ const vscodeTasksJSON = `{
       "problemMatcher": []
     },
     {
-      "label": "Specs: Lint (baselines)",
-      "type": "shell",
-      "command": "specs",
-      "args": ["lint", "--baselines"],
-      "problemMatcher": []
-    },
-    {
       "label": "Specs: Doctor",
       "type": "shell",
       "command": "specs",
@@ -89,20 +82,6 @@ const vscodeTasksJSON = `{
         "cr", "drain",
         "--id", "${input:specsCRId}"
       ],
-      "problemMatcher": []
-    },
-    {
-      "label": "Specs: Baseline Update (dry-run)",
-      "type": "shell",
-      "command": "specs",
-      "args": ["baseline", "update", "--dry-run"],
-      "problemMatcher": []
-    },
-    {
-      "label": "Specs: Baseline Update",
-      "type": "shell",
-      "command": "specs",
-      "args": ["baseline", "update"],
       "problemMatcher": []
     }
   ],

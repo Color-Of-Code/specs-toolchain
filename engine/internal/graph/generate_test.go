@@ -50,7 +50,6 @@ func TestGenerateMarkdownUpdatesArtifactFields(t *testing.T) {
 		"---",
 		"status: Draft",
 		"requirements: []",
-		"baseline: ~",
 		"---",
 		"",
 		"# Alpha Component",
@@ -62,7 +61,6 @@ func TestGenerateMarkdownUpdatesArtifactFields(t *testing.T) {
 			PartKindRefine:     {{Source: "model/requirements/alpha-requirement", Targets: []string{"model/use-cases/alpha-feature"}}},
 			PartKindSatisfy:    {{Source: "model/requirements/alpha-requirement", Targets: []string{"model/components/alpha-component"}}},
 		},
-		Baselines: []BaselineEntry{{Component: "model/components/alpha-component", Repo: "host-repo", Path: "/", Commit: "0123456789abcdef0123456789abcdef01234567"}},
 	}
 
 	result, err := GenerateMarkdown(modelDir, productDir, g, false)
@@ -83,8 +81,8 @@ func TestGenerateMarkdownUpdatesArtifactFields(t *testing.T) {
 		}
 	}
 	componentBody := readGenerateFile(t, filepath.Join(modelDir, "components", "alpha-component.md"))
-	if !strings.Contains(componentBody, "baseline: host-repo:/@0123456789abcdef0123456789abcdef01234567") {
-		t.Fatalf("component baseline missing generated value:\n%s", componentBody)
+	if !strings.Contains(componentBody, "requirements:") {
+		t.Fatalf("component requirements missing generated value:\n%s", componentBody)
 	}
 }
 

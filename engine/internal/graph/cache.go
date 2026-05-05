@@ -10,11 +10,10 @@ import (
 )
 
 type CacheStats struct {
-	CachePath     string
-	NodeCount     int
-	EdgeCount     int
-	BaselineCount int
-	LayoutCount   int
+	CachePath   string
+	NodeCount   int
+	EdgeCount   int
+	LayoutCount int
 }
 
 func RebuildCache(cachePath string, g *Graph, dryRun bool) (*CacheStats, error) {
@@ -32,11 +31,10 @@ func RebuildCache(cachePath string, g *Graph, dryRun bool) (*CacheStats, error) 
 		}
 	}
 	stats := &CacheStats{
-		CachePath:     absCachePath,
-		NodeCount:     len(g.NodeIDs()),
-		EdgeCount:     edgeCount,
-		BaselineCount: len(g.Baselines),
-		LayoutCount:   len(g.Layout),
+		CachePath:   absCachePath,
+		NodeCount:   len(g.NodeIDs()),
+		EdgeCount:   edgeCount,
+		LayoutCount: len(g.Layout),
 	}
 	if dryRun {
 		return stats, nil
@@ -62,12 +60,10 @@ func RebuildCache(cachePath string, g *Graph, dryRun bool) (*CacheStats, error) 
 		`DROP TABLE IF EXISTS meta`,
 		`DROP TABLE IF EXISTS nodes`,
 		`DROP TABLE IF EXISTS edges`,
-		`DROP TABLE IF EXISTS baselines`,
 		`DROP TABLE IF EXISTS layout`,
 		`CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT NOT NULL)`,
 		`CREATE TABLE nodes (id TEXT PRIMARY KEY, kind TEXT NOT NULL, path TEXT NOT NULL)`,
 		`CREATE TABLE edges (kind TEXT NOT NULL, source_id TEXT NOT NULL, target_id TEXT NOT NULL, PRIMARY KEY (kind, source_id, target_id))`,
-		`CREATE TABLE baselines (component_id TEXT PRIMARY KEY, repo TEXT NOT NULL, path TEXT NOT NULL, commit_sha TEXT NOT NULL)`,
 		`CREATE TABLE layout (node_id TEXT PRIMARY KEY, x REAL NOT NULL, y REAL NOT NULL, locked INTEGER NOT NULL DEFAULT 0)`,
 		`CREATE INDEX edges_source_idx ON edges (source_id, kind)`,
 		`CREATE INDEX edges_target_idx ON edges (target_id, kind)`,
@@ -123,17 +119,6 @@ func RebuildCache(cachePath string, g *Graph, dryRun bool) (*CacheStats, error) 
 					return nil, err
 				}
 			}
-		}
-	}
-
-	baselineStmt, err := tx.Prepare(`INSERT INTO baselines (component_id, repo, path, commit_sha) VALUES (?, ?, ?, ?)`)
-	if err != nil {
-		return nil, err
-	}
-	defer baselineStmt.Close()
-	for _, entry := range g.Baselines {
-		if _, err := baselineStmt.Exec(entry.Component, entry.Repo, entry.Path, entry.Commit); err != nil {
-			return nil, err
 		}
 	}
 

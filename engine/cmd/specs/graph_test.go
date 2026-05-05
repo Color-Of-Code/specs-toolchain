@@ -58,7 +58,6 @@ func TestCmdGraphValidateJSON(t *testing.T) {
 		`"node_count": 4`,
 		`"derive_reqt_edge_count": 1`,
 		`"refine_edge_count": 1`,
-		`"baseline_count": 1`,
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("output missing %q:\n%s", want, out)
@@ -110,21 +109,6 @@ func TestCmdGraphValidateRejectsMissingNodeFile(t *testing.T) {
 	}
 }
 
-func TestValidateBaselineReposRejectsUnknownRepo(t *testing.T) {
-	g := &graph.Graph{
-		Baselines: []graph.BaselineEntry{{
-			Component: "model/components/alpha-component",
-			Repo:      "missing-repo",
-			Path:      "/",
-			Commit:    "0123456789abcdef0123456789abcdef01234567",
-		}},
-	}
-	err := validateBaselineRepos(g, map[string]string{"known": "repos/known"})
-	if err == nil || !strings.Contains(err.Error(), `missing-repo`) {
-		t.Fatalf("validateBaselineRepos() error = %v, want missing repo error", err)
-	}
-}
-
 func TestCmdGraphImportMarkdownWritesCanonicalGraph(t *testing.T) {
 	dir := t.TempDir()
 	specsDir := filepath.Join(dir, "specs")
@@ -133,7 +117,6 @@ func TestCmdGraphImportMarkdownWritesCanonicalGraph(t *testing.T) {
 		filepath.Join(specsDir, "model", "requirements"),
 		filepath.Join(specsDir, "model", "use-cases"),
 		filepath.Join(specsDir, "model", "components"),
-		filepath.Join(specsDir, "model", "baselines"),
 	} {
 		if err := os.MkdirAll(path, 0o755); err != nil {
 			t.Fatal(err)
@@ -168,9 +151,6 @@ func TestCmdGraphImportMarkdownWritesCanonicalGraph(t *testing.T) {
 	}
 	if len(reloaded.Relations[graph.PartKindDeriveReqt]) != 1 || len(reloaded.Relations[graph.PartKindSatisfy]) != 1 || len(reloaded.Relations[graph.PartKindRefine]) != 1 {
 		t.Fatalf("unexpected imported graph sizes: %+v", reloaded)
-	}
-	if len(reloaded.Baselines) != 1 {
-		t.Fatalf("len(Baselines) = %d, want 1", len(reloaded.Baselines))
 	}
 }
 
@@ -273,15 +253,8 @@ func TestCmdGraphRebuildCacheWritesSQLite(t *testing.T) {
 	if err := db.QueryRow(`SELECT COUNT(*) FROM edges`).Scan(&edges); err != nil {
 		t.Fatal(err)
 	}
-	if edges != 2 {
-		t.Fatalf("edges = %d, want 2", edges)
-	}
-	var baselines int
-	if err := db.QueryRow(`SELECT COUNT(*) FROM baselines`).Scan(&baselines); err != nil {
-		t.Fatal(err)
-	}
-	if baselines != 1 {
-		t.Fatalf("baselines = %d, want 1", baselines)
+	if edges != 3 {
+		t.Fatalf("edges = %d, want 3", edges)
 	}
 }
 
@@ -424,13 +397,8 @@ func writeGraphFixture(t *testing.T, specsDir string) {
 			"    file: satisfactions.yaml",
 			"    kind: satisfy",
 			"    required: true",
-			"  - name: baselines",
-			"    file: baselines.yaml",
-			"    kind: baseline",
-			"    required: false",
 			"generation:",
 			"  markdown_relationship_fields: true",
-			"  markdown_baseline_fields: true",
 			"  stable_sort: lexical_id",
 		}, "\n"),
 		"deriveReqt.yaml": strings.Join([]string{
@@ -447,14 +415,12 @@ func writeGraphFixture(t *testing.T, specsDir string) {
 			"    targets:",
 			"      - model/use-cases/alpha-feature",
 		}, "\n"),
-		"satisfactions.yaml": "kind: satisfy\nentries: []\n",
-		"baselines.yaml": strings.Join([]string{
-			"kind: baseline",
+		"satisfactions.yaml": strings.Join([]string{
+			"kind: satisfy",
 			"entries:",
-			"  - component: model/components/alpha-component",
-			"    repo: host-repo",
-			"    path: /",
-			"    commit: 0123456789abcdef0123456789abcdef01234567",
+			"  - source: model/requirements/alpha-requirement",
+			"    targets:",
+			"      - model/components/alpha-component",
 		}, "\n"),
 	}
 	for name, content := range files {
@@ -500,14 +466,6 @@ func writeGraphImportFixture(t *testing.T, specsDir string) {
 			"",
 			"# Alpha Component",
 		}, "\n"),
-		filepath.Join(specsDir, "model", "baselines", "repo-baseline.md"): strings.Join([]string{
-			"# Baselines",
-			"",
-			"## Components",
-			"| Component | Repo | Path | SHA | Date |",
-			"| --------- | ---- | ---- | --- | ---- |",
-			"| [Alpha Component](../components/alpha-component.md) | `host-repo` | `/` | `0123456789abcdef0123456789abcdef01234567` | 2026-05-03 |",
-		}, "\n"),
 	}
 	for path, content := range files {
 		if err := os.WriteFile(path, []byte(content), 0o644); err != nil {
@@ -548,7 +506,6 @@ func writeGraphGenerateFixture(t *testing.T, specsDir string) {
 			"---",
 			"status: Draft",
 			"requirements: []",
-			"baseline: ~",
 			"---",
 			"",
 			"# Alpha Component",

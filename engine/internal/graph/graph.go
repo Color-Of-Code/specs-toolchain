@@ -5,7 +5,6 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"regexp"
 	"sort"
 	"strings"
 
@@ -21,7 +20,6 @@ const (
 	PartKindSatisfy    PartKind = "satisfy"
 	PartKindRefine     PartKind = "refine"
 	PartKindTrace      PartKind = "trace"
-	PartKindBaseline   PartKind = "baseline"
 	PartKindLayout     PartKind = "layout"
 )
 
@@ -41,20 +39,12 @@ type ManifestPart struct {
 
 type GenerationConfig struct {
 	MarkdownRelationshipFields bool   `yaml:"markdown_relationship_fields"`
-	MarkdownBaselineFields     bool   `yaml:"markdown_baseline_fields"`
 	StableSort                 string `yaml:"stable_sort"`
 }
 
 type RelationEntry struct {
 	Source  string   `yaml:"source"`
 	Targets []string `yaml:"targets"`
-}
-
-type BaselineEntry struct {
-	Component string `yaml:"component"`
-	Repo      string `yaml:"repo"`
-	Path      string `yaml:"path"`
-	Commit    string `yaml:"commit"`
 }
 
 type LayoutEntry struct {
@@ -69,18 +59,12 @@ type Graph struct {
 	RootDir      string
 	Manifest     Manifest
 	Relations    map[PartKind][]RelationEntry
-	Baselines    []BaselineEntry
 	Layout       []LayoutEntry
 }
 
 type relationPart struct {
 	Kind    PartKind        `yaml:"kind"`
 	Entries []RelationEntry `yaml:"entries"`
-}
-
-type baselinePart struct {
-	Kind    PartKind        `yaml:"kind"`
-	Entries []BaselineEntry `yaml:"entries"`
 }
 
 type layoutPart struct {
@@ -131,11 +115,8 @@ var manifestPartSpecs = []partSpec{
 	{Name: "refinements", File: "refinements.yaml", Kind: PartKindRefine, Required: true, isRelation: true, sourceKind: "requirement", targetKind: "use-case", invertOnSave: true},
 	{Name: "satisfactions", File: "satisfactions.yaml", Kind: PartKindSatisfy, Required: true, isRelation: true, sourceKind: "requirement", targetKind: "component", invertOnSave: true},
 	{Name: "traces", File: "traces.yaml", Kind: PartKindTrace, Required: false, isRelation: true},
-	{Name: "baselines", File: "baselines.yaml", Kind: PartKindBaseline, Required: false},
 	{Name: "layout", File: "layout.yaml", Kind: PartKindLayout, Required: false},
 }
-
-var fullSHARe = regexp.MustCompile(`^[0-9a-f]{40}$`)
 
 func Load(manifestPath string) (*Graph, error) {
 	absManifest, err := filepath.Abs(manifestPath)
@@ -231,9 +212,6 @@ func (g *Graph) NodeIDs() []string {
 			}
 		}
 	}
-	for _, baseline := range g.Baselines {
-		seen[baseline.Component] = struct{}{}
-	}
 	for _, layout := range g.Layout {
 		seen[layout.ID] = struct{}{}
 	}
@@ -254,9 +232,6 @@ func validateManifest(manifest Manifest) error {
 	}
 	if !manifest.Generation.MarkdownRelationshipFields {
 		return fmt.Errorf("generation.markdown_relationship_fields must be true")
-	}
-	if !manifest.Generation.MarkdownBaselineFields {
-		return fmt.Errorf("generation.markdown_baseline_fields must be true")
 	}
 	if manifest.Generation.StableSort != "lexical_id" {
 		return fmt.Errorf("generation.stable_sort must be %q", "lexical_id")
@@ -327,12 +302,6 @@ func (g *Graph) loadPart(part ManifestPart) error {
 		}
 	}
 	switch part.Kind {
-	case PartKindBaseline:
-		entries, err := loadBaselineEntries(data)
-		if err != nil {
-			return fmt.Errorf("load %s: %w", part.File, err)
-		}
-		g.Baselines = entries
 	case PartKindLayout:
 		entries, err := loadLayoutEntries(data)
 		if err != nil {
@@ -356,17 +325,6 @@ func loadRelationEntries(data []byte, kind PartKind) ([]RelationEntry, error) {
 	return part.Entries, nil
 }
 
-func loadBaselineEntries(data []byte) ([]BaselineEntry, error) {
-	var part baselinePart
-	if err := yaml.Unmarshal(data, &part); err != nil {
-		return nil, err
-	}
-	if part.Kind != PartKindBaseline {
-		return nil, fmt.Errorf("kind must be %q", PartKindBaseline)
-	}
-	return part.Entries, nil
-}
-
 func loadLayoutEntries(data []byte) ([]LayoutEntry, error) {
 	var part layoutPart
 	if err := yaml.Unmarshal(data, &part); err != nil {
@@ -386,9 +344,6 @@ func (g *Graph) validate() error {
 		if err := validateRelationEntries(g.Relations[spec.Kind], spec.Kind, spec.sourceKind, spec.targetKind); err != nil {
 			return err
 		}
-	}
-	if err := validateBaselines(g.Baselines); err != nil {
-		return err
 	}
 	if err := validateLayout(g.Layout); err != nil {
 		return err
@@ -443,39 +398,6 @@ func validateRelationEntries(entries []RelationEntry, partKind PartKind, sourceK
 	return nil
 }
 
-func validateBaselines(entries []BaselineEntry) error {
-	seenComponents := map[string]struct{}{}
-	for index, entry := range entries {
-		normalizedComponent, err := NormalizeNodeID(entry.Component)
-		if err != nil {
-			return fmt.Errorf("baseline entry %d component: %w", index, err)
-		}
-		if normalizedComponent != entry.Component {
-			return fmt.Errorf("baseline entry %d component must be normalized as %q", index, normalizedComponent)
-		}
-		if KindForNodeID(entry.Component) != "component" {
-			return fmt.Errorf("baseline entry %d component %q must be a component", index, entry.Component)
-		}
-		if _, exists := seenComponents[entry.Component]; exists {
-			return fmt.Errorf("baseline entry %d duplicates component %q", index, entry.Component)
-		}
-		seenComponents[entry.Component] = struct{}{}
-		if index > 0 && entries[index-1].Component > entry.Component {
-			return fmt.Errorf("baseline entries must be sorted by component")
-		}
-		if strings.TrimSpace(entry.Repo) == "" {
-			return fmt.Errorf("baseline entry %d repo is empty", index)
-		}
-		if _, err := normalizeBaselinePath(entry.Path); err != nil {
-			return fmt.Errorf("baseline entry %d path: %w", index, err)
-		}
-		if !fullSHARe.MatchString(entry.Commit) {
-			return fmt.Errorf("baseline entry %d commit must be a full lowercase SHA", index)
-		}
-	}
-	return nil
-}
-
 func validateLayout(entries []LayoutEntry) error {
 	seen := map[string]struct{}{}
 	for index, entry := range entries {
@@ -495,26 +417,4 @@ func validateLayout(entries []LayoutEntry) error {
 		}
 	}
 	return nil
-}
-
-func normalizeBaselinePath(raw string) (string, error) {
-	trimmed := strings.TrimSpace(raw)
-	if trimmed == "" {
-		return "", fmt.Errorf("baseline path is empty")
-	}
-	trimmed = strings.ReplaceAll(trimmed, "\\", "/")
-	if trimmed == "/" {
-		return "/", nil
-	}
-	if strings.HasPrefix(trimmed, "/") {
-		return "", fmt.Errorf("baseline path %q must be repo-relative or /", raw)
-	}
-	normalized := path.Clean(trimmed)
-	if normalized == "." || normalized == "" {
-		return "", fmt.Errorf("baseline path %q is invalid", raw)
-	}
-	if strings.HasPrefix(normalized, "../") || normalized == ".." {
-		return "", fmt.Errorf("baseline path %q escapes the repo", raw)
-	}
-	return normalized, nil
 }

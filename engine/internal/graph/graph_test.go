@@ -25,13 +25,8 @@ func TestLoadValidGraph(t *testing.T) {
 		"    file: satisfactions.yaml",
 		"    kind: satisfy",
 		"    required: true",
-		"  - name: baselines",
-		"    file: baselines.yaml",
-		"    kind: baseline",
-		"    required: false",
 		"generation:",
 		"  markdown_relationship_fields: true",
-		"  markdown_baseline_fields: true",
 		"  stable_sort: lexical_id",
 	}, "\n"))
 	writeGraphFile(t, dir, "deriveReqt.yaml", strings.Join([]string{
@@ -48,14 +43,12 @@ func TestLoadValidGraph(t *testing.T) {
 		"    targets:",
 		"      - model/use-cases/alpha-feature",
 	}, "\n"))
-	writeGraphFile(t, dir, "satisfactions.yaml", "kind: satisfy\nentries: []\n")
-	writeGraphFile(t, dir, "baselines.yaml", strings.Join([]string{
-		"kind: baseline",
+	writeGraphFile(t, dir, "satisfactions.yaml", strings.Join([]string{
+		"kind: satisfy",
 		"entries:",
-		"  - component: model/components/alpha-component",
-		"    repo: host-repo",
-		"    path: services/alpha",
-		"    commit: 0123456789abcdef0123456789abcdef01234567",
+		"  - source: model/requirements/alpha-requirement",
+		"    targets:",
+		"      - model/components/alpha-component",
 	}, "\n"))
 
 	g, err := Load(filepath.Join(dir, "graph.yaml"))
@@ -97,7 +90,6 @@ func TestLoadRejectsOutOfOrderParts(t *testing.T) {
 		"    required: true",
 		"generation:",
 		"  markdown_relationship_fields: true",
-		"  markdown_baseline_fields: true",
 		"  stable_sort: lexical_id",
 	}, "\n"))
 
@@ -126,7 +118,6 @@ func TestLoadRejectsNonCanonicalNodeIDs(t *testing.T) {
 		"    required: true",
 		"generation:",
 		"  markdown_relationship_fields: true",
-		"  markdown_baseline_fields: true",
 		"  stable_sort: lexical_id",
 	}, "\n"))
 	writeGraphFile(t, dir, "deriveReqt.yaml", strings.Join([]string{

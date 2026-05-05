@@ -1,6 +1,6 @@
 // Package lint ports the framework lint checks to Go. It exposes
 // modular check functions and a Result type so callers can compose modes
-// (--all, --links, --style, --baselines).
+// (--all, --links, --style).
 package lint
 
 import (
@@ -11,10 +11,6 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
-
-	baselineutil "github.com/Color-Of-Code/specs-toolchain/engine/internal/baseline"
-	"github.com/Color-Of-Code/specs-toolchain/engine/internal/config"
-	"github.com/Color-Of-Code/specs-toolchain/engine/internal/graph"
 )
 
 // Result aggregates findings from a lint run.
@@ -253,46 +249,5 @@ func CheckMarkdownStyle(out io.Writer, specsRoot, configPath string, r *Result) 
 	}
 	if count == 0 {
 		fmt.Fprintln(out, "ok")
-	}
-}
-
-// CheckBaselines verifies that every canonical baseline entry records the
-// latest git commit SHA for the referenced (repo, path).
-func CheckBaselines(out io.Writer, cfg *config.Resolved, r *Result) {
-	fmt.Fprintln(out, "== component baselines ==")
-	if cfg.GraphManifest == "" {
-		r.warnf("no graph manifest configured; skipping")
-		return
-	}
-	if _, err := os.Stat(cfg.GraphManifest); err != nil {
-		r.warnf("no graph manifest at %s; skipping", cfg.GraphManifest)
-		return
-	}
-	g, err := graph.Load(cfg.GraphManifest)
-	if err != nil {
-		r.errf("load graph: %v", err)
-		return
-	}
-	if len(cfg.Repos) == 0 {
-		r.warnf("no repos: map in .specs.yaml; baseline entries will be skipped")
-	}
-
-	workspace := filepath.Dir(cfg.HostRoot)
-
-	checked := 0
-	for _, entry := range g.Baselines {
-		actual, err := baselineutil.ResolveCommit(entry.Component, entry.Repo, entry.Path, cfg.Repos, workspace)
-		if err != nil {
-			r.warnf("%v", err)
-			continue
-		}
-		checked++
-		if actual != entry.Commit {
-			r.errf("baseline stale: %s path=%q\n  recorded: %s\n  actual:   %s",
-				entry.Repo, entry.Path, entry.Commit, actual)
-		}
-	}
-	if !r.Failed() {
-		fmt.Fprintf(out, "ok (%d component(s) verified)\n", checked)
 	}
 }
