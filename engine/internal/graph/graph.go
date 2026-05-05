@@ -77,17 +77,21 @@ type partSpec struct {
 	Required bool
 	// Relation-only fields (meaningful when isRelation is true).
 	isRelation   bool
-	sourceKind   string // storage source kind; empty = any valid node kind
-	targetKind   string // storage target kind; empty = any valid node kind
-	invertOnSave bool   // frontend sends (target→source); swap before storing
+	allowedPairs []NodeKindPair // valid (frontend source kind, frontend target kind); nil = unconstrained
+	invertOnSave bool           // frontend sends (target→source); swap before storing
+}
+
+// NodeKindPair is a (source kind, target kind) pair in frontend/JSON edge orientation.
+type NodeKindPair struct {
+	SourceKind string
+	TargetKind string
 }
 
 // RelationPartSpec is the exported view of a relation part spec.
 type RelationPartSpec struct {
 	Kind         PartKind
 	Required     bool
-	SourceKind   string
-	TargetKind   string
+	AllowedPairs []NodeKindPair // valid (frontend source kind, frontend target kind); nil = unconstrained
 	InvertOnSave bool
 }
 
@@ -99,8 +103,7 @@ func AllRelationSpecs() []RelationPartSpec {
 			specs = append(specs, RelationPartSpec{
 				Kind:         spec.Kind,
 				Required:     spec.Required,
-				SourceKind:   spec.sourceKind,
-				TargetKind:   spec.targetKind,
+				AllowedPairs: spec.allowedPairs,
 				InvertOnSave: spec.invertOnSave,
 			})
 		}
@@ -109,9 +112,9 @@ func AllRelationSpecs() []RelationPartSpec {
 }
 
 var manifestPartSpecs = []partSpec{
-	{Name: "derive_reqt", File: "deriveReqt.yaml", Kind: PartKindDeriveReqt, Required: true, isRelation: true, sourceKind: "product-requirement", targetKind: "requirement", invertOnSave: true},
-	{Name: "refinements", File: "refinements.yaml", Kind: PartKindRefine, Required: true, isRelation: true, sourceKind: "requirement", targetKind: "use-case", invertOnSave: true},
-	{Name: "satisfactions", File: "satisfactions.yaml", Kind: PartKindSatisfy, Required: true, isRelation: true, sourceKind: "requirement", targetKind: "component", invertOnSave: true},
+	{Name: "derive_reqt", File: "deriveReqt.yaml", Kind: PartKindDeriveReqt, Required: true, isRelation: true, allowedPairs: []NodeKindPair{{"requirement", "product-requirement"}}, invertOnSave: true},
+	{Name: "refinements", File: "refinements.yaml", Kind: PartKindRefine, Required: true, isRelation: true, allowedPairs: []NodeKindPair{{"use-case", "requirement"}, {"requirement", "requirement"}}, invertOnSave: true},
+	{Name: "satisfactions", File: "satisfactions.yaml", Kind: PartKindSatisfy, Required: true, isRelation: true, allowedPairs: []NodeKindPair{{"component", "requirement"}}, invertOnSave: true},
 	{Name: "traces", File: "traces.yaml", Kind: PartKindTrace, Required: false, isRelation: true},
 	{Name: "layout", File: "layout.yaml", Kind: PartKindLayout, Required: false},
 }
@@ -329,7 +332,15 @@ func (g *Graph) validate() error {
 		if !spec.isRelation {
 			continue
 		}
-		if err := validateRelationEntries(g.Relations[spec.Kind], spec.Kind, spec.sourceKind, spec.targetKind); err != nil {
+		pairs := spec.allowedPairs
+		if spec.invertOnSave {
+			inverted := make([]NodeKindPair, len(pairs))
+			for i, p := range pairs {
+				inverted[i] = NodeKindPair{SourceKind: p.TargetKind, TargetKind: p.SourceKind}
+			}
+			pairs = inverted
+		}
+		if err := validateRelationEntries(g.Relations[spec.Kind], spec.Kind, pairs); err != nil {
 			return err
 		}
 	}
@@ -339,7 +350,7 @@ func (g *Graph) validate() error {
 	return nil
 }
 
-func validateRelationEntries(entries []RelationEntry, partKind PartKind, sourceKind string, targetKind string) error {
+func validateRelationEntries(entries []RelationEntry, partKind PartKind, allowedPairs []NodeKindPair) error {
 	seenSources := map[string]struct{}{}
 	for index, entry := range entries {
 		normalizedSource, err := NormalizeNodeID(entry.Source)
@@ -349,8 +360,19 @@ func validateRelationEntries(entries []RelationEntry, partKind PartKind, sourceK
 		if normalizedSource != entry.Source {
 			return fmt.Errorf("%s entry %d source must be normalized as %q", partKind, index, normalizedSource)
 		}
-		if sourceKind != "" && KindForNodeID(entry.Source) != sourceKind {
-			return fmt.Errorf("%s entry %d source %q must be a %s", partKind, index, entry.Source, sourceKind)
+		if len(allowedPairs) > 0 {
+			for _, target := range entry.Targets {
+				pairOK := false
+				for _, p := range allowedPairs {
+					if KindForNodeID(entry.Source) == p.SourceKind && KindForNodeID(target) == p.TargetKind {
+						pairOK = true
+						break
+					}
+				}
+				if !pairOK {
+					return fmt.Errorf("%s entry %d: source %q -> target %q is not an allowed pair", partKind, index, entry.Source, target)
+				}
+			}
 		}
 		if _, exists := seenSources[entry.Source]; exists {
 			return fmt.Errorf("%s entry %d duplicates source %q", partKind, index, entry.Source)
@@ -371,9 +393,7 @@ func validateRelationEntries(entries []RelationEntry, partKind PartKind, sourceK
 			if normalizedTarget != target {
 				return fmt.Errorf("%s entry %d target %d must be normalized as %q", partKind, index, targetIndex, normalizedTarget)
 			}
-			if targetKind != "" && KindForNodeID(target) != targetKind {
-				return fmt.Errorf("%s entry %d target %q must be a %s", partKind, index, target, targetKind)
-			}
+			// pair validation handled above
 			if _, exists := seenTargets[target]; exists {
 				return fmt.Errorf("%s entry %d contains duplicate target %q", partKind, index, target)
 			}

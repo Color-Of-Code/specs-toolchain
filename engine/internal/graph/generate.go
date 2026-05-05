@@ -13,13 +13,17 @@ type GenerateResult struct {
 }
 
 func GenerateMarkdown(modelDir, productDir string, g *Graph, dryRun bool) (*GenerateResult, error) {
+	// Split refine relations: req→use-case (existing) vs. req→req (new "refines" field).
+	refineToReq, refineToUseCase := partitionRelationsByTargetKind(g.Relations[PartKindRefine], "requirement")
 	realisesByRequirement := invertRelationEntries(g.Relations[PartKindDeriveReqt])
 	implementedByByRequirement := mergeRelationEntries(
-		g.Relations[PartKindRefine],
+		refineToUseCase,
 		g.Relations[PartKindSatisfy],
 	)
-	requirementsByUseCase := invertRelationEntries(g.Relations[PartKindRefine])
+	requirementsByUseCase := invertRelationEntries(refineToUseCase)
 	requirementsByComponent := invertRelationEntries(g.Relations[PartKindSatisfy])
+	// refinesTargets[specific_req] = [abstract_req, ...]
+	refinesTargets := invertRelationEntries(refineToReq)
 	traceTargets := map[string][]string{}
 	for _, entry := range g.Relations[PartKindTrace] {
 		traceTargets[entry.Source] = entry.Targets
@@ -65,6 +69,7 @@ func GenerateMarkdown(modelDir, productDir string, g *Graph, dryRun bool) (*Gene
 			updated, err := applyFMUpdates(string(body), []fmUpdate{
 				{key: "realises", paths: pathsForTargets(path, realisesByRequirement[nodeID], modelDir, productDir)},
 				{key: "implemented_by", paths: pathsForTargets(path, implementedByByRequirement[nodeID], modelDir, productDir)},
+				{key: "refines", paths: pathsForTargets(path, refinesTargets[nodeID], modelDir, productDir), omitIfAbsent: true},
 				{key: "traces", paths: pathsForTargets(path, traceTargets[nodeID], modelDir, productDir), omitIfAbsent: true},
 			})
 			if err != nil {
@@ -168,6 +173,29 @@ func markdownPathForNodeID(nodeID, modelDir, productDir string) (string, error) 
 	default:
 		return "", fmt.Errorf("unsupported node id %q", nodeID)
 	}
+}
+
+// partitionRelationsByTargetKind splits entries into those whose ALL targets are of
+// targetKind (matched) and those whose targets are NOT of targetKind (rest).
+// Entries with mixed targets are split into two partial entries.
+func partitionRelationsByTargetKind(entries []RelationEntry, targetKind string) (matched, rest []RelationEntry) {
+	for _, entry := range entries {
+		var matchedTargets, restTargets []string
+		for _, target := range entry.Targets {
+			if KindForNodeID(target) == targetKind {
+				matchedTargets = append(matchedTargets, target)
+			} else {
+				restTargets = append(restTargets, target)
+			}
+		}
+		if len(matchedTargets) > 0 {
+			matched = append(matched, RelationEntry{Source: entry.Source, Targets: matchedTargets})
+		}
+		if len(restTargets) > 0 {
+			rest = append(rest, RelationEntry{Source: entry.Source, Targets: restTargets})
+		}
+	}
+	return
 }
 
 func invertRelationEntries(entries []RelationEntry) map[string][]string {

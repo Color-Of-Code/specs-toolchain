@@ -55,6 +55,7 @@ var traceabilityPageTemplate = template.Must(template.New("traceability-page").P
     <option value="deriveReqt">Derive Req.</option>
     <option value="satisfy">Satisfy</option>
     <option value="refine">Refine</option>
+    <option value="trace">Trace</option>
   </select>{{ end }}
   {{ if .SaveRelationsURL }}<button id="remove-edge" type="button" class="toolbar-icon-button toolbar-remove-edge-button" aria-label="Remove selected edge" title="Remove selected edge"><span class="details-visually-hidden">Remove selected edge</span></button>{{ end }}
   <a class="toolbar-link" href="{{ .JSONURL }}">Graph JSON</a>

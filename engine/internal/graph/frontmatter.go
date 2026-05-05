@@ -12,6 +12,7 @@ var fmFieldKeys = map[string]string{
 	"Realised By":    "realised_by",
 	"Realises":       "realises",
 	"Implemented By": "implemented_by",
+	"Refines":        "refines",
 	"Requirements":   "requirements",
 	"Traces":         "traces",
 }

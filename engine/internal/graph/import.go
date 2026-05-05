@@ -84,6 +84,19 @@ func ImportMarkdown(modelDir, productDir string) (*Graph, error) {
 					return fmt.Errorf("implemented-by target %q from %s is not a supported implementer kind", target, path)
 				}
 			}
+			// refines: specific_req → abstract_req (stored as abstract → specific)
+			refinesTargets, err := linkedNodeIDs(path, modelDir, productDir, "Refines")
+			if err != nil {
+				return err
+			}
+			for _, target := range refinesTargets {
+				if KindForNodeID(target) != "requirement" {
+					return fmt.Errorf("refines target %q from %s must be a requirement", target, path)
+				}
+				// source=current req (specific), target=abstract req
+				// storage convention: source=abstract, target=specific
+				addEdge(refinements, target, source)
+			}
 			return nil
 		}); err != nil {
 			return nil, err

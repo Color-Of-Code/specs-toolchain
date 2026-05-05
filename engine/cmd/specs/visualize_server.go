@@ -240,16 +240,21 @@ func relationEntriesFromSaveEdges(edges []relationSaveEdge, allowed map[string]s
 		if spec == nil {
 			return nil, fmt.Errorf("relation edge %d kind %q is unsupported", index, current.Kind)
 		}
-		// Derive the expected source/target node kinds as the frontend sends them.
-		frontendSrc, frontendTgt := spec.SourceKind, spec.TargetKind
-		if spec.InvertOnSave {
-			frontendSrc, frontendTgt = spec.TargetKind, spec.SourceKind
-		}
-		if frontendSrc != "" && tracegraph.KindForNodeID(normalizedSource) != frontendSrc {
-			return nil, fmt.Errorf("relation edge %d source %q must be a %s", index, normalizedSource, frontendSrc)
-		}
-		if frontendTgt != "" && tracegraph.KindForNodeID(normalizedTarget) != frontendTgt {
-			return nil, fmt.Errorf("relation edge %d target %q must be a %s", index, normalizedTarget, frontendTgt)
+		// Validate source/target node kinds against all allowed pairs (frontend orientation).
+		srcKind := tracegraph.KindForNodeID(normalizedSource)
+		tgtKind := tracegraph.KindForNodeID(normalizedTarget)
+		if len(spec.AllowedPairs) > 0 {
+			valid := false
+			for _, pair := range spec.AllowedPairs {
+				if (pair.SourceKind == "" || pair.SourceKind == srcKind) &&
+					(pair.TargetKind == "" || pair.TargetKind == tgtKind) {
+					valid = true
+					break
+				}
+			}
+			if !valid {
+				return nil, fmt.Errorf("relation edge %d kind %q is not valid between %s and %s", index, current.Kind, srcKind, tgtKind)
+			}
 		}
 		key := current.Kind + "\x00" + normalizedSource + "\x00" + normalizedTarget
 		if _, exists := seen[key]; exists {
