@@ -83,10 +83,12 @@
     // Spacing multiplier for overflow columns (layer index > 2) so they sit
     // closer together than the three primary columns.
     extraColumnSpacing: 0.75,
-    // Number of forward+backward barycenter sweeps used to reduce crossings.
-    barycenterPasses: 6,
+    // Number of cose iterations for the virtual organic pre-pass that determines
+    // the vertical order of nodes within each column. More iterations give a
+    // better cluster arrangement but take longer to compute.
+    organicPrepassIterations: 800,
     // Maximum number of adjacent-pair swap sweeps per column in the
-    // transposition refinement pass that runs after barycenter ordering.
+    // transposition refinement pass that runs after the organic pre-pass.
     // Each sweep scans every adjacent pair in a column and swaps the pair
     // when the swap provably reduces the crossing count.
     transpositionSweeps: 8,
@@ -617,51 +619,6 @@
         return order;
       }
 
-      function reorderLayer(layer, neighborLayer, useIncomingEdges) {
-        const orderedNodes = layers.get(layer) || [];
-        if (orderedNodes.length < 2) {
-          return;
-        }
-        const neighborOrder = indexByNodeId(neighborLayer);
-        const currentOrder = indexByNodeId(layer);
-        const scored = orderedNodes.map((node) => {
-          const related = [];
-          for (const edge of edges) {
-            if (useIncomingEdges) {
-              if (edge.target === node.id() && neighborOrder.has(edge.source)) {
-                related.push(neighborOrder.get(edge.source));
-              }
-            } else if (edge.source === node.id() && neighborOrder.has(edge.target)) {
-              related.push(neighborOrder.get(edge.target));
-            }
-          }
-          const fallback = currentOrder.get(node.id()) || 0;
-          // Median is more robust than mean when connectivity is skewed:
-          // a single outlier neighbour cannot pull a node far out of position.
-          let score;
-          if (related.length === 0) {
-            score = fallback;
-          } else {
-            related.sort((a, b) => a - b);
-            const mid = Math.floor(related.length / 2);
-            score = related.length % 2 === 1
-              ? related[mid]
-              : (related[mid - 1] + related[mid]) / 2;
-          }
-          return { node, score, fallback };
-        });
-        scored.sort((left, right) => {
-          if (left.score !== right.score) {
-            return left.score - right.score;
-          }
-          if (left.fallback !== right.fallback) {
-            return left.fallback - right.fallback;
-          }
-          return compareNodeOrder(left.node, right.node);
-        });
-        layers.set(layer, scored.map((entry) => entry.node));
-      }
-
       // Returns the sorted positions of a node's neighbours in a specific layer.
       function neighborPositions(nodeId, neighborOrder, useIncomingEdges) {
         const positions = [];
@@ -728,18 +685,32 @@
         }
       }
 
-      // Phase 1: iterative median-barycenter sweeps (global ordering).
-      for (let pass = 0; pass < layeredLayoutTuning.barycenterPasses; pass += 1) {
-        for (let i = 1; i < layerKeys.length; i += 1) {
-          reorderLayer(layerKeys[i], layerKeys[i - 1], true);
-        }
-        for (let i = layerKeys.length - 2; i >= 0; i -= 1) {
-          reorderLayer(layerKeys[i], layerKeys[i + 1], false);
-        }
-      }
+      // Phase 1: organic pre-pass — run a virtual cose layout (no animation) so
+      // the physics engine naturally clusters connected nodes. We use only the
+      // resulting y-positions to determine the vertical ordering within each
+      // column; x-positions are discarded. Starting from current positions
+      // (randomize: false) keeps the result deterministic.
+      cy.layout({
+        name: "cose",
+        fit: false,
+        animate: false,
+        randomize: false,
+        nodeRepulsion: 4500,
+        idealEdgeLength: 80,
+        edgeElasticity: 100,
+        gravity: 40,
+        numIter: layeredLayoutTuning.organicPrepassIterations,
+      }).run();
 
-      // Phase 2: transposition refinement (local crossing elimination).
-      // Runs once over all columns; each column converges internally.
+      // Sort each column by the y-coordinate assigned by the organic pre-pass.
+      // Nodes that are densely connected share a region of the organic layout,
+      // so this naturally groups connected clusters adjacent in the column.
+      layerKeys.forEach((layer) => {
+        layers.get(layer).sort((a, b) => a.position().y - b.position().y);
+      });
+
+      // Phase 2: transposition refinement — fix any local crossings introduced
+      // when nodes are snapped back to their fixed column x-coordinates.
       layerKeys.forEach((layer) => transposeLayer(layer));
 
       const vpWidth = Math.max(cy.width(), layeredLayoutTuning.minWidth);
