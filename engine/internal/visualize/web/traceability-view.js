@@ -63,6 +63,21 @@
   };
 
   // Tuning knobs for the layered (left-to-right columns) layout.
+  // Tuning knobs for the clustered (concentric-ring) layout.
+  const clusteredLayoutTuning = {
+    // Padding (px) passed to cy.fit() at the end of layout.
+    padding: 40,
+    // Radius (px) of the innermost ring (requirements around a PR centre).
+    innerRingRadius: 120,
+    // Radius step (px) added per additional ring outward (use-cases, leaves).
+    ringRadiusStep: 100,
+    // Minimum distance (px) between the bounding circles of adjacent clusters.
+    // Increase to give more breathing room between PR clusters.
+    clusterGap: 60,
+    // Fallback radius (px) used when Cytoscape has not yet measured a node.
+    defaultNodeSize: 44,
+  };
+
   const layeredLayoutTuning = {
     // Padding (px) passed to cy.fit() at the end of layout.
     padding: 40,
@@ -529,44 +544,122 @@
       if (!cy) {
         return;
       }
-      // Step 1: pre-position nodes in concentric rings by kind rank
-      const kindCount = Object.keys(kindOrder).length;
-      const groups = {};
-      cy.nodes().forEach((ele) => {
-        const rank = kindRank(ele.data("kind"));
-        const key = rank === Number.MAX_SAFE_INTEGER ? kindCount : rank;
-        if (!groups[key]) {
-          groups[key] = [];
-        }
-        groups[key].push(ele);
+
+      // ── Cluster structure ────────────────────────────────────────────────
+      // Build one sub-cluster per product-requirement node.
+      // Each cluster has:
+      //   ring 0 (centre): the PR itself
+      //   ring 1: requirements directly connected to it
+      //   ring 2: use-cases connected to those requirements
+      //   ring 3: remaining leaf nodes (component, api, service, feature, …)
+      //           connected to nodes already in rings 1-2
+      //
+      // Nodes not reachable from any PR are collected in a single extra cluster
+      // at the end.
+
+      const allNodes = cy.nodes().toArray();
+      const allEdges = cy.edges().toArray();
+
+      // Adjacency index (undirected).
+      const adj = new Map(allNodes.map((n) => [n.id(), new Set()]));
+      allEdges.forEach((e) => {
+        adj.get(e.data("source")).add(e.data("target"));
+        adj.get(e.data("target")).add(e.data("source"));
       });
-      const sortedRings = Object.keys(groups).map(Number).sort((a, b) => a - b);
-      const w = cy.width();
-      const h = cy.height();
-      const cx = w / 2;
-      const ch = h / 2;
-      const maxRadius = Math.min(w, h) * 0.45;
-      sortedRings.forEach((ringKey, ringIdx) => {
-        const r = maxRadius * (ringIdx + 1) / sortedRings.length;
-        const nodes = groups[ringKey];
-        nodes.forEach((node, i) => {
-          const angle = (2 * Math.PI * i) / nodes.length - Math.PI / 2;
-          node.position({ x: cx + r * Math.cos(angle), y: ch + r * Math.sin(angle) });
+
+      const prNodes = allNodes.filter((n) => n.data("kind") === "product-requirement");
+      const globalPlaced = new Set();
+
+      // Gather rings for one PR.
+      function buildCluster(pr) {
+        const ring1 = allNodes.filter(
+          (n) => !globalPlaced.has(n.id()) && n.data("kind") === "requirement" && adj.get(pr.id()).has(n.id()),
+        );
+        ring1.forEach((n) => globalPlaced.add(n.id()));
+
+        const ring1ids = new Set(ring1.map((n) => n.id()));
+        const ring2 = allNodes.filter(
+          (n) => !globalPlaced.has(n.id())
+            && (n.data("kind") === "use-case" || n.data("kind") === "usecase")
+            && ring1.some((r) => adj.get(r.id()).has(n.id())),
+        );
+        ring2.forEach((n) => globalPlaced.add(n.id()));
+
+        const ring12ids = new Set([...ring1ids, ...ring2.map((n) => n.id())]);
+        const ring3 = allNodes.filter(
+          (n) => !globalPlaced.has(n.id())
+            && [...adj.get(n.id())].some((id) => ring12ids.has(id)),
+        );
+        ring3.forEach((n) => globalPlaced.add(n.id()));
+
+        return [ring1, ring2, ring3];
+      }
+
+      // Compute the outer radius of a cluster given its rings.
+      function clusterRadius(rings) {
+        const nonEmpty = rings.filter((r) => r.length > 0);
+        return clusteredLayoutTuning.innerRingRadius
+          + nonEmpty.length * clusteredLayoutTuning.ringRadiusStep;
+      }
+
+      // Place one ring of nodes around (cx, cy) at radius r.
+      function placeRing(ring, cx2, cy2, r) {
+        ring.forEach((node, i) => {
+          const angle = (2 * Math.PI * i) / ring.length - Math.PI / 2;
+          node.position({
+            x: roundCoord(cx2 + r * Math.cos(angle)),
+            y: roundCoord(cy2 + r * Math.sin(angle)),
+          });
+        });
+      }
+
+      // ── Layout the clusters on a grid ──────────────────────────────────
+      cy.startBatch();
+      globalPlaced.clear();
+
+      // Collect cluster data first so we can compute grid cell sizes.
+      const clusters = prNodes.map((pr) => {
+        globalPlaced.add(pr.id());
+        const rings = buildCluster(pr);
+        return { pr, rings, radius: clusterRadius(rings) };
+      });
+
+      // Lone nodes (no PR) form a single extra pseudo-cluster.
+      const orphans = allNodes.filter((n) => !globalPlaced.has(n.id()));
+      if (orphans.length > 0) {
+        clusters.push({ pr: null, rings: [orphans, [], []], radius: clusterRadius([orphans, [], []]) });
+      }
+
+      // Arrange clusters in a roughly-square grid.
+      const cols = Math.ceil(Math.sqrt(clusters.length));
+      clusters.forEach((cluster, idx) => {
+        const col = idx % cols;
+        const row = Math.floor(idx / cols);
+        const maxR = clusters
+          .slice(row * cols, row * cols + cols)
+          .reduce((m, c) => Math.max(m, c.radius), 0);
+        const cellSize = 2 * maxR + clusteredLayoutTuning.clusterGap;
+        const cx2 = col * cellSize + cellSize / 2;
+        const cy2 = row * cellSize + cellSize / 2;
+
+        // Centre: the PR node itself (or first orphan).
+        if (cluster.pr) {
+          cluster.pr.position({ x: roundCoord(cx2), y: roundCoord(cy2) });
+        }
+
+        // Rings outward.
+        cluster.rings.forEach((ring, ringIdx) => {
+          if (ring.length === 0) {
+            return;
+          }
+          const r = clusteredLayoutTuning.innerRingRadius
+            + ringIdx * clusteredLayoutTuning.ringRadiusStep;
+          placeRing(ring, cx2, cy2, r);
         });
       });
-      // Step 2: run cose from these positions to minimize edge crossings
-      cy.layout({
-        name: "cose",
-        fit: true,
-        padding: 40,
-        animate: false,
-        randomize: false,
-        nodeRepulsion: 4500,
-        idealEdgeLength: 80,
-        edgeElasticity: 100,
-        gravity: 40,
-        numIter: 1000,
-      }).run();
+
+      cy.endBatch();
+      cy.fit(undefined, clusteredLayoutTuning.padding);
     }
 
     function runLayeredLayout() {
