@@ -64,33 +64,18 @@
 
   // Tuning knobs for the layered (left-to-right columns) layout.
   const layeredLayoutTuning = {
-    // Minimum viewport size assumed when the container reports 0.
-    minWidth: 720,
-    minHeight: 440,
-    // Padding passed to cy.fit() at the end.
+    // Padding (px) passed to cy.fit() at the end of layout.
     padding: 40,
-    // Outer margin reserved on each side before distributing columns.
-    marginX: 96,
-    marginY: 64,
-    // Maximum pixels between adjacent node centres in the same column. Prevents
-    // tall columns (e.g. many requirements) from stretching the full viewport.
-    maxNodeSpacingY: 120,
-    // Minimum clear gap (px) between adjacent node bounding-boxes in a column.
-    // Overrides maxNodeSpacingY when nodes are large enough to otherwise overlap.
-    minNodeGap: 14,
-    // Fallback node height (px) used when Cytoscape has not yet measured a node.
-    defaultNodeHeight: 40,
-    // Spacing multiplier for overflow columns (layer index > 2) so they sit
-    // closer together than the three primary columns.
-    extraColumnSpacing: 0.75,
-    // Number of cose iterations for the virtual organic pre-pass that determines
-    // the vertical order of nodes within each column. More iterations give a
-    // better cluster arrangement but take longer to compute.
+    // Horizontal distance (px) between adjacent column centres.
+    columnSpacingX: 300,
+    // Vertical distance (px) between adjacent node centres in a column.
+    // Set this large enough so no two nodes ever overlap at any zoom level.
+    nodeSpacingY: 110,
+    // Number of cose iterations for the virtual organic pre-pass whose
+    // y-positions are used to determine the vertical order of nodes.
     organicPrepassIterations: 800,
     // Maximum number of adjacent-pair swap sweeps per column in the
     // transposition refinement pass that runs after the organic pre-pass.
-    // Each sweep scans every adjacent pair in a column and swaps the pair
-    // when the swap provably reduces the crossing count.
     transpositionSweeps: 8,
   };
 
@@ -706,20 +691,17 @@
       const organicY = new Map();
       nodes.forEach((node) => organicY.set(node.id(), node.position().y));
 
-      // For each column, sort its nodes by the MEAN organic-y of their
-      // connected neighbours across all other columns — NOT by the node's own
-      // organic-y. This is the critical distinction:
+      // Sort the anchor column (requirements, layer 1) by its own organic y.
+      // This is the reference: the physics engine has already arranged connected
+      // requirements into coherent vertical bands, so this order is correct.
       //
-      //   - A product requirement's own organic-y depends on where cose placed
-      //     it in free 2-D space, which may have nothing to do with the vertical
-      //     region of its requirements.
-      //   - Its neighbours' organic-y tells us exactly which vertical band those
-      //     requirements occupy, so the product requirement should be placed in
-      //     the same band.
-      //
-      // Unconnected nodes fall back to their own organic-y so they at least
-      // stay in a plausible region rather than being arbitrarily ordered.
-      function neighbourMeanOrganicY(nodeId) {
+      // All other columns sort by the MEAN organic y of their direct neighbours.
+      // A product requirement connected to REQ-1(y=100) and REQ-2(y=200) gets
+      // score=150, placing it in the same vertical band as those requirements.
+      // Unconnected nodes fall back to their own organic y.
+      const anchorLayer = layerKeys.includes(1) ? 1 : layerKeys[Math.floor(layerKeys.length / 2)];
+
+      function meanNeighbourOrganicY(nodeId) {
         const ys = [];
         for (const edge of edges) {
           if (edge.source === nodeId && organicY.has(edge.target)) {
@@ -735,60 +717,24 @@
       }
 
       layerKeys.forEach((layer) => {
-        layers.get(layer).sort((a, b) => neighbourMeanOrganicY(a.id()) - neighbourMeanOrganicY(b.id()));
+        if (layer === anchorLayer) {
+          layers.get(layer).sort((a, b) => organicY.get(a.id()) - organicY.get(b.id()));
+        } else {
+          layers.get(layer).sort((a, b) => meanNeighbourOrganicY(a.id()) - meanNeighbourOrganicY(b.id()));
+        }
       });
 
       // Phase 2: transposition refinement — eliminates any residual local
       // crossings introduced when nodes snap back to fixed column x-positions.
       layerKeys.forEach((layer) => transposeLayer(layer));
 
-      const vpWidth = Math.max(cy.width(), layeredLayoutTuning.minWidth);
-      const vpHeight = Math.max(cy.height(), layeredLayoutTuning.minHeight);
-      const usableWidth = Math.max(1, vpWidth - 2 * layeredLayoutTuning.marginX);
-      const usableHeight = Math.max(1, vpHeight - 2 * layeredLayoutTuning.marginY);
-      const primaryColumns = Math.max(1, layerKeys.length - 1);
-
-      // Per-column vertical positions: centre the column in the available height
-      // and respect each node's rendered size so nodes never overlap. The step
-      // between consecutive centres is max(minRequired, min(rawEqual, maxCap))
-      // where minRequired = halfHeight(i) + halfHeight(i+1) + minNodeGap.
-      function computeColumnPositions(orderedNodes) {
-        const count = orderedNodes.length;
-        if (count === 0) {
-          return [];
-        }
-        if (count === 1) {
-          return [layeredLayoutTuning.marginY + usableHeight / 2];
-        }
-        const halfH = orderedNodes.map(
-          (node) => (node.height() || layeredLayoutTuning.defaultNodeHeight) / 2,
-        );
-        const rawStep = usableHeight / (count - 1);
-        const steps = [];
-        for (let i = 0; i < count - 1; i += 1) {
-          const minStep = halfH[i] + halfH[i + 1] + layeredLayoutTuning.minNodeGap;
-          steps.push(Math.max(minStep, Math.min(rawStep, layeredLayoutTuning.maxNodeSpacingY)));
-        }
-        const totalHeight = steps.reduce((sum, s) => sum + s, 0);
-        const topY = layeredLayoutTuning.marginY + (usableHeight - totalHeight) / 2;
-        const positions = [topY];
-        for (let i = 0; i < count - 1; i += 1) {
-          positions.push(positions[i] + steps[i]);
-        }
-        return positions;
-      }
-
+      // Place nodes at absolute positions using fixed spacing. The canvas
+      // expands automatically; cy.fit() zooms to show all nodes with padding.
       cy.startBatch();
       layerKeys.forEach((layer, layerPosition) => {
-        // Overflow columns (index > 2) are pulled closer together.
-        const columnRatio = layer <= 2
-          ? layerPosition
-          : 2 + (layerPosition - 2) * layeredLayoutTuning.extraColumnSpacing;
-        const x = layeredLayoutTuning.marginX + (usableWidth * columnRatio) / primaryColumns;
-        const orderedNodes = layers.get(layer) || [];
-        const yPositions = computeColumnPositions(orderedNodes);
-        orderedNodes.forEach((node, nodeIndex) => {
-          node.position({ x: roundCoord(x), y: roundCoord(yPositions[nodeIndex]) });
+        const x = layerPosition * layeredLayoutTuning.columnSpacingX;
+        (layers.get(layer) || []).forEach((node, nodeIndex) => {
+          node.position({ x: roundCoord(x), y: roundCoord(nodeIndex * layeredLayoutTuning.nodeSpacingY) });
         });
       });
       cy.endBatch();
