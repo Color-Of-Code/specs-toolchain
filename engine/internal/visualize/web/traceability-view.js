@@ -1556,11 +1556,68 @@
         container.innerHTML = `<pre style="padding: 16px; color: inherit;">${String(error)}</pre>`;
       });
 
+    function updateGraph(graph) {
+      if (!cy) {
+        return;
+      }
+      // Save viewport to restore after patching.
+      const savedZoom = cy.zoom();
+      const savedPan = cy.pan();
+
+      // Diff nodes.
+      const newNodeIds = new Set((graph.nodes || []).map((n) => n.id));
+      cy.nodes().forEach((n) => {
+        if (!newNodeIds.has(n.id())) {
+          n.remove();
+        }
+      });
+      (graph.nodes || []).forEach((node) => {
+        if (!cy.$id(node.id).length) {
+          cy.add({ data: { id: node.id, label: node.label, path: node.path, kind: node.kind, summary: node.summary || "" } });
+        }
+      });
+
+      // Diff edges by (source, target, kind).
+      const edgeKey = (source, target, kind) => `${source}\0${target}\0${kind}`;
+      const newEdgeKeys = new Set((graph.edges || []).map((e) => edgeKey(e.source, e.target, e.kind)));
+      cy.edges().forEach((e) => {
+        if (!newEdgeKeys.has(edgeKey(e.data("source"), e.data("target"), e.data("kind")))) {
+          e.remove();
+        }
+      });
+      const existingEdgeKeys = new Set();
+      cy.edges().forEach((e) => {
+        existingEdgeKeys.add(edgeKey(e.data("source"), e.data("target"), e.data("kind")));
+      });
+      (graph.edges || []).forEach((edge) => {
+        if (!existingEdgeKeys.has(edgeKey(edge.source, edge.target, edge.kind))) {
+          cy.add({ data: { id: createClientEdgeId(), source: edge.source, target: edge.target, kind: edge.kind } });
+        }
+      });
+
+      currentGraph = graph;
+
+      // Restore viewport — no fit.
+      cy.viewport({ zoom: savedZoom, pan: savedPan });
+
+      selectedEdge = undefined;
+      selectedNode = undefined;
+      updateMetaSummary(options, cy.nodes().length, cy.edges().length);
+      updateRemoveEdgeButton();
+      updateDetailsPanel();
+      if (options.filterInput) {
+        applyFilter(options.filterInput.value);
+      }
+    }
+
     return {
       fit() {
         if (cy) {
           cy.fit(undefined, 40);
         }
+      },
+      update(graph) {
+        updateGraph(graph);
       },
     };
   }

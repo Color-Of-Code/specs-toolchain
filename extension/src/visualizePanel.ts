@@ -6,6 +6,7 @@ import * as vscode from "vscode";
 import { runAndCapture, getSpecsExecutionTarget, getOutput } from "./engine";
 
 let currentPanel: vscode.WebviewPanel | undefined;
+let currentPanelReady = false;
 let suppressRefreshUntil = 0;
 
 interface VisualizeLayout {
@@ -105,6 +106,7 @@ async function openOrRefresh(context: vscode.ExtensionContext): Promise<void> {
   currentPanel = panel;
   panel.onDidDispose(() => {
     currentPanel = undefined;
+    currentPanelReady = false;
   });
   panel.webview.onDidReceiveMessage(async (msg: { type: string; requestId?: string; payload?: string | SaveRelationsPayload }) => {
     if (msg.type === "export-json") {
@@ -166,6 +168,7 @@ async function refresh(context: vscode.ExtensionContext): Promise<void> {
   if (res.exitCode !== 0) {
     getOutput().appendLine(res.stderr);
     currentPanel.webview.html = errorHtml(res.stderr || "visualize failed");
+    currentPanelReady = false;
     return;
   }
   let graph: VisualizeGraph;
@@ -175,9 +178,15 @@ async function refresh(context: vscode.ExtensionContext): Promise<void> {
     const message = error instanceof Error ? error.message : String(error);
     getOutput().appendLine(`invalid visualize json: ${message}`);
     currentPanel.webview.html = errorHtml(`invalid visualize json: ${message}`);
+    currentPanelReady = false;
     return;
   }
-  currentPanel.webview.html = renderHtml(currentPanel.webview, context, graph);
+  if (currentPanelReady) {
+    await currentPanel.webview.postMessage({ type: "update-graph", graph });
+  } else {
+    currentPanel.webview.html = renderHtml(currentPanel.webview, context, graph);
+    currentPanelReady = true;
+  }
 }
 
 async function exportFile(
@@ -322,7 +331,16 @@ ${fallbackInline ? "" : `<script nonce="${nonce}" src="${cytoscapeUri}"></script
   const pendingRequests = new Map();
   window.addEventListener('message', (event) => {
     const message = event.data;
-    if (!message || !message.requestId || message.type !== 'save-relations-result') {
+    if (!message) {
+      return;
+    }
+    if (message.type === 'update-graph' && message.graph) {
+      if (typeof ui !== 'undefined' && typeof ui.update === 'function') {
+        ui.update(message.graph);
+      }
+      return;
+    }
+    if (!message.requestId || message.type !== 'save-relations-result') {
       return;
     }
     const pending = pendingRequests.get(message.requestId);
@@ -338,8 +356,9 @@ ${fallbackInline ? "" : `<script nonce="${nonce}" src="${cytoscapeUri}"></script
   });
   document.getElementById('refresh').addEventListener('click', () => vscode.postMessage({ type: 'refresh' }));
   document.getElementById('export-json').addEventListener('click', () => vscode.postMessage({ type: 'export-json' }));
+  let ui;
   if (typeof TraceabilityUI !== 'undefined') {
-    const ui = TraceabilityUI.mount({
+    ui = TraceabilityUI.mount({
       graph,
       container: document.getElementById('graph'),
       fitButton: document.getElementById('fit'),
@@ -360,7 +379,6 @@ ${fallbackInline ? "" : `<script nonce="${nonce}" src="${cytoscapeUri}"></script
       onConfirm: () => true,
       emptyMessage: 'No traceability data found.',
     });
-    void ui;
   } else {
     document.getElementById('graph').innerHTML = '<pre style="padding: 16px; color: var(--vscode-errorForeground)">traceability UI failed to load</pre>';
   }
