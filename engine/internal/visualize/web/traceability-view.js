@@ -62,6 +62,26 @@
     service: 5,
   };
 
+  // Tuning knobs for the layered (left-to-right columns) layout.
+  const layeredLayoutTuning = {
+    // Minimum viewport size assumed when the container reports 0.
+    minWidth: 720,
+    minHeight: 440,
+    // Padding passed to cy.fit() at the end.
+    padding: 40,
+    // Outer margin reserved on each side before distributing columns.
+    marginX: 96,
+    marginY: 64,
+    // Maximum pixels between adjacent nodes in the same column. Prevents tall
+    // columns (e.g. many requirements) from becoming too spread out vertically.
+    maxNodeSpacingY: 120,
+    // Spacing multiplier for overflow columns (layer index > 2) so they sit
+    // closer together than the three primary columns.
+    extraColumnSpacing: 0.75,
+    // Number of forward+backward barycenter sweeps used to reduce crossings.
+    barycenterPasses: 6,
+  };
+
   function shapeForKind(kind) {
     switch (kind) {
       case "product-requirement":
@@ -242,6 +262,20 @@
     }
   }
 
+  function layerIndexForKind(kind) {
+    if (kind === "product-requirement") {
+      return 0;
+    }
+    if (kind === "requirement") {
+      return 1;
+    }
+    if (kind === "use-case" || kind === "usecase" || kind === "feature") {
+      return 2;
+    }
+    // Other kinds (api, component, service) go to a stable overflow column.
+    return 3;
+  }
+
   function layoutOptions(graph, name) {
     switch (name) {
       case "organic":
@@ -278,13 +312,15 @@
         };
       case "layered":
       default:
+        // runLayeredLayout() overrides this with preset positions; this
+        // breadthfirst config is only used as the initial Cytoscape pass before
+        // runLayeredLayout repositions every node.
         return {
           name: "breadthfirst",
           directed: true,
-          direction: "downward",
           roots: defaultRoots(graph),
           fit: true,
-          padding: 40,
+          padding: layeredLayoutTuning.padding,
           spacingFactor: 1.2,
           avoidOverlap: true,
           depthSort: compareNodeOrder,
@@ -479,6 +515,8 @@
       }
       if (layoutName === "clustered") {
         runClusteredLayout();
+      } else if (layoutName === "layered") {
+        runLayeredLayout();
       } else {
         cy.layout(layoutOptions(currentGraph, layoutName)).run();
       }
@@ -529,6 +567,126 @@
         gravity: 40,
         numIter: 1000,
       }).run();
+    }
+
+    function runLayeredLayout() {
+      if (!cy) {
+        return;
+      }
+
+      const nodes = cy.nodes().toArray();
+      if (nodes.length === 0) {
+        return;
+      }
+
+      // Group nodes by their fixed column (layer).
+      const layers = new Map();
+      nodes.forEach((node) => {
+        const layer = layerIndexForKind(node.data("kind"));
+        if (!layers.has(layer)) {
+          layers.set(layer, []);
+        }
+        layers.get(layer).push(node);
+      });
+
+      const layerKeys = Array.from(layers.keys()).sort((left, right) => left - right);
+      layerKeys.forEach((layer) => {
+        layers.get(layer).sort(compareNodeOrder);
+      });
+
+      const edges = cy.edges().toArray().map((edge) => ({
+        source: edge.data("source"),
+        target: edge.data("target"),
+      }));
+
+      function indexByNodeId(layer) {
+        const order = new Map();
+        (layers.get(layer) || []).forEach((node, index) => {
+          order.set(node.id(), index);
+        });
+        return order;
+      }
+
+      function reorderLayer(layer, neighborLayer, useIncomingEdges) {
+        const orderedNodes = layers.get(layer) || [];
+        if (orderedNodes.length < 2) {
+          return;
+        }
+        const neighborOrder = indexByNodeId(neighborLayer);
+        const currentOrder = indexByNodeId(layer);
+        const scored = orderedNodes.map((node) => {
+          const related = [];
+          for (const edge of edges) {
+            if (useIncomingEdges) {
+              if (edge.target === node.id() && neighborOrder.has(edge.source)) {
+                related.push(neighborOrder.get(edge.source));
+              }
+            } else if (edge.source === node.id() && neighborOrder.has(edge.target)) {
+              related.push(neighborOrder.get(edge.target));
+            }
+          }
+          const fallback = currentOrder.get(node.id()) || 0;
+          const barycenter = related.length
+            ? related.reduce((sum, value) => sum + value, 0) / related.length
+            : fallback;
+          return { node, barycenter, fallback };
+        });
+        scored.sort((left, right) => {
+          if (left.barycenter !== right.barycenter) {
+            return left.barycenter - right.barycenter;
+          }
+          if (left.fallback !== right.fallback) {
+            return left.fallback - right.fallback;
+          }
+          return compareNodeOrder(left.node, right.node);
+        });
+        layers.set(layer, scored.map((entry) => entry.node));
+      }
+
+      // Iterative barycenter sweeps reduce visible edge crossings.
+      for (let pass = 0; pass < layeredLayoutTuning.barycenterPasses; pass += 1) {
+        for (let i = 1; i < layerKeys.length; i += 1) {
+          reorderLayer(layerKeys[i], layerKeys[i - 1], true);
+        }
+        for (let i = layerKeys.length - 2; i >= 0; i -= 1) {
+          reorderLayer(layerKeys[i], layerKeys[i + 1], false);
+        }
+      }
+
+      const vpWidth = Math.max(cy.width(), layeredLayoutTuning.minWidth);
+      const vpHeight = Math.max(cy.height(), layeredLayoutTuning.minHeight);
+      const usableWidth = Math.max(1, vpWidth - 2 * layeredLayoutTuning.marginX);
+      const usableHeight = Math.max(1, vpHeight - 2 * layeredLayoutTuning.marginY);
+      const primaryColumns = Math.max(1, layerKeys.length - 1);
+
+      // Per-column vertical spacing: cap the gap between nodes so a column with
+      // many nodes does not stretch the full viewport height. The capped column
+      // is centred in the available space.
+      function columnY(nodeIndex, count) {
+        if (count <= 1) {
+          return layeredLayoutTuning.marginY + usableHeight / 2;
+        }
+        const rawStep = usableHeight / (count - 1);
+        const step = Math.min(rawStep, layeredLayoutTuning.maxNodeSpacingY);
+        const columnHeight = step * (count - 1);
+        const topY = layeredLayoutTuning.marginY + (usableHeight - columnHeight) / 2;
+        return topY + nodeIndex * step;
+      }
+
+      cy.startBatch();
+      layerKeys.forEach((layer, layerPosition) => {
+        // Overflow columns (index > 2) are pulled closer together.
+        const columnRatio = layer <= 2
+          ? layerPosition
+          : 2 + (layerPosition - 2) * layeredLayoutTuning.extraColumnSpacing;
+        const x = layeredLayoutTuning.marginX + (usableWidth * columnRatio) / primaryColumns;
+        const orderedNodes = layers.get(layer) || [];
+        orderedNodes.forEach((node, nodeIndex) => {
+          node.position({ x: roundCoord(x), y: roundCoord(columnY(nodeIndex, orderedNodes.length)) });
+        });
+      });
+      cy.endBatch();
+      cy.fit(undefined, layeredLayoutTuning.padding);
     }
 
     function applyFilter(filterText) {
@@ -786,6 +944,9 @@
         currentGraph = graph;
         cy = renderGraph(options, graph) || undefined;
         if (cy) {
+          if (activeLayoutName(options) === "layered") {
+            runLayeredLayout();
+          }
           updateMetaSummary(options, cy.nodes().length, cy.edges().length);
           updateDetailsPanel();
           if (options.filterInput) {
