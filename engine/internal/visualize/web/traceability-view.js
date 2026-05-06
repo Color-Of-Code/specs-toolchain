@@ -75,6 +75,15 @@
     // transposition refinement pass that runs after the cluster-walk ordering.
     // Each sweep fixes crossing pairs left by nodes connected to multiple clusters.
     transpositionSweeps: 8,
+    // Number of relaxation iterations after initial placement. Each pass slides
+    // every node towards the mean y of its connected neighbours (making edges
+    // as close to horizontal as possible) then clamps to prevent overlaps.
+    relaxationPasses: 30,
+    // Minimum clear gap (px) between adjacent node bounding-boxes in a column
+    // during relaxation. Prevents nodes touching even when label text is tall.
+    // Minimum gap (px) between groups placed in the same column.
+    // Prevents groups from touching when the master-node y spacing is tight.
+    nodeGap: 20,
   };
 
   function shapeForKind(kind) {
@@ -716,15 +725,107 @@
       // caused by nodes that connect to more than one cluster.
       layerKeys.forEach((layer) => transposeLayer(layer));
 
-      // Place nodes at absolute fixed-spacing positions. The canvas grows to
-      // fit all nodes; cy.fit() zooms to fill the viewport with padding.
+      // Master-column placement:
+      // 1. The column with the most nodes becomes the master; its nodes sit at
+      //    fixed y = nodeIndex × nodeSpacingY and are never moved.
+      // 2. Walk the master column BOTTOM-UP. For each master node at y=mY, find
+      //    every unplaced direct neighbour in every other column and place that
+      //    group so its BOTTOMMOST node sits at mY. If an already-placed group
+      //    sits at or below mY in that column, the new group is shifted upward
+      //    until it clears by nodeGap — preventing overlaps absolutely.
+      // 3. Any node not reachable from the master column is stacked above the
+      //    topmost placed node in its column.
+
+      // Find master column.
+      let masterLayer = layerKeys[0];
+      layerKeys.forEach((layer) => {
+        if ((layers.get(layer) || []).length > (layers.get(masterLayer) || []).length) {
+          masterLayer = layer;
+        }
+      });
+      const masterNodes = layers.get(masterLayer) || [];
+
+      // Direct-adjacency sets for O(1) neighbour lookup.
+      const adjacent = new Map();
+      nodes.forEach((n) => adjacent.set(n.id(), new Set()));
+      for (const edge of edges) {
+        adjacent.get(edge.source).add(edge.target);
+        adjacent.get(edge.target).add(edge.source);
+      }
+
+      // colTopY[layer]: minimum y (topmost node) of anything placed so far.
+      // Infinity = nothing placed yet.
+      const colTopY = new Map(layerKeys.map((layer) => [layer, Infinity]));
+      const placed = new Set(masterNodes.map((n) => n.id()));
+
       cy.startBatch();
-      layerKeys.forEach((layer, layerPosition) => {
-        const x = layerPosition * layeredLayoutTuning.columnSpacingX;
+
+      // Fix column x-positions and master column y-positions.
+      layerKeys.forEach((layer, layerPos) => {
+        const x = layerPos * layeredLayoutTuning.columnSpacingX;
         (layers.get(layer) || []).forEach((node, nodeIndex) => {
-          node.position({ x: roundCoord(x), y: roundCoord(nodeIndex * layeredLayoutTuning.nodeSpacingY) });
+          node.position({
+            x: roundCoord(x),
+            y: layer === masterLayer ? roundCoord(nodeIndex * layeredLayoutTuning.nodeSpacingY) : 0,
+          });
         });
       });
+
+      // Bottom-up master walk.
+      for (let mi = masterNodes.length - 1; mi >= 0; mi -= 1) {
+        const mNode = masterNodes[mi];
+        const mY = mi * layeredLayoutTuning.nodeSpacingY;
+
+        layerKeys.forEach((layer) => {
+          if (layer === masterLayer) {
+            return;
+          }
+          const colNodes = layers.get(layer) || [];
+          const group = colNodes.filter(
+            (n) => !placed.has(n.id()) && adjacent.get(mNode.id()).has(n.id()),
+          );
+          if (group.length === 0) {
+            return;
+          }
+
+          // Bottommost node of group → mY, clamped up if needed.
+          const prevTop = colTopY.get(layer);
+          const actualBottom = prevTop === Infinity
+            ? mY
+            : Math.min(mY, prevTop - layeredLayoutTuning.nodeGap);
+          const count = group.length;
+          const groupTop = actualBottom - (count - 1) * layeredLayoutTuning.nodeSpacingY;
+
+          group.forEach((n, i) => {
+            n.position({
+              x: n.position().x,
+              y: roundCoord(actualBottom - (count - 1 - i) * layeredLayoutTuning.nodeSpacingY),
+            });
+            placed.add(n.id());
+          });
+
+          colTopY.set(layer, prevTop === Infinity ? groupTop : Math.min(prevTop, groupTop));
+        });
+      }
+
+      // Stack unreachable nodes above all placed nodes in their column.
+      layerKeys.forEach((layer) => {
+        if (layer === masterLayer) {
+          return;
+        }
+        const unplaced = (layers.get(layer) || []).filter((n) => !placed.has(n.id()));
+        if (unplaced.length === 0) {
+          return;
+        }
+        const top = colTopY.get(layer);
+        let cursor = top === Infinity ? 0 : top - layeredLayoutTuning.nodeGap;
+        for (let i = unplaced.length - 1; i >= 0; i -= 1) {
+          unplaced[i].position({ x: unplaced[i].position().x, y: roundCoord(cursor) });
+          placed.add(unplaced[i].id());
+          cursor -= layeredLayoutTuning.nodeSpacingY;
+        }
+      });
+
       cy.endBatch();
       cy.fit(undefined, layeredLayoutTuning.padding);
     }
