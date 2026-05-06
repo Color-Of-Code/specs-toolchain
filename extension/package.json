@@ -311,9 +311,11 @@
   },
   "scripts": {
     "vscode:prepublish": "pnpm run compile",
-    "compile": "node ./scripts/prepare-media.mjs && tsc -p .",
+    "build-webview": "node ./scripts/build-webview.mjs",
+    "typecheck-webview": "tsc -p ../engine/internal/visualize/web/src/tsconfig.json",
+    "compile": "node ./scripts/build-webview.mjs && node ./scripts/prepare-media.mjs && tsc -p .",
     "watch": "tsc -p . --watch",
-    "lint": "tsc -p . --noEmit",
+    "lint": "tsc -p . --noEmit && tsc -p ../engine/internal/visualize/web/src/tsconfig.json",
     "package": "vsce package --no-dependencies",
     "package:bundled": "node --experimental-strip-types ./scripts/build-extension.ts",
     "deploy-dev": "mkdir -p ../bin && cd ../engine/cmd/specs && go build -o ../../../bin/specs && cd ../../../extension && pnpm run compile && pnpm run symlink",
@@ -324,6 +326,7 @@
     "@types/vscode": "^1.85.0",
     "@vscode/vsce": "^3.2.0",
     "cytoscape": "^3.33.2",
+    "esbuild": "^0.25.12",
     "typescript": "^5.4.0"
   }
 }

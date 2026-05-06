@@ -1,4 +1,4 @@
-.PHONY: lint format format-docs format-check check test vet build build-engine build-extension package-extension deploy-dev
+.PHONY: lint format format-docs format-check check test vet build build-webview build-engine build-extension package-extension deploy-dev
 
 lint:
 	cd engine && go run ./cmd/specs lint --style
@@ -22,7 +22,10 @@ check: format-check lint vet test
 
 build: build-engine build-extension
 
-build-engine:
+build-webview:
+	cd extension && pnpm run build-webview
+
+build-engine: build-webview
 	mkdir -p bin
 	cd engine/cmd/specs && go build -o ../../../bin/specs
 

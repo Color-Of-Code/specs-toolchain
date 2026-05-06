@@ -5,3 +5,6 @@
 /bin/specs
 /engine/specs
 /dist/
+/engine/internal/visualize/web/cytoscape.min.js
+/engine/internal/visualize/web/traceability-view.css
+/engine/internal/visualize/web/traceability-view.js
