@@ -71,11 +71,9 @@
     // Vertical distance (px) between adjacent node centres in a column.
     // Set this large enough so no two nodes ever overlap at any zoom level.
     nodeSpacingY: 110,
-    // Number of cose iterations for the virtual organic pre-pass whose
-    // y-positions are used to determine the vertical order of nodes.
-    organicPrepassIterations: 800,
     // Maximum number of adjacent-pair swap sweeps per column in the
-    // transposition refinement pass that runs after the organic pre-pass.
+    // transposition refinement pass that runs after the cluster-walk ordering.
+    // Each sweep fixes crossing pairs left by nodes connected to multiple clusters.
     transpositionSweeps: 8,
   };
 
@@ -670,93 +668,56 @@
         }
       }
 
-      // Phase 1: organic pre-pass — run a virtual cose layout (no animation) so
-      // the physics engine clusters connected nodes into coherent regions of the
-      // canvas. We capture every node's resulting y-coordinate as a "semantic
-      // height" signal and then discard the x-coordinates.
-      // randomize: false starts from current positions for determinism.
-      cy.layout({
-        name: "cose",
-        fit: false,
-        animate: false,
-        randomize: false,
-        nodeRepulsion: 4500,
-        idealEdgeLength: 80,
-        edgeElasticity: 100,
-        gravity: 40,
-        numIter: layeredLayoutTuning.organicPrepassIterations,
-      }).run();
-
-      // Capture organic y-positions before they are overwritten by column placement.
-      const organicY = new Map();
-      nodes.forEach((node) => organicY.set(node.id(), node.position().y));
-
-      // Build a lookup from node id to its layer index so the sort function
-      // can tell which side of a given layer a neighbour belongs to.
-      const nodeToLayer = new Map();
-      layerKeys.forEach((layer) => {
-        (layers.get(layer) || []).forEach((node) => nodeToLayer.set(node.id(), layer));
-      });
-
-      // The anchor layer is requirements (layer 1) — the column in the middle.
-      // Sorting strategy: every column uses mean organic y of its "anchor-side"
-      // direct neighbours as its primary sort key, with its own organic y as
-      // a tiebreaker within tied clusters.
+      // Cluster-walk ordering: reorder each column by visiting the left-column
+      // nodes top-to-bottom and immediately pulling in their unvisited
+      // right-column neighbours. This guarantees that all requirements connected
+      // to the same product requirement form a contiguous block in the
+      // requirements column, directly across from that product requirement.
+      // The same pass then clusters use-cases under their requirements, etc.
       //
-      // "Anchor-side neighbours" means:
-      //   - Layers LEFT  of the anchor (< 1): outgoing targets in the layer to
-      //     their right, i.e. the requirements they point to.
-      //   - The anchor layer itself (1) and layers to its RIGHT (> 1): incoming
-      //     sources in the layer to their left, i.e. requirements or use-cases
-      //     upstream.
-      //
-      // Why this works: every requirement that connects to the SAME product
-      // requirement gets the SAME primary score (= that PR's organic y). They
-      // all cluster together in the requirements column. Own organic y then
-      // orders them within the cluster, preserving cose's local spatial sense.
-      const anchorLayer = layerKeys.includes(1) ? 1 : layerKeys[Math.floor(layerKeys.length / 2)];
+      // The leftmost column is already sorted alphabetically (compareNodeOrder).
+      // Nodes not reachable from any left-column node are appended at the end.
+      for (let i = 0; i < layerKeys.length - 1; i += 1) {
+        const leftLayer = layerKeys[i];
+        const rightLayer = layerKeys[i + 1];
+        const rightSet = new Map(
+          (layers.get(rightLayer) || []).map((node) => [node.id(), node]),
+        );
+        const placed = new Set();
+        const ordered = [];
 
-      function anchorSideMeanOrganicY(nodeId, ownLayer) {
-        const lookRight = ownLayer < anchorLayer;
-        const ys = [];
-        for (const edge of edges) {
-          if (lookRight) {
-            if (edge.source === nodeId) {
-              const tgtLayer = nodeToLayer.get(edge.target);
-              if (tgtLayer !== undefined && tgtLayer > ownLayer) {
-                ys.push(organicY.get(edge.target) || 0);
-              }
+        (layers.get(leftLayer) || []).forEach((leftNode) => {
+          const lid = leftNode.id();
+          for (const edge of edges) {
+            let rightId = null;
+            if (edge.source === lid && rightSet.has(edge.target)) {
+              rightId = edge.target;
+            } else if (edge.target === lid && rightSet.has(edge.source)) {
+              rightId = edge.source;
             }
-          } else {
-            if (edge.target === nodeId) {
-              const srcLayer = nodeToLayer.get(edge.source);
-              if (srcLayer !== undefined && srcLayer < ownLayer) {
-                ys.push(organicY.get(edge.source) || 0);
-              }
+            if (rightId !== null && !placed.has(rightId)) {
+              ordered.push(rightSet.get(rightId));
+              placed.add(rightId);
             }
           }
-        }
-        return ys.length
-          ? ys.reduce((sum, y) => sum + y, 0) / ys.length
-          : (organicY.get(nodeId) || 0);
+        });
+
+        // Nodes in the right column with no left-side connection go last.
+        (layers.get(rightLayer) || []).forEach((node) => {
+          if (!placed.has(node.id())) {
+            ordered.push(node);
+          }
+        });
+
+        layers.set(rightLayer, ordered);
       }
 
-      layerKeys.forEach((layer) => {
-        layers.get(layer).sort((a, b) => {
-          const diff = anchorSideMeanOrganicY(a.id(), layer) - anchorSideMeanOrganicY(b.id(), layer);
-          if (diff !== 0) {
-            return diff;
-          }
-          return (organicY.get(a.id()) || 0) - (organicY.get(b.id()) || 0);
-        });
-      });
-
-      // Phase 2: transposition refinement — eliminates any residual local
-      // crossings introduced when nodes snap back to fixed column x-positions.
+      // Transposition refinement: fix any residual adjacent-pair crossings
+      // caused by nodes that connect to more than one cluster.
       layerKeys.forEach((layer) => transposeLayer(layer));
 
-      // Place nodes at absolute positions using fixed spacing. The canvas
-      // expands automatically; cy.fit() zooms to show all nodes with padding.
+      // Place nodes at absolute fixed-spacing positions. The canvas grows to
+      // fit all nodes; cy.fit() zooms to fill the viewport with padding.
       cy.startBatch();
       layerKeys.forEach((layer, layerPosition) => {
         const x = layerPosition * layeredLayoutTuning.columnSpacingX;
