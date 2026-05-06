@@ -1,11 +1,9 @@
+import cytoscape from "cytoscape";
 import type { Core, CytoscapeOptions } from "cytoscape";
 import type { GraphData, MountOptions } from "./types";
 import { layoutOptions } from "./layout";
 import { activeLayoutName, colorForKind, lineStyleForKind, shapeForKind } from "./utils";
 import { buildElements } from "./graph";
-
-// cytoscape is loaded as a browser global via <script src="cytoscape.min.js">.
-declare const cytoscape: (opts: CytoscapeOptions) => Core;
 
 export function updateMetaSummary(
   options: MountOptions,

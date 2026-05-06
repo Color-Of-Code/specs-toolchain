@@ -240,7 +240,6 @@ function renderHtml(
   graph: VisualizeGraph,
 ): string {
   const mediaRoot = vscode.Uri.joinPath(context.extensionUri, "media");
-  const cytoscapeUri = webview.asWebviewUri(vscode.Uri.joinPath(mediaRoot, "cytoscape.min.js")).toString();
   const appUri = webview.asWebviewUri(vscode.Uri.joinPath(mediaRoot, "traceability-view.js")).toString();
   const styleUri = webview.asWebviewUri(vscode.Uri.joinPath(mediaRoot, "traceability-view.css")).toString();
   const nonce = randomNonce();
@@ -253,7 +252,6 @@ function renderHtml(
   ].join("; ");
   const safeGraph = escapeScriptText(JSON.stringify(graph));
   const requiredAssets = [
-    path.join(context.extensionPath, "media", "cytoscape.min.js"),
     path.join(context.extensionPath, "media", "traceability-view.js"),
     path.join(context.extensionPath, "media", "traceability-view.css"),
   ];
@@ -318,7 +316,7 @@ ${fallbackBanner}
   <div id="graph"></div>
   <aside class="details" id="details"><article class="details-panel"><p class="details-eyebrow">Inspector</p><h2 class="details-title">No selection</h2><p class="details-note">Select a node or edge to inspect its details.</p></article></aside>
 </div>
-${fallbackInline ? "" : `<script nonce="${nonce}" src="${cytoscapeUri}"></script><script nonce="${nonce}" src="${appUri}"></script>`}
+${fallbackInline ? "" : `<script nonce="${nonce}" src="${appUri}"></script>`}
 <script nonce="${nonce}">
   const vscode = acquireVsCodeApi();
   const graph = ${safeGraph};

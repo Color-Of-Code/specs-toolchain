@@ -10,10 +10,6 @@ const mediaDir = path.join(extensionDir, "media");
 
 const assets = [
   {
-    source: path.join(repoRoot, "engine", "internal", "visualize", "web", "cytoscape.min.js"),
-    target: path.join(mediaDir, "cytoscape.min.js"),
-  },
-  {
     source: path.join(repoRoot, "engine", "internal", "visualize", "web", "traceability-view.js"),
     target: path.join(mediaDir, "traceability-view.js"),
   },

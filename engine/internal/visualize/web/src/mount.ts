@@ -1,7 +1,4 @@
-import type { Core, CytoscapeOptions, NodeSingular } from "cytoscape";
-
-// cytoscape is loaded as a browser global via <script src="cytoscape.min.js">.
-declare const cytoscape: (opts: CytoscapeOptions) => Core;
+import type { Core, NodeSingular } from "cytoscape";
 import { emptyGraph, persistRelations, resolveGraph } from "./graph";
 import { runClusteredLayout, runGridLayout, runLayeredLayout, runLayout } from "./layout";
 import { detailsIconButton, detailsMarkup, detailsRowsMarkup, escapeHTML, setDetails } from "./markup";
@@ -48,11 +45,6 @@ export function mount(options: MountOptions): MountHandle {
   const container = options.container;
   if (!container) {
     throw new Error("container is required");
-  }
-  if (typeof cytoscape === "undefined") {
-    container.innerHTML =
-      '<pre style="padding: 16px; color: inherit;">cytoscape failed to load</pre>';
-    return { fit() {}, update() {} };
   }
 
   let cy: Core | undefined;
