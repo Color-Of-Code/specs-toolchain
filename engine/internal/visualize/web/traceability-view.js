@@ -72,9 +72,14 @@
     // Outer margin reserved on each side before distributing columns.
     marginX: 96,
     marginY: 64,
-    // Maximum pixels between adjacent nodes in the same column. Prevents tall
-    // columns (e.g. many requirements) from becoming too spread out vertically.
+    // Maximum pixels between adjacent node centres in the same column. Prevents
+    // tall columns (e.g. many requirements) from stretching the full viewport.
     maxNodeSpacingY: 120,
+    // Minimum clear gap (px) between adjacent node bounding-boxes in a column.
+    // Overrides maxNodeSpacingY when nodes are large enough to otherwise overlap.
+    minNodeGap: 14,
+    // Fallback node height (px) used when Cytoscape has not yet measured a node.
+    defaultNodeHeight: 40,
     // Spacing multiplier for overflow columns (layer index > 2) so they sit
     // closer together than the three primary columns.
     extraColumnSpacing: 0.75,
@@ -659,18 +664,34 @@
       const usableHeight = Math.max(1, vpHeight - 2 * layeredLayoutTuning.marginY);
       const primaryColumns = Math.max(1, layerKeys.length - 1);
 
-      // Per-column vertical spacing: cap the gap between nodes so a column with
-      // many nodes does not stretch the full viewport height. The capped column
-      // is centred in the available space.
-      function columnY(nodeIndex, count) {
-        if (count <= 1) {
-          return layeredLayoutTuning.marginY + usableHeight / 2;
+      // Per-column vertical positions: centre the column in the available height
+      // and respect each node's rendered size so nodes never overlap. The step
+      // between consecutive centres is max(minRequired, min(rawEqual, maxCap))
+      // where minRequired = halfHeight(i) + halfHeight(i+1) + minNodeGap.
+      function computeColumnPositions(orderedNodes) {
+        const count = orderedNodes.length;
+        if (count === 0) {
+          return [];
         }
+        if (count === 1) {
+          return [layeredLayoutTuning.marginY + usableHeight / 2];
+        }
+        const halfH = orderedNodes.map(
+          (node) => (node.height() || layeredLayoutTuning.defaultNodeHeight) / 2,
+        );
         const rawStep = usableHeight / (count - 1);
-        const step = Math.min(rawStep, layeredLayoutTuning.maxNodeSpacingY);
-        const columnHeight = step * (count - 1);
-        const topY = layeredLayoutTuning.marginY + (usableHeight - columnHeight) / 2;
-        return topY + nodeIndex * step;
+        const steps = [];
+        for (let i = 0; i < count - 1; i += 1) {
+          const minStep = halfH[i] + halfH[i + 1] + layeredLayoutTuning.minNodeGap;
+          steps.push(Math.max(minStep, Math.min(rawStep, layeredLayoutTuning.maxNodeSpacingY)));
+        }
+        const totalHeight = steps.reduce((sum, s) => sum + s, 0);
+        const topY = layeredLayoutTuning.marginY + (usableHeight - totalHeight) / 2;
+        const positions = [topY];
+        for (let i = 0; i < count - 1; i += 1) {
+          positions.push(positions[i] + steps[i]);
+        }
+        return positions;
       }
 
       cy.startBatch();
@@ -681,8 +702,9 @@
           : 2 + (layerPosition - 2) * layeredLayoutTuning.extraColumnSpacing;
         const x = layeredLayoutTuning.marginX + (usableWidth * columnRatio) / primaryColumns;
         const orderedNodes = layers.get(layer) || [];
+        const yPositions = computeColumnPositions(orderedNodes);
         orderedNodes.forEach((node, nodeIndex) => {
-          node.position({ x: roundCoord(x), y: roundCoord(columnY(nodeIndex, orderedNodes.length)) });
+          node.position({ x: roundCoord(x), y: roundCoord(yPositions[nodeIndex]) });
         });
       });
       cy.endBatch();
