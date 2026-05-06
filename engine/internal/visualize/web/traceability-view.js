@@ -691,24 +691,49 @@
       const organicY = new Map();
       nodes.forEach((node) => organicY.set(node.id(), node.position().y));
 
-      // Sort the anchor column (requirements, layer 1) by its own organic y.
-      // This is the reference: the physics engine has already arranged connected
-      // requirements into coherent vertical bands, so this order is correct.
+      // Build a lookup from node id to its layer index so the sort function
+      // can tell which side of a given layer a neighbour belongs to.
+      const nodeToLayer = new Map();
+      layerKeys.forEach((layer) => {
+        (layers.get(layer) || []).forEach((node) => nodeToLayer.set(node.id(), layer));
+      });
+
+      // The anchor layer is requirements (layer 1) — the column in the middle.
+      // Sorting strategy: every column uses mean organic y of its "anchor-side"
+      // direct neighbours as its primary sort key, with its own organic y as
+      // a tiebreaker within tied clusters.
       //
-      // All other columns sort by the MEAN organic y of their direct neighbours.
-      // A product requirement connected to REQ-1(y=100) and REQ-2(y=200) gets
-      // score=150, placing it in the same vertical band as those requirements.
-      // Unconnected nodes fall back to their own organic y.
+      // "Anchor-side neighbours" means:
+      //   - Layers LEFT  of the anchor (< 1): outgoing targets in the layer to
+      //     their right, i.e. the requirements they point to.
+      //   - The anchor layer itself (1) and layers to its RIGHT (> 1): incoming
+      //     sources in the layer to their left, i.e. requirements or use-cases
+      //     upstream.
+      //
+      // Why this works: every requirement that connects to the SAME product
+      // requirement gets the SAME primary score (= that PR's organic y). They
+      // all cluster together in the requirements column. Own organic y then
+      // orders them within the cluster, preserving cose's local spatial sense.
       const anchorLayer = layerKeys.includes(1) ? 1 : layerKeys[Math.floor(layerKeys.length / 2)];
 
-      function meanNeighbourOrganicY(nodeId) {
+      function anchorSideMeanOrganicY(nodeId, ownLayer) {
+        const lookRight = ownLayer < anchorLayer;
         const ys = [];
         for (const edge of edges) {
-          if (edge.source === nodeId && organicY.has(edge.target)) {
-            ys.push(organicY.get(edge.target));
-          }
-          if (edge.target === nodeId && organicY.has(edge.source)) {
-            ys.push(organicY.get(edge.source));
+          if (lookRight) {
+            if (edge.source === nodeId) {
+              const tgtLayer = nodeToLayer.get(edge.target);
+              if (tgtLayer !== undefined && tgtLayer > ownLayer) {
+                ys.push(organicY.get(edge.target) || 0);
+              }
+            }
+          } else {
+            if (edge.target === nodeId) {
+              const srcLayer = nodeToLayer.get(edge.source);
+              if (srcLayer !== undefined && srcLayer < ownLayer) {
+                ys.push(organicY.get(edge.source) || 0);
+              }
+            }
           }
         }
         return ys.length
@@ -717,11 +742,13 @@
       }
 
       layerKeys.forEach((layer) => {
-        if (layer === anchorLayer) {
-          layers.get(layer).sort((a, b) => organicY.get(a.id()) - organicY.get(b.id()));
-        } else {
-          layers.get(layer).sort((a, b) => meanNeighbourOrganicY(a.id()) - meanNeighbourOrganicY(b.id()));
-        }
+        layers.get(layer).sort((a, b) => {
+          const diff = anchorSideMeanOrganicY(a.id(), layer) - anchorSideMeanOrganicY(b.id(), layer);
+          if (diff !== 0) {
+            return diff;
+          }
+          return (organicY.get(a.id()) || 0) - (organicY.get(b.id()) || 0);
+        });
       });
 
       // Phase 2: transposition refinement — eliminates any residual local
