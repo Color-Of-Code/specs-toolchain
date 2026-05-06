@@ -4,7 +4,7 @@ import {
   gridLayoutTuning,
   layeredLayoutTuning,
 } from "./constants";
-import { NodeKind } from "./types";
+import { LayoutKind, NodeKind } from "./types";
 import type { GraphData, MountOptions } from "./types";
 import {
   compareNodeOrder,
@@ -20,10 +20,10 @@ import {
 
 export function layoutOptions(
   graph: GraphData,
-  name: string,
+  name: LayoutKind,
 ): Record<string, unknown> {
   switch (name) {
-    case "organic":
+    case LayoutKind.Organic:
       return {
         name: "cose",
         fit: true,
@@ -35,7 +35,7 @@ export function layoutOptions(
         gravity: 30,
         nestingFactor: 0.8,
       };
-    case "grid":
+    case LayoutKind.Grid:
       return {
         name: "grid",
         fit: true,
@@ -43,7 +43,7 @@ export function layoutOptions(
         avoidOverlap: true,
         sort: compareNodeOrder,
       };
-    case "clustered":
+    case LayoutKind.Clustered:
       return {
         name: "breadthfirst",
         directed: true,
@@ -54,7 +54,7 @@ export function layoutOptions(
         avoidOverlap: true,
         depthSort: compareNodeOrder,
       };
-    case "layered":
+    case LayoutKind.Layered:
     default:
       return {
         name: "breadthfirst",
@@ -75,13 +75,13 @@ export function runLayout(
   cy: Core,
   graph: GraphData,
   options: MountOptions,
-  layoutName: string,
+  layoutName: LayoutKind,
 ): void {
-  if (layoutName === "clustered") {
+  if (layoutName === LayoutKind.Clustered) {
     runClusteredLayout(cy);
-  } else if (layoutName === "layered") {
+  } else if (layoutName === LayoutKind.Layered) {
     runLayeredLayout(cy);
-  } else if (layoutName === "grid") {
+  } else if (layoutName === LayoutKind.Grid) {
     runGridLayout(cy);
   } else {
     cy.layout(layoutOptions(graph, layoutName) as unknown as Parameters<Core["layout"]>[0]).run();

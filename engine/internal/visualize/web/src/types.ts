@@ -21,6 +21,13 @@ export enum EdgeKind {
   ApiImplementation = "api_implementation",
 }
 
+export enum LayoutKind {
+  Layered = "layered",
+  Organic = "organic",
+  Grid = "grid",
+  Clustered = "clustered",
+}
+
 export interface NodeData {
   id: string;
   label: string;

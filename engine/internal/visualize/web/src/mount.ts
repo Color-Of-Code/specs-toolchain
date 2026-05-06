@@ -3,7 +3,7 @@ import { emptyGraph, persistRelations, resolveGraph } from "./graph";
 import { runClusteredLayout, runGridLayout, runLayeredLayout, runLayout } from "./layout";
 import { detailsIconButton, detailsMarkup, detailsRowsMarkup, escapeHTML, setDetails } from "./markup";
 import { renderGraph, setMetaStatus, updateMetaSummary } from "./render";
-import { EdgeKind, NodeKind } from "./types";
+import { EdgeKind, LayoutKind, NodeKind } from "./types";
 import type { GraphData, MountHandle, MountOptions, RelationInfo } from "./types";
 import {
   activeLayoutName,
@@ -384,11 +384,11 @@ export function mount(options: MountOptions): MountHandle {
       cy = renderGraph(options, graph) ?? undefined;
       if (cy) {
         const layoutName = activeLayoutName(options);
-        if (layoutName === "layered") {
+        if (layoutName === LayoutKind.Layered) {
           runLayeredLayout(cy);
-        } else if (layoutName === "grid") {
+        } else if (layoutName === LayoutKind.Grid) {
           runGridLayout(cy);
-        } else if (layoutName === "clustered") {
+        } else if (layoutName === LayoutKind.Clustered) {
           runClusteredLayout(cy);
         }
         updateMetaSummary(options, cy.nodes().length, cy.edges().length);

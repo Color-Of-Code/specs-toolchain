@@ -1,7 +1,7 @@
 import type { NodeSingular } from "cytoscape";
 import { kindOrder, palette, relationSpecs } from "./constants";
 import type { RelationSpec } from "./constants";
-import { EdgeKind, NodeKind } from "./types";
+import { EdgeKind, LayoutKind, NodeKind } from "./types";
 import type { GraphData, MountOptions } from "./types";
 
 export function shapeForKind(kind: NodeKind): string {
@@ -82,18 +82,16 @@ export function nodeDisplayLabel(
   return (node.data("label") as string | undefined) ?? node.id();
 }
 
-export function layoutLabel(name: string): string {
+export function layoutLabel(name: LayoutKind): string {
   switch (name) {
-    case "layered":
+    case LayoutKind.Layered:
       return "layered";
-    case "organic":
+    case LayoutKind.Organic:
       return "organic";
-    case "grid":
+    case LayoutKind.Grid:
       return "grid";
-    case "clustered":
+    case LayoutKind.Clustered:
       return "clustered";
-    default:
-      return String(name || "layout");
   }
 }
 
@@ -167,6 +165,6 @@ export function colorForKind(kind: NodeKind): string {
   return palette[kind] ?? "#7a8791";
 }
 
-export function activeLayoutName(options: MountOptions): string {
-  return options.layoutSelect?.value ?? "layered";
+export function activeLayoutName(options: MountOptions): LayoutKind {
+  return (options.layoutSelect?.value ?? LayoutKind.Layered) as LayoutKind;
 }
