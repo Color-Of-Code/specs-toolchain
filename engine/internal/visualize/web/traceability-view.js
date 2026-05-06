@@ -70,20 +70,16 @@
     columnSpacingX: 300,
     // Vertical distance (px) between adjacent node centres in a column.
     // Set this large enough so no two nodes ever overlap at any zoom level.
-    nodeSpacingY: 110,
+    nodeSpacingY: 60,
     // Maximum number of adjacent-pair swap sweeps per column in the
     // transposition refinement pass that runs after the cluster-walk ordering.
     // Each sweep fixes crossing pairs left by nodes connected to multiple clusters.
     transpositionSweeps: 8,
-    // Number of relaxation iterations after initial placement. Each pass slides
-    // every node towards the mean y of its connected neighbours (making edges
-    // as close to horizontal as possible) then clamps to prevent overlaps.
-    relaxationPasses: 30,
     // Minimum clear gap (px) between adjacent node bounding-boxes in a column
     // during relaxation. Prevents nodes touching even when label text is tall.
     // Minimum gap (px) between groups placed in the same column.
     // Prevents groups from touching when the master-node y spacing is tight.
-    nodeGap: 20,
+    nodeGap: 4,
   };
 
   function shapeForKind(kind) {
