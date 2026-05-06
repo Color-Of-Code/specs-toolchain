@@ -85,6 +85,11 @@
     extraColumnSpacing: 0.75,
     // Number of forward+backward barycenter sweeps used to reduce crossings.
     barycenterPasses: 6,
+    // Maximum number of adjacent-pair swap sweeps per column in the
+    // transposition refinement pass that runs after barycenter ordering.
+    // Each sweep scans every adjacent pair in a column and swaps the pair
+    // when the swap provably reduces the crossing count.
+    transpositionSweeps: 8,
   };
 
   function shapeForKind(kind) {
@@ -631,14 +636,23 @@
             }
           }
           const fallback = currentOrder.get(node.id()) || 0;
-          const barycenter = related.length
-            ? related.reduce((sum, value) => sum + value, 0) / related.length
-            : fallback;
-          return { node, barycenter, fallback };
+          // Median is more robust than mean when connectivity is skewed:
+          // a single outlier neighbour cannot pull a node far out of position.
+          let score;
+          if (related.length === 0) {
+            score = fallback;
+          } else {
+            related.sort((a, b) => a - b);
+            const mid = Math.floor(related.length / 2);
+            score = related.length % 2 === 1
+              ? related[mid]
+              : (related[mid - 1] + related[mid]) / 2;
+          }
+          return { node, score, fallback };
         });
         scored.sort((left, right) => {
-          if (left.barycenter !== right.barycenter) {
-            return left.barycenter - right.barycenter;
+          if (left.score !== right.score) {
+            return left.score - right.score;
           }
           if (left.fallback !== right.fallback) {
             return left.fallback - right.fallback;
@@ -648,7 +662,73 @@
         layers.set(layer, scored.map((entry) => entry.node));
       }
 
-      // Iterative barycenter sweeps reduce visible edge crossings.
+      // Returns the sorted positions of a node's neighbours in a specific layer.
+      function neighborPositions(nodeId, neighborOrder, useIncomingEdges) {
+        const positions = [];
+        for (const edge of edges) {
+          if (useIncomingEdges) {
+            if (edge.target === nodeId && neighborOrder.has(edge.source)) {
+              positions.push(neighborOrder.get(edge.source));
+            }
+          } else if (edge.source === nodeId && neighborOrder.has(edge.target)) {
+            positions.push(neighborOrder.get(edge.target));
+          }
+        }
+        return positions;
+      }
+
+      // Counts edge crossings when node A is directly above node B.
+      // An edge from A to position p and an edge from B to position q cross
+      // when p > q (A's neighbour is lower than B's neighbour).
+      function countCrossings(aPositions, bPositions) {
+        let count = 0;
+        for (const p of aPositions) {
+          for (const q of bPositions) {
+            if (p > q) {
+              count += 1;
+            }
+          }
+        }
+        return count;
+      }
+
+      // Transposition refinement: scan every adjacent pair in a column and swap
+      // the pair when swapping reduces the actual crossing count against both
+      // neighbour layers. Repeats until no improvement or sweep limit reached.
+      function transposeLayer(layer) {
+        const orderedNodes = layers.get(layer);
+        if (!orderedNodes || orderedNodes.length < 2) {
+          return;
+        }
+        const layerPos = layerKeys.indexOf(layer);
+        const leftOrder = layerPos > 0 ? indexByNodeId(layerKeys[layerPos - 1]) : new Map();
+        const rightOrder = layerPos < layerKeys.length - 1 ? indexByNodeId(layerKeys[layerPos + 1]) : new Map();
+        let improved = true;
+        let sweeps = 0;
+        while (improved && sweeps < layeredLayoutTuning.transpositionSweeps) {
+          improved = false;
+          sweeps += 1;
+          for (let i = 0; i < orderedNodes.length - 1; i += 1) {
+            const u = orderedNodes[i];
+            const v = orderedNodes[i + 1];
+            const uid = u.id();
+            const vid = v.id();
+            const uLeft = neighborPositions(uid, leftOrder, true);
+            const vLeft = neighborPositions(vid, leftOrder, true);
+            const uRight = neighborPositions(uid, rightOrder, false);
+            const vRight = neighborPositions(vid, rightOrder, false);
+            const current = countCrossings(uLeft, vLeft) + countCrossings(uRight, vRight);
+            const swapped = countCrossings(vLeft, uLeft) + countCrossings(vRight, uRight);
+            if (swapped < current) {
+              orderedNodes[i] = v;
+              orderedNodes[i + 1] = u;
+              improved = true;
+            }
+          }
+        }
+      }
+
+      // Phase 1: iterative median-barycenter sweeps (global ordering).
       for (let pass = 0; pass < layeredLayoutTuning.barycenterPasses; pass += 1) {
         for (let i = 1; i < layerKeys.length; i += 1) {
           reorderLayer(layerKeys[i], layerKeys[i - 1], true);
@@ -657,6 +737,10 @@
           reorderLayer(layerKeys[i], layerKeys[i + 1], false);
         }
       }
+
+      // Phase 2: transposition refinement (local crossing elimination).
+      // Runs once over all columns; each column converges internally.
+      layerKeys.forEach((layer) => transposeLayer(layer));
 
       const vpWidth = Math.max(cy.width(), layeredLayoutTuning.minWidth);
       const vpHeight = Math.max(cy.height(), layeredLayoutTuning.minHeight);
