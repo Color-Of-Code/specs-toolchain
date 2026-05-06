@@ -686,10 +686,10 @@
       }
 
       // Phase 1: organic pre-pass — run a virtual cose layout (no animation) so
-      // the physics engine naturally clusters connected nodes. We use only the
-      // resulting y-positions to determine the vertical ordering within each
-      // column; x-positions are discarded. Starting from current positions
-      // (randomize: false) keeps the result deterministic.
+      // the physics engine clusters connected nodes into coherent regions of the
+      // canvas. We capture every node's resulting y-coordinate as a "semantic
+      // height" signal and then discard the x-coordinates.
+      // randomize: false starts from current positions for determinism.
       cy.layout({
         name: "cose",
         fit: false,
@@ -702,15 +702,44 @@
         numIter: layeredLayoutTuning.organicPrepassIterations,
       }).run();
 
-      // Sort each column by the y-coordinate assigned by the organic pre-pass.
-      // Nodes that are densely connected share a region of the organic layout,
-      // so this naturally groups connected clusters adjacent in the column.
+      // Capture organic y-positions before they are overwritten by column placement.
+      const organicY = new Map();
+      nodes.forEach((node) => organicY.set(node.id(), node.position().y));
+
+      // For each column, sort its nodes by the MEAN organic-y of their
+      // connected neighbours across all other columns — NOT by the node's own
+      // organic-y. This is the critical distinction:
+      //
+      //   - A product requirement's own organic-y depends on where cose placed
+      //     it in free 2-D space, which may have nothing to do with the vertical
+      //     region of its requirements.
+      //   - Its neighbours' organic-y tells us exactly which vertical band those
+      //     requirements occupy, so the product requirement should be placed in
+      //     the same band.
+      //
+      // Unconnected nodes fall back to their own organic-y so they at least
+      // stay in a plausible region rather than being arbitrarily ordered.
+      function neighbourMeanOrganicY(nodeId) {
+        const ys = [];
+        for (const edge of edges) {
+          if (edge.source === nodeId && organicY.has(edge.target)) {
+            ys.push(organicY.get(edge.target));
+          }
+          if (edge.target === nodeId && organicY.has(edge.source)) {
+            ys.push(organicY.get(edge.source));
+          }
+        }
+        return ys.length
+          ? ys.reduce((sum, y) => sum + y, 0) / ys.length
+          : (organicY.get(nodeId) || 0);
+      }
+
       layerKeys.forEach((layer) => {
-        layers.get(layer).sort((a, b) => a.position().y - b.position().y);
+        layers.get(layer).sort((a, b) => neighbourMeanOrganicY(a.id()) - neighbourMeanOrganicY(b.id()));
       });
 
-      // Phase 2: transposition refinement — fix any local crossings introduced
-      // when nodes are snapped back to their fixed column x-coordinates.
+      // Phase 2: transposition refinement — eliminates any residual local
+      // crossings introduced when nodes snap back to fixed column x-positions.
       layerKeys.forEach((layer) => transposeLayer(layer));
 
       const vpWidth = Math.max(cy.width(), layeredLayoutTuning.minWidth);
