@@ -63,6 +63,23 @@
   };
 
   // Tuning knobs for the layered (left-to-right columns) layout.
+  // Tuning knobs for the grid layout (transposed layered: rows per kind).
+  const gridLayoutTuning = {
+    // Padding (px) passed to cy.fit() at the end of layout.
+    padding: 40,
+    // Horizontal distance (px) between adjacent node centres in a row.
+    nodeSpacingX: 260,
+    // Vertical distance (px) between sub-rows within the same kind-band.
+    subRowSpacingY: 140,
+    // Extra vertical gap (px) added between kind-bands so types are visually
+    // separated even after wrapping into multiple sub-rows.
+    kindBandGapY: 80,
+    // Horizontal stagger (px) applied alternately: even-index bands shift right
+    // by this amount, odd-index bands shift left. Separates overlapping edges
+    // between adjacent bands so they are easier to trace visually.
+    kindBandXOffset: 60,
+  };
+
   // Tuning knobs for the clustered (concentric-ring) layout.
   const clusteredLayoutTuning = {
     // Padding (px) passed to cy.fit() at the end of layout.
@@ -306,10 +323,12 @@
           nestingFactor: 0.8,
         };
       case "grid":
+        // runGridLayout() places nodes; this stub keeps layoutOptions callable
+        // for the initial cytoscape render before runGridLayout repositions them.
         return {
           name: "grid",
           fit: true,
-          padding: 40,
+          padding: gridLayoutTuning.padding,
           avoidOverlap: true,
           sort: compareNodeOrder,
         };
@@ -532,6 +551,8 @@
         runClusteredLayout();
       } else if (layoutName === "layered") {
         runLayeredLayout();
+      } else if (layoutName === "grid") {
+        runGridLayout();
       } else {
         cy.layout(layoutOptions(currentGraph, layoutName)).run();
       }
@@ -919,6 +940,180 @@
       cy.fit(undefined, layeredLayoutTuning.padding);
     }
 
+    // Grid layout: the layered layout transposed.
+    // Rows contain nodes of a single kind (product-requirements, requirements,
+    // use-cases, other). Within each row nodes are ordered by the same
+    // cluster-walk used in the layered layout so that columns of connected
+    // nodes align vertically, minimising crossing angles.
+    // One straightforward left-to-right pass per adjacent row pair — no
+    // multiple sweeps needed.
+    function runGridLayout() {
+      if (!cy) {
+        return;
+      }
+
+      const nodes = cy.nodes().toArray();
+      if (nodes.length === 0) {
+        return;
+      }
+
+      // Group nodes into rows by kind.
+      const rows = new Map();
+      nodes.forEach((node) => {
+        const row = layerIndexForKind(node.data("kind"));
+        if (!rows.has(row)) {
+          rows.set(row, []);
+        }
+        rows.get(row).push(node);
+      });
+
+      const rowKeys = Array.from(rows.keys()).sort((a, b) => a - b);
+      // Seed: sort top row (product-requirements) alphabetically.
+      rowKeys.forEach((row) => rows.get(row).sort(compareNodeOrder));
+
+      const edges = cy.edges().toArray().map((e) => ({
+        source: e.data("source"),
+        target: e.data("target"),
+      }));
+
+      // Cluster-walk: walk each row left-to-right; for every node pull its
+      // unvisited neighbours in the next row into the position immediately
+      // following nodes already placed by previous pulls. This groups connected
+      // nodes in adjacent rows into the same column band — one pass, no loops.
+      for (let i = 0; i < rowKeys.length - 1; i += 1) {
+        const topRow = rowKeys[i];
+        const btmRow = rowKeys[i + 1];
+        const btmSet = new Map(
+          (rows.get(btmRow) || []).map((node) => [node.id(), node]),
+        );
+        const placed = new Set();
+        const ordered = [];
+
+        (rows.get(topRow) || []).forEach((topNode) => {
+          for (const edge of edges) {
+            let btmId = null;
+            if (edge.source === topNode.id() && btmSet.has(edge.target)) {
+              btmId = edge.target;
+            } else if (edge.target === topNode.id() && btmSet.has(edge.source)) {
+              btmId = edge.source;
+            }
+            if (btmId !== null && !placed.has(btmId)) {
+              ordered.push(btmSet.get(btmId));
+              placed.add(btmId);
+            }
+          }
+        });
+
+        // Nodes in the bottom row with no connection to the top row go last.
+        (rows.get(btmRow) || []).forEach((node) => {
+          if (!placed.has(node.id())) {
+            ordered.push(node);
+          }
+        });
+
+        rows.set(btmRow, ordered);
+      }
+
+      // Decide column count for a roughly square overall shape, then for each
+      // kind-band compute the number of sub-rows needed.
+      //
+      // Filling order: TOP-TO-BOTTOM then LEFT-TO-RIGHT (column-major).
+      //   col     = floor(idx / rowsPerBand)
+      //   subRow  = idx % rowsPerBand
+      //
+      // This keeps the cluster-walk order intact inside each column: all
+      // requirements that belong to the same PR cluster occupy consecutive
+      // indices, so they fall in the same column (or spill into the very next
+      // one) rather than spreading horizontally across the row.
+      const colCount = Math.max(1, Math.ceil(Math.sqrt(nodes.length)));
+
+      // Build neighbour id sets for the edge-verticality pass below.
+      const adjIds = new Map(nodes.map((n) => [n.id(), new Set()]));
+      for (const edge of edges) {
+        adjIds.get(edge.source).add(edge.target);
+        adjIds.get(edge.target).add(edge.source);
+      }
+      const nodeById = new Map(nodes.map((n) => [n.id(), n]));
+
+      cy.startBatch();
+      let currentY = 0;
+      rowKeys.forEach((row, bandIdx) => {
+        const kindNodes = rows.get(row) || [];
+        const rowsPerBand = Math.max(1, Math.ceil(kindNodes.length / colCount));
+        const xOffset = bandIdx % 2 === 0
+          ? gridLayoutTuning.kindBandXOffset
+          : -gridLayoutTuning.kindBandXOffset;
+
+        // Step 1: column-major initial placement with alternating x-offset.
+        kindNodes.forEach((node, idx) => {
+          const col    = Math.floor(idx / rowsPerBand);
+          const subRow = idx % rowsPerBand;
+          node.position({
+            x: roundCoord(col * gridLayoutTuning.nodeSpacingX + xOffset),
+            y: roundCoord(currentY + subRow * gridLayoutTuning.subRowSpacingY),
+          });
+        });
+
+        // Step 2: greedy right-shift pass — improve edge verticality.
+        // For each node, scan all free cells to its right in the same sub-row
+        // (stopping at the first occupied cell to preserve cluster order).
+        // Place the node in the free cell that minimises mean |Δx| to its
+        // cross-band neighbours. Walking right-to-left means already-processed
+        // nodes may have vacated cells that earlier nodes can now use.
+        //
+        // usedCells keys use (col, subRow) with col = round((x - xOffset) / nodeSpacingX)
+        // so the key space is consistent with the loop calculations.
+        const usedCells = new Set(
+          kindNodes.map((n) => {
+            const c = Math.round((n.position().x - xOffset) / gridLayoutTuning.nodeSpacingX);
+            const r = Math.round((n.position().y - currentY) / gridLayoutTuning.subRowSpacingY);
+            return `${c},${r}`;
+          }),
+        );
+
+        for (let idx = kindNodes.length - 1; idx >= 0; idx -= 1) {
+          const node = kindNodes[idx];
+          const pos = node.position();
+          const curCol    = Math.round((pos.x - xOffset) / gridLayoutTuning.nodeSpacingX);
+          const curSubRow = Math.round((pos.y - currentY) / gridLayoutTuning.subRowSpacingY);
+
+          const nbrs = [...(adjIds.get(node.id()) || [])]
+            .map((id) => nodeById.get(id))
+            .filter(Boolean);
+          if (nbrs.length === 0) {
+            continue;
+          }
+
+          const curDx = nbrs.reduce((s, n2) => s + Math.abs(n2.position().x - pos.x), 0) / nbrs.length;
+          let bestCol = curCol;
+          let bestDx  = curDx;
+
+          // Scan rightward within the grid, stopping at the first occupied cell.
+          for (let c = curCol + 1; c < colCount; c += 1) {
+            if (usedCells.has(`${c},${curSubRow}`)) {
+              break;
+            }
+            const testX = c * gridLayoutTuning.nodeSpacingX + xOffset;
+            const dx = nbrs.reduce((s, n2) => s + Math.abs(n2.position().x - testX), 0) / nbrs.length;
+            if (dx < bestDx) {
+              bestDx  = dx;
+              bestCol = c;
+            }
+          }
+
+          if (bestCol !== curCol) {
+            usedCells.delete(`${curCol},${curSubRow}`);
+            usedCells.add(`${bestCol},${curSubRow}`);
+            node.position({ x: roundCoord(bestCol * gridLayoutTuning.nodeSpacingX + xOffset), y: pos.y });
+          }
+        }
+
+        currentY += rowsPerBand * gridLayoutTuning.subRowSpacingY + gridLayoutTuning.kindBandGapY;
+      });
+      cy.endBatch();
+      cy.fit(undefined, gridLayoutTuning.padding);
+    }
+
     function applyFilter(filterText) {
       if (!cy) {
         return;
@@ -1176,6 +1371,9 @@
         if (cy) {
           if (activeLayoutName(options) === "layered") {
             runLayeredLayout();
+          }
+          if (activeLayoutName(options) === "grid") {
+            runGridLayout();
           }
           updateMetaSummary(options, cy.nodes().length, cy.edges().length);
           updateDetailsPanel();
