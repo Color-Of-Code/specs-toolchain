@@ -1,7 +1,11 @@
-.PHONY: lint format format-docs format-check check test vet build build-webview build-engine build-extension package-extension deploy-dev
+.PHONY: lint lint-ts format format-docs format-check check test vet build build-webview build-engine build-extension package-extension deploy-dev
 
 lint:
 	cd engine && go run ./cmd/specs lint --style
+
+lint-ts:
+	cd extension && pnpm run lint
+	node extension/node_modules/eslint/bin/eslint.js --max-warnings 0 --config eslint.webview.config.mjs extension/src engine/internal/visualize/web/src
 
 format:
 	cd engine && go run ./cmd/specs format
@@ -18,7 +22,7 @@ vet:
 test:
 	cd engine && go test ./...
 
-check: format-check lint vet test
+check: format-check lint lint-ts vet test
 
 build: build-engine build-extension
 

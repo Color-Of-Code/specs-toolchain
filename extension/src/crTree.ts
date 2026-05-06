@@ -53,7 +53,7 @@ export class CRTreeProvider implements vscode.TreeDataProvider<Node> {
     switch (node.kind) {
       case "cr": {
         const item = new vscode.TreeItem(
-          `${node.cr.id} — ${node.cr.slug}`,
+          `${node.cr.id} \u2014 ${node.cr.slug}`,  
           vscode.TreeItemCollapsibleState.Collapsed,
         );
         item.description = countsLabel(node.cr);
@@ -105,7 +105,7 @@ export class CRTreeProvider implements vscode.TreeDataProvider<Node> {
       const records = JSON.parse(res.stdout || "[]") as CRRecord[];
       return records.map((r) => new CRNode(r));
     } catch (err) {
-      getOutput().appendLine(`cr status --json parse error: ${err}`);
+      getOutput().appendLine(`cr status --json parse error: ${String(err)}`);
       return [];
     }
   }
@@ -138,7 +138,10 @@ function countsLabel(cr: CRRecord): string {
 function* walkMarkdown(dir: string, crDir: string): Generator<{ full: string; rel: string }> {
   const stack = [dir];
   while (stack.length > 0) {
-    const d = stack.pop()!;
+    const d = stack.pop();
+    if (!d) {
+      break;
+    }
     let entries: fs.Dirent[];
     try {
       entries = fs.readdirSync(d, { withFileTypes: true });

@@ -7,9 +7,7 @@ import * as vscode from "vscode";
 let outputChannel: vscode.OutputChannel | undefined;
 
 export function getOutput(): vscode.OutputChannel {
-  if (!outputChannel) {
-    outputChannel = vscode.window.createOutputChannel("Specs");
-  }
+  outputChannel ??= vscode.window.createOutputChannel("Specs");
   return outputChannel;
 }
 
@@ -93,8 +91,8 @@ export async function runAndCapture(
     const proc = cp.spawn(bin, args, { cwd, env: process.env });
     let stdout = "";
     let stderr = "";
-    proc.stdout.on("data", (d) => (stdout += d.toString()));
-    proc.stderr.on("data", (d) => (stderr += d.toString()));
+    proc.stdout.on("data", (d: Buffer) => (stdout += d.toString()));
+    proc.stderr.on("data", (d: Buffer) => (stderr += d.toString()));
     proc.on("error", (err) => {
       resolve({ stdout, stderr: stderr + String(err), exitCode: 127 });
     });

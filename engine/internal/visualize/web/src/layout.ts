@@ -6,7 +6,6 @@ import {
 } from "./constants";
 import type { GraphData, MountOptions } from "./types";
 import {
-  activeLayoutName,
   compareNodeOrder,
   defaultRoots,
   layerIndexForKind,
@@ -103,8 +102,8 @@ export function runClusteredLayout(cy: Core): void {
     allNodes.map((n) => [n.id(), new Set<string>()]),
   );
   allEdges.forEach((e) => {
-    adj.get(e.data("source") as string)!.add(e.data("target") as string);
-    adj.get(e.data("target") as string)!.add(e.data("source") as string);
+    adj.get(e.data("source") as string)?.add(e.data("target") as string);
+    adj.get(e.data("target") as string)?.add(e.data("source") as string);
   });
 
   const prNodes = allNodes.filter(
@@ -119,7 +118,7 @@ export function runClusteredLayout(cy: Core): void {
       (n) =>
         !globalPlaced.has(n.id()) &&
         n.data("kind") === "requirement" &&
-        adj.get(pr.id())!.has(n.id()),
+        (adj.get(pr.id())?.has(n.id()) ?? false),
     );
     ring1.forEach((n) => globalPlaced.add(n.id()));
 
@@ -128,7 +127,7 @@ export function runClusteredLayout(cy: Core): void {
       (n) =>
         !globalPlaced.has(n.id()) &&
         (n.data("kind") === "use-case" || n.data("kind") === "usecase") &&
-        ring1.some((r) => adj.get(r.id())!.has(n.id())),
+        ring1.some((r) => adj.get(r.id())?.has(n.id()) ?? false),
     );
     ring2.forEach((n) => globalPlaced.add(n.id()));
 
@@ -136,7 +135,7 @@ export function runClusteredLayout(cy: Core): void {
     const ring3 = allNodes.filter(
       (n) =>
         !globalPlaced.has(n.id()) &&
-        [...adj.get(n.id())!].some((id) => ring12ids.has(id)),
+        [...(adj.get(n.id()) ?? [])].some((id) => ring12ids.has(id)),
     );
     ring3.forEach((n) => globalPlaced.add(n.id()));
 
@@ -169,10 +168,11 @@ export function runClusteredLayout(cy: Core): void {
   cy.startBatch();
   globalPlaced.clear();
 
-  const clusters = prNodes.map((pr) => {
+  type Cluster = { pr: NodeSingular | null; rings: NodeSingular[][]; radius: number };
+  const clusters: Cluster[] = prNodes.map((pr) => {
     globalPlaced.add(pr.id());
     const rings = buildCluster(pr);
-    return { pr: pr as NodeSingular | null, rings, radius: clusterRadius(rings) };
+    return { pr: pr, rings, radius: clusterRadius(rings) };
   });
 
   const orphans = allNodes.filter((n) => !globalPlaced.has(n.id()));
@@ -228,15 +228,17 @@ export function runLayeredLayout(cy: Core): void {
   const layers = new Map<number, NodeSingular[]>();
   nodes.forEach((node) => {
     const layer = layerIndexForKind(node.data("kind") as string);
-    if (!layers.has(layer)) {
-      layers.set(layer, []);
+    let arr = layers.get(layer);
+    if (!arr) {
+      arr = [];
+      layers.set(layer, arr);
     }
-    layers.get(layer)!.push(node);
+    arr.push(node);
   });
 
   const layerKeys = Array.from(layers.keys()).sort((a, b) => a - b);
   layerKeys.forEach((layer) => {
-    layers.get(layer)!.sort(compareNodeOrder);
+    layers.get(layer)?.sort(compareNodeOrder);
   });
 
   const edges = cy.edges().toArray().map((edge) => ({
@@ -261,10 +263,10 @@ export function runLayeredLayout(cy: Core): void {
     for (const edge of edges) {
       if (useIncomingEdges) {
         if (edge.target === nodeId && neighborOrder.has(edge.source)) {
-          positions.push(neighborOrder.get(edge.source)!);
+          positions.push(neighborOrder.get(edge.source) ?? 0);
         }
       } else if (edge.source === nodeId && neighborOrder.has(edge.target)) {
-        positions.push(neighborOrder.get(edge.target)!);
+        positions.push(neighborOrder.get(edge.target) ?? 0);
       }
     }
     return positions;
@@ -292,10 +294,10 @@ export function runLayeredLayout(cy: Core): void {
     }
     const layerPos = layerKeys.indexOf(layer);
     const leftOrder =
-      layerPos > 0 ? indexByNodeId(layerKeys[layerPos - 1]!) : new Map<string, number>();
+      layerPos > 0 ? indexByNodeId(layerKeys[layerPos - 1]) : new Map<string, number>();
     const rightOrder =
       layerPos < layerKeys.length - 1
-        ? indexByNodeId(layerKeys[layerPos + 1]!)
+        ? indexByNodeId(layerKeys[layerPos + 1])
         : new Map<string, number>();
     let improved = true;
     let sweeps = 0;
@@ -303,8 +305,8 @@ export function runLayeredLayout(cy: Core): void {
       improved = false;
       sweeps += 1;
       for (let i = 0; i < orderedNodes.length - 1; i += 1) {
-        const u = orderedNodes[i]!;
-        const v = orderedNodes[i + 1]!;
+        const u = orderedNodes[i];
+        const v = orderedNodes[i + 1];
         const uid = u.id();
         const vid = v.id();
         const uLeft = neighborPositions(uid, leftOrder, true);
@@ -326,8 +328,8 @@ export function runLayeredLayout(cy: Core): void {
 
   // Cluster-walk ordering.
   for (let i = 0; i < layerKeys.length - 1; i += 1) {
-    const leftLayer = layerKeys[i]!;
-    const rightLayer = layerKeys[i + 1]!;
+    const leftLayer = layerKeys[i];
+    const rightLayer = layerKeys[i + 1];
     const rightSet = new Map<string, NodeSingular>(
       (layers.get(rightLayer) ?? []).map((node) => [node.id(), node]),
     );
@@ -343,9 +345,12 @@ export function runLayeredLayout(cy: Core): void {
         } else if (edge.target === lid && rightSet.has(edge.source)) {
           rightId = edge.source;
         }
-        if (rightId !== null && !placed.has(rightId)) {
-          ordered.push(rightSet.get(rightId)!);
-          placed.add(rightId);
+        if (rightId !== null) {
+          const rightNode = rightSet.get(rightId);
+          if (rightNode && !placed.has(rightId)) {
+            ordered.push(rightNode);
+            placed.add(rightId);
+          }
         }
       }
     });
@@ -362,7 +367,7 @@ export function runLayeredLayout(cy: Core): void {
   layerKeys.forEach((layer) => transposeLayer(layer));
 
   // Find master column (most nodes).
-  let masterLayer = layerKeys[0]!;
+  let masterLayer = layerKeys[0];
   layerKeys.forEach((layer) => {
     if (
       (layers.get(layer) ?? []).length > (layers.get(masterLayer) ?? []).length
@@ -375,8 +380,8 @@ export function runLayeredLayout(cy: Core): void {
   const adjacent = new Map<string, Set<string>>();
   nodes.forEach((n) => adjacent.set(n.id(), new Set<string>()));
   for (const edge of edges) {
-    adjacent.get(edge.source)!.add(edge.target);
-    adjacent.get(edge.target)!.add(edge.source);
+    adjacent.get(edge.source)?.add(edge.target);
+    adjacent.get(edge.target)?.add(edge.source);
   }
 
   const colTopY = new Map<number, number>(
@@ -400,7 +405,7 @@ export function runLayeredLayout(cy: Core): void {
   });
 
   for (let mi = masterNodes.length - 1; mi >= 0; mi -= 1) {
-    const mNode = masterNodes[mi]!;
+    const mNode = masterNodes[mi];
     const mY = mi * layeredLayoutTuning.nodeSpacingY;
 
     layerKeys.forEach((layer) => {
@@ -409,13 +414,13 @@ export function runLayeredLayout(cy: Core): void {
       }
       const colNodes = layers.get(layer) ?? [];
       const group = colNodes.filter(
-        (n) => !placed.has(n.id()) && adjacent.get(mNode.id())!.has(n.id()),
+        (n) => !placed.has(n.id()) && (adjacent.get(mNode.id())?.has(n.id()) ?? false),
       );
       if (group.length === 0) {
         return;
       }
 
-      const prevTop = colTopY.get(layer)!;
+      const prevTop = colTopY.get(layer) ?? Infinity;
       const actualBottom =
         prevTop === Infinity
           ? mY
@@ -451,14 +456,14 @@ export function runLayeredLayout(cy: Core): void {
     if (unplaced.length === 0) {
       return;
     }
-    const top = colTopY.get(layer)!;
+    const top = colTopY.get(layer) ?? Infinity;
     let cursor = top === Infinity ? 0 : top - layeredLayoutTuning.nodeGap;
     for (let i = unplaced.length - 1; i >= 0; i -= 1) {
-      unplaced[i]!.position({
-        x: unplaced[i]!.position().x,
+      unplaced[i].position({
+        x: unplaced[i].position().x,
         y: roundCoord(cursor),
       });
-      placed.add(unplaced[i]!.id());
+      placed.add(unplaced[i].id());
       cursor -= layeredLayoutTuning.nodeSpacingY;
     }
   });
@@ -482,14 +487,16 @@ export function runGridLayout(cy: Core): void {
   const rows = new Map<number, NodeSingular[]>();
   nodes.forEach((node) => {
     const row = layerIndexForKind(node.data("kind") as string);
-    if (!rows.has(row)) {
-      rows.set(row, []);
+    let arr = rows.get(row);
+    if (!arr) {
+      arr = [];
+      rows.set(row, arr);
     }
-    rows.get(row)!.push(node);
+    arr.push(node);
   });
 
   const rowKeys = Array.from(rows.keys()).sort((a, b) => a - b);
-  rowKeys.forEach((row) => rows.get(row)!.sort(compareNodeOrder));
+  rowKeys.forEach((row) => rows.get(row)?.sort(compareNodeOrder));
 
   const edges = cy.edges().toArray().map((e) => ({
     source: e.data("source") as string,
@@ -500,8 +507,8 @@ export function runGridLayout(cy: Core): void {
   // unvisited neighbours in the next row into position immediately following
   // nodes already placed by previous pulls.
   for (let i = 0; i < rowKeys.length - 1; i += 1) {
-    const topRow = rowKeys[i]!;
-    const btmRow = rowKeys[i + 1]!;
+    const topRow = rowKeys[i];
+    const btmRow = rowKeys[i + 1];
     const btmSet = new Map<string, NodeSingular>(
       (rows.get(btmRow) ?? []).map((node) => [node.id(), node]),
     );
@@ -516,9 +523,12 @@ export function runGridLayout(cy: Core): void {
         } else if (edge.target === topNode.id() && btmSet.has(edge.source)) {
           btmId = edge.source;
         }
-        if (btmId !== null && !placed.has(btmId)) {
-          ordered.push(btmSet.get(btmId)!);
-          placed.add(btmId);
+        if (btmId !== null) {
+          const btmNode = btmSet.get(btmId);
+          if (btmNode && !placed.has(btmId)) {
+            ordered.push(btmNode);
+            placed.add(btmId);
+          }
         }
       }
     });
@@ -538,8 +548,8 @@ export function runGridLayout(cy: Core): void {
     nodes.map((n) => [n.id(), new Set<string>()]),
   );
   for (const edge of edges) {
-    adjIds.get(edge.source)!.add(edge.target);
-    adjIds.get(edge.target)!.add(edge.source);
+    adjIds.get(edge.source)?.add(edge.target);
+    adjIds.get(edge.target)?.add(edge.source);
   }
   const nodeById = new Map<string, NodeSingular>(
     nodes.map((n) => [n.id(), n]),
@@ -579,7 +589,7 @@ export function runGridLayout(cy: Core): void {
     );
 
     for (let idx = kindNodes.length - 1; idx >= 0; idx -= 1) {
-      const node = kindNodes[idx]!;
+      const node = kindNodes[idx];
       const pos = node.position();
       const curCol = Math.round(
         (pos.x - xOffset) / gridLayoutTuning.nodeSpacingX,

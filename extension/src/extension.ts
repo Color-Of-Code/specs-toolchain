@@ -10,7 +10,7 @@ import { registerVisualizePanel } from "./visualizePanel";
 
 export function activate(context: vscode.ExtensionContext): void {
   const out = getOutput();
-  out.appendLine(`Specs extension activated (v${context.extension.packageJSON.version})`);
+  out.appendLine(`Specs extension activated (v${(context.extension.packageJSON as { version: string }).version})`);  
   registerCommands(context);
   registerChatParticipant(context);
   registerFrameworkTools(context);

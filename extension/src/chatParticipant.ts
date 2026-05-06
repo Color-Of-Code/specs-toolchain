@@ -37,7 +37,7 @@ export function registerChatParticipant(context: vscode.ExtensionContext): void 
   // Load agents from the framework initially and on config changes.
   void loadAgents(context);
   const watcher = vscode.workspace.createFileSystemWatcher("**/.specs.yaml");
-  const reload = () => void loadAgents(context);
+  const reload = (): void => { void loadAgents(context); };
   watcher.onDidChange(reload, undefined, context.subscriptions);
   watcher.onDidCreate(reload, undefined, context.subscriptions);
   watcher.onDidDelete(reload, undefined, context.subscriptions);
@@ -102,7 +102,7 @@ async function handleCommand(
   token: vscode.CancellationToken,
   cwd: string,
 ): Promise<vscode.ChatResult> {
-  const cmd = request.command!;
+  const cmd = request.command as string;
 
   // Scaffold: delegate to LLM with scaffolding instructions.
   if (cmd === "scaffold") {
@@ -311,8 +311,9 @@ function provideFollowups(
   result: vscode.ChatResult,
   _context: vscode.ChatContext,
   _token: vscode.CancellationToken,
-): vscode.ChatFollowup[] {
-  const cmd = (result.metadata as Record<string, string> | undefined)?.command;
+): vscode.ChatFollowup[] | undefined {
+  const cmdRaw: unknown = result.metadata?.["command"];
+  const cmd = typeof cmdRaw === "string" ? cmdRaw : undefined;
   if (cmd === "lint") {
     return [
       { prompt: "@specs /trace", label: "Check traceability" },

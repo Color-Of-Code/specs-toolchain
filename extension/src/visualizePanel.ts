@@ -45,11 +45,6 @@ interface SaveRelationsPayload {
   edges: SaveRelationsEdge[];
 }
 
-interface PendingRequest {
-  resolve: () => void;
-  reject: (reason: Error) => void;
-}
-
 export function registerVisualizePanel(context: vscode.ExtensionContext): void {
   context.subscriptions.push(
     vscode.commands.registerCommand("specs.visualize.preview", () => openOrRefresh(context)),
@@ -63,7 +58,7 @@ export function registerVisualizePanel(context: vscode.ExtensionContext): void {
     const root = target.cwd;
     const debounced = debounce(() => {
       if (currentPanel && Date.now() > suppressRefreshUntil) {
-        refresh(context);
+        void refresh(context);
       }
     }, 500);
     for (const pattern of [
@@ -245,9 +240,9 @@ function renderHtml(
   graph: VisualizeGraph,
 ): string {
   const mediaRoot = vscode.Uri.joinPath(context.extensionUri, "media");
-  const cytoscapeUri = webview.asWebviewUri(vscode.Uri.joinPath(mediaRoot, "cytoscape.min.js"));
-  const appUri = webview.asWebviewUri(vscode.Uri.joinPath(mediaRoot, "traceability-view.js"));
-  const styleUri = webview.asWebviewUri(vscode.Uri.joinPath(mediaRoot, "traceability-view.css"));
+  const cytoscapeUri = webview.asWebviewUri(vscode.Uri.joinPath(mediaRoot, "cytoscape.min.js")).toString();
+  const appUri = webview.asWebviewUri(vscode.Uri.joinPath(mediaRoot, "traceability-view.js")).toString();
+  const styleUri = webview.asWebviewUri(vscode.Uri.joinPath(mediaRoot, "traceability-view.css")).toString();
   const nonce = randomNonce();
   const csp = [
     `default-src 'none'`,

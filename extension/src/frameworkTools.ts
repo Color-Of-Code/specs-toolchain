@@ -31,7 +31,7 @@ export function registerFrameworkTools(context: vscode.ExtensionContext): void {
 
   // Re-register whenever .specs.yaml changes (framework_dir may have changed).
   const watcher = vscode.workspace.createFileSystemWatcher("**/.specs.yaml");
-  const reregister = () => void refreshFrameworkTools(context);
+  const reregister = (): void => { void refreshFrameworkTools(context); };
   watcher.onDidChange(reregister, undefined, context.subscriptions);
   watcher.onDidCreate(reregister, undefined, context.subscriptions);
   watcher.onDidDelete(reregister, undefined, context.subscriptions);

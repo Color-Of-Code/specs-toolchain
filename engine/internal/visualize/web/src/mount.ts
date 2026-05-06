@@ -94,7 +94,7 @@ export function mount(options: MountOptions): MountHandle {
       return undefined;
     }
     const matches = cy.$id(nodeID);
-    return matches.length ? (matches[0] as NodeSingular) : undefined;
+    return matches.length ? (matches[0]) : undefined;
   }
 
   function describeNode(node: NodeSingular | undefined): string | undefined {
@@ -181,7 +181,7 @@ export function mount(options: MountOptions): MountHandle {
     }
     const selectedEdges = cy.$("edge:selected");
     return selectedEdges.length > 0
-      ? (selectedEdges[0] as ReturnType<Core["$"]>[0])
+      ? (selectedEdges[0])
       : undefined;
   }
 
@@ -243,7 +243,7 @@ export function mount(options: MountOptions): MountHandle {
         data: { id: createClientEdgeId(), ...edge },
       });
       selectedNode = undefined;
-      selectedEdge = addedEdge[0] as ReturnType<Core["$"]>[0];
+      selectedEdge = addedEdge[0];
       updateMetaSummary(options, cy.nodes().length, cy.edges().length);
       updateRemoveEdgeButton();
       setMetaStatus(options, "edge added");
@@ -311,53 +311,57 @@ export function mount(options: MountOptions): MountHandle {
   }
 
   if (options.filterInput) {
-    options.filterInput.addEventListener("input", () => {
-      applyFilter(options.filterInput!.value);
+    const filterInput = options.filterInput;
+    filterInput.addEventListener("input", () => {
+      applyFilter(filterInput.value);
     });
   }
 
   if (options.removeEdgeButton) {
     updateRemoveEdgeButton();
-    options.removeEdgeButton.addEventListener("click", async () => {
-      const edgeToRemove = currentSelectedEdge();
-      if (!edgeToRemove || !canSaveRelations || !cy) {
-        return;
-      }
-      const removalPreview: RelationInfo = {
-        source: edgeToRemove.data("source") as string,
-        target: edgeToRemove.data("target") as string,
-        kind: edgeToRemove.data("kind") as string,
-        sourceLabel: nodeDisplayLabel(
-          resolveNode(edgeToRemove.data("source") as string),
-        ),
-        targetLabel: nodeDisplayLabel(
-          resolveNode(edgeToRemove.data("target") as string),
-        ),
-      };
-      if (!confirmRelationChange(options, "Remove", removalPreview)) {
-        setMetaStatus(options, "edge removal cancelled");
-        updateDetailsPanel();
-        return;
-      }
-      options.removeEdgeButton!.disabled = true;
-      try {
-        await persistRelations(options, cy, {
-          omitEdgeId: edgeToRemove.id(),
-        });
-        edgeToRemove.remove();
-        selectedEdge = undefined;
-        selectedNode = undefined;
-        updateMetaSummary(options, cy.nodes().length, cy.edges().length);
-        setMetaStatus(options, "edge removed");
-        updateDetailsPanel();
-      } catch (error) {
-        console.error(error);
-        setMetaStatus(options, "edge removal failed");
-      } finally {
-        window.setTimeout(() => {
-          updateRemoveEdgeButton();
-        }, 1200);
-      }
+    const removeEdgeButton = options.removeEdgeButton;
+    removeEdgeButton.addEventListener("click", () => {
+      void (async () => {
+        const edgeToRemove = currentSelectedEdge();
+        if (!edgeToRemove || !canSaveRelations || !cy) {
+          return;
+        }
+        const removalPreview: RelationInfo = {
+          source: edgeToRemove.data("source") as string,
+          target: edgeToRemove.data("target") as string,
+          kind: edgeToRemove.data("kind") as string,
+          sourceLabel: nodeDisplayLabel(
+            resolveNode(edgeToRemove.data("source") as string),
+          ),
+          targetLabel: nodeDisplayLabel(
+            resolveNode(edgeToRemove.data("target") as string),
+          ),
+        };
+        if (!confirmRelationChange(options, "Remove", removalPreview)) {
+          setMetaStatus(options, "edge removal cancelled");
+          updateDetailsPanel();
+          return;
+        }
+        removeEdgeButton.disabled = true;
+        try {
+          await persistRelations(options, cy, {
+            omitEdgeId: edgeToRemove.id(),
+          });
+          edgeToRemove.remove();
+          selectedEdge = undefined;
+          selectedNode = undefined;
+          updateMetaSummary(options, cy.nodes().length, cy.edges().length);
+          setMetaStatus(options, "edge removed");
+          updateDetailsPanel();
+        } catch (error) {
+          console.error(error);
+          setMetaStatus(options, "edge removal failed");
+        } finally {
+          window.setTimeout(() => {
+            updateRemoveEdgeButton();
+          }, 1200);
+        }
+      })();
     });
   }
 
@@ -461,7 +465,7 @@ export function mount(options: MountOptions): MountHandle {
                 ry >= bb.y1 &&
                 ry <= bb.y2
               ) {
-                found = node as NodeSingular;
+                found = node;
               }
             });
             return found;
@@ -627,18 +631,19 @@ export function mount(options: MountOptions): MountHandle {
     if (!cy) {
       return;
     }
-    const savedZoom = cy.zoom();
-    const savedPan = cy.pan();
+    const cyRef = cy;
+    const savedZoom = cyRef.zoom();
+    const savedPan = cyRef.pan();
 
     const newNodeIds = new Set((graph.nodes ?? []).map((n) => n.id));
-    cy.nodes().forEach((n) => {
+    cyRef.nodes().forEach((n) => {
       if (!newNodeIds.has(n.id())) {
         n.remove();
       }
     });
     (graph.nodes ?? []).forEach((node) => {
-      if (!cy!.$id(node.id).length) {
-        cy!.add({
+      if (!cyRef.$id(node.id).length) {
+        cyRef.add({
           data: {
             id: node.id,
             label: node.label,
@@ -655,7 +660,7 @@ export function mount(options: MountOptions): MountHandle {
     const newEdgeKeys = new Set(
       (graph.edges ?? []).map((e) => edgeKey(e.source, e.target, e.kind)),
     );
-    cy.edges().forEach((e) => {
+    cyRef.edges().forEach((e) => {
       if (
         !newEdgeKeys.has(
           edgeKey(
@@ -669,7 +674,7 @@ export function mount(options: MountOptions): MountHandle {
       }
     });
     const existingEdgeKeys = new Set<string>();
-    cy.edges().forEach((e) => {
+    cyRef.edges().forEach((e) => {
       existingEdgeKeys.add(
         edgeKey(
           e.data("source") as string,
@@ -680,7 +685,7 @@ export function mount(options: MountOptions): MountHandle {
     });
     (graph.edges ?? []).forEach((edge) => {
       if (!existingEdgeKeys.has(edgeKey(edge.source, edge.target, edge.kind))) {
-        cy!.add({
+        cyRef.add({
           data: {
             id: createClientEdgeId(),
             source: edge.source,
@@ -692,11 +697,11 @@ export function mount(options: MountOptions): MountHandle {
     });
 
     currentGraph = graph;
-    cy.viewport({ zoom: savedZoom, pan: savedPan });
+    cyRef.viewport({ zoom: savedZoom, pan: savedPan });
 
     selectedEdge = undefined;
     selectedNode = undefined;
-    updateMetaSummary(options, cy.nodes().length, cy.edges().length);
+    updateMetaSummary(options, cyRef.nodes().length, cyRef.edges().length);
     updateRemoveEdgeButton();
     updateDetailsPanel();
     if (options.filterInput) {

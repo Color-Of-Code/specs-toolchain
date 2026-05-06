@@ -23,7 +23,7 @@ export function registerStatusBar(context: vscode.ExtensionContext): void {
   item.tooltip = "Specs (click to open palette)";
   context.subscriptions.push(item);
 
-  const refresh = async () => {
+  const refresh = async (): Promise<void> => {
     const target = getSpecsExecutionTarget();
     if (!target) {
       item.hide();
@@ -61,7 +61,7 @@ export function registerStatusBar(context: vscode.ExtensionContext): void {
   };
 
   let pending: NodeJS.Timeout | undefined;
-  const scheduleRefresh = () => {
+  const scheduleRefresh = (): void => {
     if (pending) {
       clearTimeout(pending);
     }

@@ -1,7 +1,7 @@
 import type { DetailRow, MountOptions } from "./types";
 
-export function escapeHTML(value: unknown): string {
-  return String(value == null ? "" : value).replace(
+export function escapeHTML(value: string | number | boolean | null | undefined): string {
+  return String(value ?? "").replace(
     /[&<>"']/g,
     (char) => {
       switch (char) {

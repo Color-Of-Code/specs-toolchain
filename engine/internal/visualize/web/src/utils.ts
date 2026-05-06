@@ -31,12 +31,12 @@ export function displayKind(kind: string | null | undefined): string {
 }
 
 export function relationSpec(kind: string): RelationSpec {
-  return relationSpecs[kind] ?? relationSpecs["realization"]!;
+  return relationSpecs[kind] ?? relationSpecs["realization"];
 }
 
 export function kindRank(kind: string): number {
   return Object.prototype.hasOwnProperty.call(kindOrder, kind)
-    ? (kindOrder[kind] as number)
+    ? (kindOrder[kind])
     : Number.MAX_SAFE_INTEGER;
 }
 
@@ -160,5 +160,5 @@ export function colorForKind(kind: string): string {
 }
 
 export function activeLayoutName(options: MountOptions): string {
-  return options.layoutSelect?.value ? options.layoutSelect.value : "layered";
+  return options.layoutSelect?.value ?? "layered";
 }

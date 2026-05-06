@@ -17,8 +17,9 @@ const TERMINAL_COMMANDS: ReadonlyArray<readonly [string, readonly string[]]> = [
 ];
 
 export function registerCommands(context: vscode.ExtensionContext): void {
-  const reg = (id: string, fn: () => void | Promise<void>) =>
+  const reg = (id: string, fn: () => void | Promise<void>): void => {
     context.subscriptions.push(vscode.commands.registerCommand(id, fn));
+  };
 
   for (const [id, args] of TERMINAL_COMMANDS) {
     reg(id, () => runTerminal(context, [...args]));
