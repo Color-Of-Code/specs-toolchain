@@ -7,27 +7,27 @@ import { activeLayoutName, colorForKind, lineStyleForKind, shapeForKind } from "
 import { buildElements } from "./graph";
 
 export function updateMetaSummary(
-  options: MountOptions,
+  { metaElement }: MountOptions,
   nodeCount: number,
   edgeCount: number,
 ): void {
-  if (!options.metaElement) {
+  if (!metaElement) {
     return;
   }
   const summary = `${nodeCount} nodes / ${edgeCount} edges`;
-  options.metaElement.dataset["summary"] = summary;
-  options.metaElement.textContent = summary;
+  metaElement.dataset["summary"] = summary;
+  metaElement.textContent = summary;
 }
 
-export function setMetaStatus(options: MountOptions, message: string): void {
-  if (!options.metaElement) {
+export function setMetaStatus({ metaElement }: MountOptions, message: string): void {
+  if (!metaElement) {
     return;
   }
   const summary =
-    options.metaElement.dataset["summary"] ??
-    options.metaElement.textContent ??
+    metaElement.dataset["summary"] ??
+    metaElement.textContent ??
     "";
-  options.metaElement.textContent = summary
+  metaElement.textContent = summary
     ? `${summary} • ${message}`
     : message;
 }
@@ -36,17 +36,19 @@ export function renderGraph(
   options: MountOptions,
   graph: GraphData,
 ): Core | undefined {
-  if (options.metaElement) {
-    const summary = `${graph.nodes.length} nodes / ${graph.edges.length} edges`;
-    options.metaElement.dataset["summary"] = summary;
-    options.metaElement.textContent = summary;
+  const { metaElement, container, emptyMessage } = options;
+  const { nodes, edges } = graph;
+  if (metaElement) {
+    const summary = `${nodes.length} nodes / ${edges.length} edges`;
+    metaElement.dataset["summary"] = summary;
+    metaElement.textContent = summary;
   }
-  if (!graph.nodes.length) {
-    options.container.innerHTML = `<pre style="padding: 16px; color: inherit;">${options.emptyMessage ?? "No traceability data found."}</pre>`;
+  if (!nodes.length) {
+    container.innerHTML = `<pre style="padding: 16px; color: inherit;">${emptyMessage ?? "No traceability data found."}</pre>`;
     return undefined;
   }
   return cytoscape({
-    container: options.container,
+    container,
     elements: buildElements(graph) as CytoscapeOptions["elements"],
     layout: layoutOptions(graph, activeLayoutName(options)) as unknown as CytoscapeOptions["layout"],
     style: [

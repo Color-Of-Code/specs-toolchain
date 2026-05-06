@@ -44,6 +44,15 @@ const sharedRules = {
     "error",
     { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
   ],
+  // Prefer destructuring assignment over property access.
+  "prefer-destructuring": [
+    "error",
+    {
+      VariableDeclarator: { array: false, object: true },
+      AssignmentExpression: { array: false, object: false },
+    },
+    { enforceForRenamedProperties: false },
+  ],
 };
 
 export default [

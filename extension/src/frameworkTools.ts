@@ -48,7 +48,7 @@ async function refreshFrameworkTools(context: vscode.ExtensionContext): Promise<
   if (!target) {
     return;
   }
-  const cwd = target.cwd;
+  const {cwd} = target;
 
   const result = await runAndCapture(context, ["framework", "skills", "list"], cwd);
   if (result.exitCode !== 0 || !result.stdout.trim()) {
@@ -112,7 +112,7 @@ function registerSkill(
 }
 
 function resolveEngineArgs(skill: SkillInfo, input: LintInput): string[] | undefined {
-  const engineArgs = skill.engineArgs;
+  const {engineArgs} = skill;
   if (!engineArgs) {
     return undefined;
   }

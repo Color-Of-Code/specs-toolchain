@@ -61,12 +61,12 @@ export function autoRelationKindFor(
 }
 
 export function resolveRelationKindForPair(
-  options: MountOptions,
+  { relationKindSelect }: MountOptions,
   sourceKind: NodeKind,
   targetKind: NodeKind,
 ): EdgeKind | null {
   const selected =
-    options.relationKindSelect && options.relationKindSelect.value;
+    relationKindSelect && relationKindSelect.value;
   if (!selected || selected === "automatic") {
     return autoRelationKindFor(sourceKind, targetKind);
   }
@@ -165,6 +165,6 @@ export function colorForKind(kind: NodeKind): string {
   return palette[kind] ?? "#7a8791";
 }
 
-export function activeLayoutName(options: MountOptions): LayoutKind {
-  return (options.layoutSelect?.value ?? LayoutKind.Layered) as LayoutKind;
+export function activeLayoutName({ layoutSelect }: MountOptions): LayoutKind {
+  return (layoutSelect?.value ?? LayoutKind.Layered) as LayoutKind;
 }

@@ -53,9 +53,9 @@ export function detailsMarkup(
   return `<article class="details-panel"><p class="details-eyebrow">${escapeHTML(eyebrow)}</p><h2 class="details-title">${escapeHTML(title)}</h2>${renderedRows}${noteMarkup}</article>`;
 }
 
-export function setDetails(options: MountOptions, markup: string): void {
-  if (!options.detailsElement) {
+export function setDetails({ detailsElement }: MountOptions, markup: string): void {
+  if (!detailsElement) {
     return;
   }
-  options.detailsElement.innerHTML = markup;
+  detailsElement.innerHTML = markup;
 }

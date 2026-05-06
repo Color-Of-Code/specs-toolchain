@@ -43,7 +43,7 @@ function defaultOpenPath(options: MountOptions, path: string): void {
 }
 
 export function mount(options: MountOptions): MountHandle {
-  const container = options.container;
+  const {container} = options;
   if (!container) {
     throw new Error("container is required");
   }
@@ -304,7 +304,7 @@ export function mount(options: MountOptions): MountHandle {
   }
 
   if (options.filterInput) {
-    const filterInput = options.filterInput;
+    const {filterInput} = options;
     filterInput.addEventListener("input", () => {
       applyFilter(filterInput.value);
     });
@@ -312,7 +312,7 @@ export function mount(options: MountOptions): MountHandle {
 
   if (options.removeEdgeButton) {
     updateRemoveEdgeButton();
-    const removeEdgeButton = options.removeEdgeButton;
+    const {removeEdgeButton} = options;
     removeEdgeButton.addEventListener("click", () => {
       void (async () => {
         const edgeToRemove = currentSelectedEdge();
@@ -360,7 +360,7 @@ export function mount(options: MountOptions): MountHandle {
 
   if (options.detailsElement) {
     options.detailsElement.addEventListener("click", (event) => {
-      const target = event.target;
+      const {target} = event;
       if (!(target instanceof HTMLElement)) {
         return;
       }

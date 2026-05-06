@@ -13,14 +13,14 @@ export function emptyGraph(): GraphData {
   return { nodes: [], edges: [] };
 }
 
-export async function resolveGraph(options: MountOptions): Promise<GraphData> {
-  if (options.graph) {
-    return options.graph;
+export async function resolveGraph({ graph, graphUrl }: MountOptions): Promise<GraphData> {
+  if (graph) {
+    return graph;
   }
-  if (!options.graphUrl) {
+  if (!graphUrl) {
     return emptyGraph();
   }
-  const response = await fetch(options.graphUrl, { cache: "no-store" });
+  const response = await fetch(graphUrl, { cache: "no-store" });
   if (!response.ok) {
     throw new Error(`graph request failed: ${response.status}`);
   }
@@ -81,7 +81,7 @@ export interface PersistRelationsOptions {
 }
 
 export async function persistRelations(
-  options: MountOptions,
+  { onSaveRelations, saveRelationsUrl }: MountOptions,
   cy: Core,
   relationOptions?: PersistRelationsOptions,
 ): Promise<void> {
@@ -92,14 +92,14 @@ export async function persistRelations(
       relationOptions?.appendEdges,
     ),
   };
-  if (typeof options.onSaveRelations === "function") {
-    await options.onSaveRelations(payload);
+  if (typeof onSaveRelations === "function") {
+    await onSaveRelations(payload);
     return;
   }
-  if (!options.saveRelationsUrl) {
+  if (!saveRelationsUrl) {
     return;
   }
-  const response = await fetch(options.saveRelationsUrl, {
+  const response = await fetch(saveRelationsUrl, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),

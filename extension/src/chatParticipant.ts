@@ -83,7 +83,7 @@ function makeHandler(
       );
       return {};
     }
-    const cwd = target.cwd;
+    const {cwd} = target;
 
     // Slash-command dispatch.
     if (request.command) {
