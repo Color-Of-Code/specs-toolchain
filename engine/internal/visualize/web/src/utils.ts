@@ -1,52 +1,60 @@
 import type { NodeSingular } from "cytoscape";
 import { kindOrder, palette, relationSpecs } from "./constants";
 import type { RelationSpec } from "./constants";
+import { EdgeKind, NodeKind } from "./types";
 import type { GraphData, MountOptions } from "./types";
 
-export function shapeForKind(kind: string): string {
+export function shapeForKind(kind: NodeKind): string {
   switch (kind) {
-    case "product-requirement":
+    case NodeKind.ProductRequirement:
       return "round-hexagon";
-    case "requirement":
+    case NodeKind.Requirement:
       return "round-rectangle";
-    case "feature":
+    case NodeKind.Feature:
       return "ellipse";
-    case "component":
+    case NodeKind.Component:
       return "cut-rectangle";
-    case "api":
+    case NodeKind.Api:
       return "diamond";
-    case "service":
+    case NodeKind.Service:
       return "barrel";
     default:
       return "round-rectangle";
   }
 }
 
-export function lineStyleForKind(kind: string): string {
-  return kind === "realization" ? "solid" : "dashed";
+export function lineStyleForKind(kind: EdgeKind): string {
+  return kind === EdgeKind.Realization ? "solid" : "dashed";
 }
 
-export function displayKind(kind: string | null | undefined): string {
+export function displayKind(kind: NodeKind | string | null | undefined): string {
   return String(kind ?? "node").replace(/[_-]/g, " ");
 }
 
-export function relationSpec(kind: string): RelationSpec {
-  return relationSpecs[kind] ?? relationSpecs["realization"];
+export function relationSpec(kind: EdgeKind): RelationSpec {
+  return (
+    relationSpecs[kind] ??
+    relationSpecs[EdgeKind.Realization] ?? {
+      label: kind,
+      sourceKind: NodeKind.Requirement,
+      targetKind: NodeKind.Requirement,
+    }
+  );
 }
 
-export function kindRank(kind: string): number {
+export function kindRank(kind: NodeKind): number {
   return Object.prototype.hasOwnProperty.call(kindOrder, kind)
-    ? (kindOrder[kind])
+    ? (kindOrder[kind] as number)
     : Number.MAX_SAFE_INTEGER;
 }
 
 export function autoRelationKindFor(
-  sourceKind: string,
-  targetKind: string,
-): string | null {
+  sourceKind: NodeKind,
+  targetKind: NodeKind,
+): EdgeKind | null {
   for (const [kind, spec] of Object.entries(relationSpecs)) {
     if (spec.sourceKind === sourceKind && spec.targetKind === targetKind) {
-      return kind;
+      return kind as EdgeKind;
     }
   }
   return null;
@@ -54,15 +62,15 @@ export function autoRelationKindFor(
 
 export function resolveRelationKindForPair(
   options: MountOptions,
-  sourceKind: string,
-  targetKind: string,
-): string | null {
+  sourceKind: NodeKind,
+  targetKind: NodeKind,
+): EdgeKind | null {
   const selected =
     options.relationKindSelect && options.relationKindSelect.value;
   if (!selected || selected === "automatic") {
     return autoRelationKindFor(sourceKind, targetKind);
   }
-  return selected;
+  return selected as EdgeKind;
 }
 
 export function nodeDisplayLabel(
@@ -89,14 +97,14 @@ export function layoutLabel(name: string): string {
   }
 }
 
-export function layerIndexForKind(kind: string): number {
-  if (kind === "product-requirement") {
+export function layerIndexForKind(kind: NodeKind): number {
+  if (kind === NodeKind.ProductRequirement) {
     return 0;
   }
-  if (kind === "requirement") {
+  if (kind === NodeKind.Requirement) {
     return 1;
   }
-  if (kind === "use-case" || kind === "usecase" || kind === "feature") {
+  if (kind === NodeKind.UseCase || kind === NodeKind.UseCaseLegacy || kind === NodeKind.Feature) {
     return 2;
   }
   // Other kinds (api, component, service) go to a stable overflow column.
@@ -106,12 +114,12 @@ export function layerIndexForKind(kind: string): number {
 export function defaultRoots(graph: GraphData): string[] | undefined {
   const nodes = graph.nodes ?? [];
   for (const kind of [
-    "product-requirement",
-    "requirement",
-    "feature",
-    "api",
-    "component",
-    "service",
+    NodeKind.ProductRequirement,
+    NodeKind.Requirement,
+    NodeKind.Feature,
+    NodeKind.Api,
+    NodeKind.Component,
+    NodeKind.Service,
   ]) {
     const roots = nodes.filter((node) => node.kind === kind).map((node) => node.id);
     if (roots.length) {
@@ -126,8 +134,8 @@ export function compareNodeOrder(
   right: NodeSingular,
 ): number {
   const kindDiff =
-    kindRank(left.data("kind") as string) -
-    kindRank(right.data("kind") as string);
+    kindRank(left.data("kind") as NodeKind) -
+    kindRank(right.data("kind") as NodeKind);
   if (kindDiff !== 0) {
     return kindDiff;
   }
@@ -155,7 +163,7 @@ export function shortID(nodeID: string): string {
   return m ? m[1] : segment;
 }
 
-export function colorForKind(kind: string): string {
+export function colorForKind(kind: NodeKind): string {
   return palette[kind] ?? "#7a8791";
 }
 

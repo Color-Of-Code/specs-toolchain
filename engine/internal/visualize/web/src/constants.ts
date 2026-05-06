@@ -1,53 +1,55 @@
+import { EdgeKind, NodeKind } from "./types";
+
 export interface RelationSpec {
   label: string;
-  sourceKind: string;
-  targetKind: string;
+  sourceKind: NodeKind;
+  targetKind: NodeKind;
 }
 
-export const palette: Record<string, string> = {
-  "product-requirement": "#e66b6b",
-  requirement: "#4f8bd6",
-  feature: "#e29c45",
-  component: "#5f9d72",
-  api: "#7b6ccf",
-  service: "#c7739f",
+export const palette: Partial<Record<NodeKind, string>> = {
+  [NodeKind.ProductRequirement]: "#e66b6b",
+  [NodeKind.Requirement]: "#4f8bd6",
+  [NodeKind.Feature]: "#e29c45",
+  [NodeKind.Component]: "#5f9d72",
+  [NodeKind.Api]: "#7b6ccf",
+  [NodeKind.Service]: "#c7739f",
 };
 
-export const relationSpecs: Record<string, RelationSpec> = {
-  realization: {
+export const relationSpecs: Partial<Record<EdgeKind, RelationSpec>> = {
+  [EdgeKind.Realization]: {
     label: "Realization",
-    sourceKind: "product-requirement",
-    targetKind: "requirement",
+    sourceKind: NodeKind.ProductRequirement,
+    targetKind: NodeKind.Requirement,
   },
-  feature_implementation: {
+  [EdgeKind.FeatureImplementation]: {
     label: "Feature",
-    sourceKind: "requirement",
-    targetKind: "feature",
+    sourceKind: NodeKind.Requirement,
+    targetKind: NodeKind.Feature,
   },
-  component_implementation: {
+  [EdgeKind.ComponentImplementation]: {
     label: "Component",
-    sourceKind: "requirement",
-    targetKind: "component",
+    sourceKind: NodeKind.Requirement,
+    targetKind: NodeKind.Component,
   },
-  service_implementation: {
+  [EdgeKind.ServiceImplementation]: {
     label: "Service",
-    sourceKind: "requirement",
-    targetKind: "service",
+    sourceKind: NodeKind.Requirement,
+    targetKind: NodeKind.Service,
   },
-  api_implementation: {
+  [EdgeKind.ApiImplementation]: {
     label: "API",
-    sourceKind: "requirement",
-    targetKind: "api",
+    sourceKind: NodeKind.Requirement,
+    targetKind: NodeKind.Api,
   },
 };
 
-export const kindOrder: Record<string, number> = {
-  "product-requirement": 0,
-  requirement: 1,
-  feature: 2,
-  api: 3,
-  component: 4,
-  service: 5,
+export const kindOrder: Partial<Record<NodeKind, number>> = {
+  [NodeKind.ProductRequirement]: 0,
+  [NodeKind.Requirement]: 1,
+  [NodeKind.Feature]: 2,
+  [NodeKind.Api]: 3,
+  [NodeKind.Component]: 4,
+  [NodeKind.Service]: 5,
 };
 
 // Tuning knobs for the grid layout (transposed layered: rows per kind).

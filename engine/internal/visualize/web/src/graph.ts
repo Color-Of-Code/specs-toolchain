@@ -1,6 +1,7 @@
 import type { Core } from "cytoscape";
 import type {
   EdgeData,
+  EdgeKind,
   GraphData,
   MountOptions,
   NodeData,
@@ -60,7 +61,7 @@ export function collectRelations(
     .map((edge) => ({
       source: edge.data("source") as string,
       target: edge.data("target") as string,
-      kind: edge.data("kind") as string,
+      kind: edge.data("kind") as EdgeKind,
     }))
     .concat(appendEdges ?? [])
     .sort((left, right) => {

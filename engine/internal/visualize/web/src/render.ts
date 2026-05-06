@@ -1,5 +1,6 @@
 import cytoscape from "cytoscape";
 import type { Core, CytoscapeOptions } from "cytoscape";
+import { EdgeKind, NodeKind } from "./types";
 import type { GraphData, MountOptions } from "./types";
 import { layoutOptions } from "./layout";
 import { activeLayoutName, colorForKind, lineStyleForKind, shapeForKind } from "./utils";
@@ -53,7 +54,7 @@ export function renderGraph(
         selector: "node",
         style: {
           label: "data(label)",
-          shape: (ele) => shapeForKind(ele.data("kind") as string) as import("cytoscape").Css.NodeShape,
+          shape: (ele) => shapeForKind(ele.data("kind") as NodeKind) as import("cytoscape").Css.NodeShape,
           width: "label",
           height: "label",
           padding: "14px",
@@ -66,7 +67,7 @@ export function renderGraph(
           "text-halign": "center",
           "border-width": 2,
           "border-color": "#173042",
-          "background-color": (ele) => colorForKind(ele.data("kind") as string),
+          "background-color": (ele) => colorForKind(ele.data("kind") as NodeKind),
         },
       },
       {
@@ -82,7 +83,7 @@ export function renderGraph(
         style: {
           width: 2.2,
           "curve-style": "bezier",
-          "line-style": (ele) => lineStyleForKind(ele.data("kind") as string) as import("cytoscape").Css.LineStyle,
+          "line-style": (ele) => lineStyleForKind(ele.data("kind") as EdgeKind) as import("cytoscape").Css.LineStyle,
           "line-color": "#6d7f88",
           "target-arrow-color": "#6d7f88",
           "target-arrow-shape": "triangle",

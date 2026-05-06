@@ -3,6 +3,7 @@ import { emptyGraph, persistRelations, resolveGraph } from "./graph";
 import { runClusteredLayout, runGridLayout, runLayeredLayout, runLayout } from "./layout";
 import { detailsIconButton, detailsMarkup, detailsRowsMarkup, escapeHTML, setDetails } from "./markup";
 import { renderGraph, setMetaStatus, updateMetaSummary } from "./render";
+import { EdgeKind, NodeKind } from "./types";
 import type { GraphData, MountHandle, MountOptions, RelationInfo } from "./types";
 import {
   activeLayoutName,
@@ -94,7 +95,7 @@ export function mount(options: MountOptions): MountHandle {
       return undefined;
     }
     const summary = node.data("summary") as string | undefined;
-    const kind = displayKind(node.data("kind") as string);
+    const kind = displayKind(node.data("kind") as NodeKind);
     const inspectorID = shortID(node.id());
     const renderedRows = detailsRowsMarkup([
       { label: "Path", value: node.data("path") as string },
@@ -111,7 +112,7 @@ export function mount(options: MountOptions): MountHandle {
     if (!edge) {
       return undefined;
     }
-    const kind = edge.data("kind") as string;
+    const kind = edge.data("kind") as EdgeKind;
     const spec = relationSpec(kind);
     const sourceNode = resolveNode(edge.data("source") as string);
     const targetNode = resolveNode(edge.data("target") as string);
@@ -188,7 +189,7 @@ export function mount(options: MountOptions): MountHandle {
   function relationAlreadyExists(
     source: string,
     target: string,
-    kind: string,
+    kind: EdgeKind,
   ): boolean {
     if (!cy) {
       return false;
@@ -210,8 +211,8 @@ export function mount(options: MountOptions): MountHandle {
     if (!cy) {
       return;
     }
-    const sourceKind = sourceNode.data("kind") as string;
-    const targetKind = targetNode.data("kind") as string;
+    const sourceKind = sourceNode.data("kind") as NodeKind;
+    const targetKind = targetNode.data("kind") as NodeKind;
     const kind = resolveRelationKindForPair(options, sourceKind, targetKind);
     if (!kind) {
       setMetaStatus(
@@ -321,7 +322,7 @@ export function mount(options: MountOptions): MountHandle {
         const removalPreview: RelationInfo = {
           source: edgeToRemove.data("source") as string,
           target: edgeToRemove.data("target") as string,
-          kind: edgeToRemove.data("kind") as string,
+          kind: edgeToRemove.data("kind") as EdgeKind,
           sourceLabel: nodeDisplayLabel(
             resolveNode(edgeToRemove.data("source") as string),
           ),
@@ -471,8 +472,8 @@ export function mount(options: MountOptions): MountHandle {
               }
               const kind = resolveRelationKindForPair(
                 options,
-                srcNode.data("kind") as string,
-                node.data("kind") as string,
+                srcNode.data("kind") as NodeKind,
+                node.data("kind") as NodeKind,
               );
               if (kind) {
                 node.addClass("traceability-create-target");
@@ -658,7 +659,7 @@ export function mount(options: MountOptions): MountHandle {
           edgeKey(
             e.data("source") as string,
             e.data("target") as string,
-            e.data("kind") as string,
+            e.data("kind") as EdgeKind,
           ),
         )
       ) {
@@ -671,7 +672,7 @@ export function mount(options: MountOptions): MountHandle {
         edgeKey(
           e.data("source") as string,
           e.data("target") as string,
-          e.data("kind") as string,
+          e.data("kind") as EdgeKind,
         ),
       );
     });

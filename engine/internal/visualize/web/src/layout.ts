@@ -4,6 +4,7 @@ import {
   gridLayoutTuning,
   layeredLayoutTuning,
 } from "./constants";
+import { NodeKind } from "./types";
 import type { GraphData, MountOptions } from "./types";
 import {
   compareNodeOrder,
@@ -107,7 +108,7 @@ export function runClusteredLayout(cy: Core): void {
   });
 
   const prNodes = allNodes.filter(
-    (n) => n.data("kind") === "product-requirement",
+    (n) => n.data("kind") === NodeKind.ProductRequirement,
   );
   const globalPlaced = new Set<string>();
 
@@ -117,7 +118,7 @@ export function runClusteredLayout(cy: Core): void {
     const ring1 = allNodes.filter(
       (n) =>
         !globalPlaced.has(n.id()) &&
-        n.data("kind") === "requirement" &&
+        n.data("kind") === NodeKind.Requirement &&
         (adj.get(pr.id())?.has(n.id()) ?? false),
     );
     ring1.forEach((n) => globalPlaced.add(n.id()));
@@ -126,7 +127,7 @@ export function runClusteredLayout(cy: Core): void {
     const ring2 = allNodes.filter(
       (n) =>
         !globalPlaced.has(n.id()) &&
-        (n.data("kind") === "use-case" || n.data("kind") === "usecase") &&
+        (n.data("kind") === NodeKind.UseCase || n.data("kind") === NodeKind.UseCaseLegacy) &&
         ring1.some((r) => adj.get(r.id())?.has(n.id()) ?? false),
     );
     ring2.forEach((n) => globalPlaced.add(n.id()));
@@ -227,7 +228,7 @@ export function runLayeredLayout(cy: Core): void {
 
   const layers = new Map<number, NodeSingular[]>();
   nodes.forEach((node) => {
-    const layer = layerIndexForKind(node.data("kind") as string);
+    const layer = layerIndexForKind(node.data("kind") as NodeKind);
     let arr = layers.get(layer);
     if (!arr) {
       arr = [];
@@ -486,7 +487,7 @@ export function runGridLayout(cy: Core): void {
 
   const rows = new Map<number, NodeSingular[]>();
   nodes.forEach((node) => {
-    const row = layerIndexForKind(node.data("kind") as string);
+    const row = layerIndexForKind(node.data("kind") as NodeKind);
     let arr = rows.get(row);
     if (!arr) {
       arr = [];
