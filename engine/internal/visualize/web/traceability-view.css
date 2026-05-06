@@ -303,6 +303,9 @@ body.traceability-shell {
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--traceability-muted, #94aab9);
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .details-list dd {
@@ -347,6 +350,16 @@ body.traceability-shell {
   justify-content: center;
   flex: 0 0 auto;
   position: relative;
+}
+
+.details-list dt .details-icon-button {
+  width: 18px;
+  height: 18px;
+}
+
+.details-list dt .details-icon-button::before {
+  width: 11px;
+  height: 11px;
 }
 
 .details-icon-button::before {

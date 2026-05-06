@@ -177,7 +177,10 @@
   function detailsRowsMarkup(rows) {
     const renderedRows = (rows || [])
       .filter((row) => row && row.value != null && row.value !== "")
-      .map((row) => `<div><dt>${escapeHTML(row.label)}</dt><dd>${escapeHTML(row.value)}</dd></div>`)
+      .map((row) => {
+        const linkButton = row.link ? detailsIconButton(`Open ${row.label}`, row.link) : "";
+        return `<div><dt><span>${escapeHTML(row.label)}</span>${linkButton}</dt><dd>${escapeHTML(row.value)}</dd></div>`;
+      })
       .join("");
     return renderedRows ? `<dl class="details-list">${renderedRows}</dl>` : "";
   }
@@ -1176,10 +1179,8 @@
       const targetNode = resolveNode(edge.data("target"));
       return detailsMarkup("Relation", spec.label, [
         { label: "Kind", value: displayKind(kind) },
-        { label: "Source", value: sourceNode ? sourceNode.data("label") || sourceNode.id() : edge.data("source") },
-        { label: "Source ID", value: edge.data("source") },
-        { label: "Target", value: targetNode ? targetNode.data("label") || targetNode.id() : edge.data("target") },
-        { label: "Target ID", value: edge.data("target") },
+        { label: "Source", value: sourceNode ? sourceNode.data("label") || sourceNode.id() : edge.data("source"), link: sourceNode ? sourceNode.data("path") : undefined },
+        { label: "Target", value: targetNode ? targetNode.data("label") || targetNode.id() : edge.data("target"), link: targetNode ? targetNode.data("path") : undefined },
       ], canSaveRelations ? "Use the remove button to delete this relation. The UI asks for confirmation before persisting the change." : "");
     }
 
